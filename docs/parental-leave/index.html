@@ -112,17 +112,19 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   /* gantt */
   .pl-gantt { position: relative; display: grid; grid-template-columns: var(--pl-lw) minmax(0, 1fr); column-gap: 12px; min-height: 22rem; }
   .pl-gantt.pl-g-narrow { grid-template-columns: minmax(0, 1fr); }
-  .pl-g-overlay { position: absolute; top: 0; bottom: 0; left: calc(var(--pl-lw) + 12px); right: 0; pointer-events: none; }
-  .pl-g-narrow .pl-g-overlay { left: 0; }
+  .pl-g-overlay { position: absolute; top: 0; bottom: 0; left: calc(var(--pl-lw) + 22px); right: 10px; pointer-events: none; }
+  .pl-g-narrow .pl-g-overlay { left: 10px; }
   .pl-g-mline { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--cds-chart-grid); }
   .pl-g-mline.is-year { border-left-color: var(--cds-chart-axis); }
   .pl-g-band { position: absolute; top: 30px; bottom: 0; background: color-mix(in srgb, var(--c) 9%, transparent); border-inline: 1px dashed color-mix(in srgb, var(--c) 40%, transparent); }
   .pl-g-band-label { position: absolute; top: 4px; left: 6px; font-size: var(--cds-font-size-caption); color: color-mix(in srgb, var(--c) 70%, var(--color-fg)); white-space: nowrap; }
   .pl-g-today { position: absolute; top: 22px; bottom: 0; border-left: 2px dashed var(--cds-chart-status-critical); }
-  .pl-g-today span { position: absolute; top: -20px; left: 0; transform: translateX(-50%); font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--cds-chart-status-critical); white-space: nowrap; background: var(--color-panel); padding-inline: 4px; border-radius: 4px; }
+  .pl-g-today span { position: absolute; top: 12px; left: 0; transform: translateX(-50%); font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--cds-chart-status-critical); white-space: nowrap; background: var(--color-panel); padding-inline: 4px; border-radius: 4px; }
   .pl-g-axis { position: relative; height: 30px; border-bottom: 1px solid var(--cds-chart-axis); }
   .pl-g-tick { position: absolute; bottom: 6px; transform: translateX(-50%); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .pl-g-tick.is-first { transform: none; }
+  .pl-g-bandspace { grid-column: 1 / -1; }
+  .pl-g-track, .pl-g-axis { margin-inline: 10px; }
   .pl-g-phase { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 14px 0 6px; position: relative; z-index: 1; }
   .pl-g-phase b { font-size: var(--cds-font-size-body); font-weight: 600; }
   .pl-g-phase-no { font-size: var(--cds-font-size-caption); font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--color-fg); color: var(--color-bg); }
@@ -1265,7 +1267,8 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       line.style.left = pct(d) + '%';
       overlay.append(line);
     });
-    (el.dataset.bands || '').split(',').filter(Boolean).forEach((spec) => {
+    const bandSpecs = (el.dataset.bands || '').split(',').filter(Boolean);
+    bandSpecs.forEach((spec, bi) => {
       const [a, b, who, label] = spec.split(':');
       const s = A[a];
       const e = A[b];
@@ -1273,22 +1276,32 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       const band = mk('div', 'pl-g-band pl-r-' + who);
       band.style.left = pct(s) + '%';
       band.style.width = (pct(d3.utcDay.offset(e, 1)) - pct(s)) + '%';
-      band.append(mk('span', 'pl-g-band-label', label));
+      const bl = mk('span', 'pl-g-band-label', label);
+      bl.style.top = 4 + bi * 16 + 'px';
+      band.append(bl);
       overlay.append(band);
     });
     const t = today();
+    let showToday = false;
     if (t >= D0 && t <= D1) {
       const tl = mk('div', 'pl-g-today');
       tl.style.left = pct(t) + '%';
-      tl.append(mk('span', '', '오늘 ' + md(t)));
+      // 오늘 글자는 축 아래, 휴직 기간 글자 다음 줄에 두고 양 끝에서는 안쪽으로 붙임
+      const tt = mk('span', '', '오늘 ' + md(t));
+      tt.style.top = 12 + bandSpecs.length * 16 + 'px';
+      const tp = pct(t);
+      tt.style.transform = tp < 15 ? 'translateX(-2px)' : tp > 85 ? 'translateX(calc(-100% + 2px))' : 'translateX(-50%)';
+      tl.append(tt);
       overlay.append(tl);
+      showToday = true;
     }
 
     const parts = [overlay];
     if (!narrow) parts.push(mk('div', ''));
     const axis = mk('div', 'pl-g-axis');
     const perMonth = trackW / Math.max(1, months.length);
-    const step = perMonth < 34 ? 3 : perMonth < 48 ? 2 : 1;
+    // 눈금 글자가 겹치지 않도록 간격이 60px 이상 되는 개월 단위를 고름
+    const step = [1, 2, 3, 6, 12].find((n) => n * perMonth >= 60) || 12;
     months.forEach((d, i) => {
       if (i % step) return;
       const tick = mk('span', 'pl-g-tick' + (i === 0 ? ' is-first' : ''), String(d.getUTCFullYear()).slice(2) + '.' + String(d.getUTCMonth() + 1).padStart(2, '0'));
@@ -1296,6 +1309,11 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       axis.append(tick);
     });
     parts.push(axis);
+    if (bandSpecs.length || showToday) {
+      const space = mk('div', 'pl-g-bandspace');
+      space.style.height = (bandSpecs.length + (showToday ? 1 : 0)) * 16 + 6 + 'px';
+      parts.push(space);
+    }
 
     const byId = new Map(rows.map((r) => [r.id, r]));
     const byRole = el.dataset.group === 'role';
