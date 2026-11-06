@@ -1,8 +1,11 @@
 // 체크리스트 — 기기별 저장 버전
+// 처음 열면 기본 목록(src/default-data.json)으로 시작합니다.
 // 목록과 체크는 이 기기 브라우저(localStorage)에만 저장됩니다. 서버로 보내지 않습니다.
 // 다른 기기로 옮길 때는 "백업 링크"를 씁니다. 링크의 # 뒷부분에 목록과 체크가 들어 있고,
 // # 뒷부분은 웹 서버로 전송되지 않습니다.
 // 데이터 형식: { title, subtitle, owners:{m,s}, sections:[...], checks:{<항목 id>:true} }
+
+import DEFAULT_DATA from "./default-data.json";
 
 const LETTERS = "가나다라마바사아자차카타파하";
 const LS = "gguggu-checklist";
@@ -357,8 +360,9 @@ $("#importYes").addEventListener("click", () => {
 });
 $("#importNo").addEventListener("click", () => { pendingImport = null; $("#importBox").hidden = true; history.replaceState(null, "", location.pathname); });
 
-if (!docData) docData = { title: "체크리스트", owners: {}, sections: [], checks: {} };
+const firstVisit = !docData;
+if (firstVisit){ docData = clone(DEFAULT_DATA); docData.checks = {}; persist(); }
 build();
-setStatus(lsGet(LS+"-data", null) ? "이 기기에만 저장됩니다." : "아직 목록이 없습니다. 목록 링크를 열거나 ‘편집’에서 직접 추가하세요.");
+setStatus(firstVisit ? "기본 목록으로 시작했습니다. 체크는 이 기기에만 저장됩니다." : "이 기기에만 저장됩니다.");
 checkHash();
 window.addEventListener("hashchange", checkHash);
