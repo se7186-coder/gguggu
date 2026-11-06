@@ -110,19 +110,12 @@ body{margin:0}
 <div class="wrap">
   <h1 id="pageTitle">체크리스트</h1>
   <div class="date" id="pageSub" hidden></div>
-  <div class="auth" id="authBar" hidden><span id="who"></span><button type="button" id="settingsBtn">연결 설정</button></div>
+  <div class="gate" id="importBox" hidden>
+    <div id="importMsg">링크에 담긴 체크리스트를 이 기기에 저장할까요?</div>
+    <div class="adds"><button type="button" class="pill" id="importYes">저장하기</button><button type="button" class="pill" id="importNo">취소</button></div>
+  </div>
 
-  <form class="gate" id="gate" hidden>
-    <div id="gateMsg">처음 한 번만 연결 정보를 넣어 주세요. 이 기기 브라우저에만 저장됩니다.</div>
-    <label class="gl" for="repoIn">데이터 저장소 (아이디/저장소이름)
-      <input class="ed" id="repoIn" type="text" placeholder="예: myid/gguggu-data" autocomplete="off" autocapitalize="off" spellcheck="false" required></label>
-    <label class="gl" for="tokenIn">GitHub 토큰
-      <input class="ed" id="tokenIn" type="password" placeholder="github_pat_로 시작하는 값" autocomplete="off" required></label>
-    <button type="submit" class="pill" id="connectBtn">연결하기</button>
-    <div class="status" id="gateErr"></div>
-  </form>
-
-  <div id="main" hidden>
+  <div id="main">
     <div class="bar">
       <div class="prog-row"><strong id="progText">0 / 0 완료</strong><span id="progPct">0%</span></div>
       <div class="track"><div class="fill" id="fill"></div></div>
@@ -142,10 +135,15 @@ body{margin:0}
     <div id="list"><div class="empty-state">목록을 불러오는 중입니다…</div></div>
 
     <div class="reset" id="resetBox">
+      <button type="button" id="shareBtn">다른 기기로 옮기기 · 백업 링크 복사</button>
       <button type="button" id="resetBtn">체크 모두 해제</button>
       <span id="resetConfirm" hidden>정말 모두 해제할까요?
         <button type="button" class="danger" id="resetYes">해제</button>
         <button type="button" id="resetNo">취소</button></span>
+    </div>
+    <div class="reset" id="shareOut" hidden>
+      <span id="shareMsg"></span>
+      <textarea class="ed" id="shareText" rows="3" readonly aria-label="백업 링크"></textarea>
     </div>
   </div>
 </div>

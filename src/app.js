@@ -1,117 +1,46 @@
-// 체크리스트 — GitHub 저장 버전
-// 목록과 체크는 비공개 데이터 저장소의 data.json 한 파일에 저장됩니다.
-// data.json 형식: { title, subtitle, owners:{m,s}, sections:[{id,title,groups:[{id,h,owner,note,items:[{id,t,sub,kids:[{id,t}]}]}]}], checks:{<항목 id>:true} }
-// 연결 정보(저장소 이름, 토큰)는 각 기기 브라우저의 localStorage에만 저장됩니다.
+// 체크리스트 — 기기별 저장 버전
+// 목록과 체크는 이 기기 브라우저(localStorage)에만 저장됩니다. 서버로 보내지 않습니다.
+// 다른 기기로 옮길 때는 "백업 링크"를 씁니다. 링크의 # 뒷부분에 목록과 체크가 들어 있고,
+// # 뒷부분은 웹 서버로 전송되지 않습니다.
+// 데이터 형식: { title, subtitle, owners:{m,s}, sections:[...], checks:{<항목 id>:true} }
 
 const LETTERS = "가나다라마바사아자차카타파하";
 const LS = "gguggu-checklist";
-const FILE = "data.json";
-const POLL_MS = 30000;
 const $ = s => document.querySelector(s);
 const clone = o => JSON.parse(JSON.stringify(o));
 const uid = () => "x" + Math.random().toString(36).slice(2, 9);
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
-function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 function setStatus(t){ $("#status").textContent = t; }
 
-let conn = lsGet(LS+"-conn", null);   // {repo, token}
-let docData = null;                   // 화면에 보이는 데이터 (원격 + 아직 안 올라간 변경)
-let remote = null;                    // {data, sha} 마지막으로 받은 원격 상태
-let ops = [];                         // 올릴 변경: (d) => void
-let structOp = null, structTimer = null;
-let busy = false;
+let docData = lsGet(LS+"-data", null);
 let filter = "all", editing = false, focusAfter = null;
 
-/* ---------- GitHub API ---------- */
-const b64enc = str => { const bytes = new TextEncoder().encode(str); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin); };
-const b64dec = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g, "")), c => c.charCodeAt(0)));
-function api(path, opts={}){
-  return fetch(`https://api.github.com/repos/${conn.repo}/contents/${path}`, {
-    cache: "no-store",
-    ...opts,
-    headers: { "Accept":"application/vnd.github+json", "Authorization":"Bearer " + conn.token, "X-GitHub-Api-Version":"2022-11-28", ...(opts.headers||{}) }
-  });
+/* ---------- 저장 ---------- */
+function persist(){
+  if (lsSet(LS+"-data", docData)) setStatus("이 기기에 저장됨 · " + new Date().toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"}));
+  else setStatus("이 브라우저에 저장할 수 없습니다(사생활 보호 모드 등). 창을 닫으면 사라집니다.");
 }
-class GhError extends Error { constructor(status, msg){ super(msg); this.status = status; } }
-async function getRemote(){
-  const r = await api(FILE);
-  if (!r.ok) throw new GhError(r.status, await r.text().catch(()=> ""));
-  const j = await r.json();
-  return { data: JSON.parse(b64dec(j.content)), sha: j.sha };
-}
-async function putRemote(data, sha){
-  const r = await api(FILE, { method:"PUT", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ message:"체크리스트 업데이트", content: b64enc(JSON.stringify(data, null, 1)), sha }) });
-  if (!r.ok) throw new GhError(r.status, await r.text().catch(()=> ""));
-  const j = await r.json();
-  return j.content.sha;
-}
-function errText(e){
-  const s = e && e.status;
-  if (s === 401) return "토큰이 올바르지 않거나 만료되었습니다";
-  if (s === 403) return "토큰 권한이 부족하거나 요청 한도를 넘었습니다";
-  if (s === 404) return "저장소 또는 data.json을 찾을 수 없습니다(이름·토큰 권한 확인)";
-  if (s === 409 || s === 422) return "다른 기기와 동시에 저장되어 충돌했습니다";
-  return (e && e.message) || "네트워크 오류";
-}
+function queue(op){ op(docData); persist(); }
+function queueStruct(){ persist(); }
 
-/* ---------- 동기화 ---------- */
-function queue(op){ ops.push(op); op(docData); flush(); }
-function queueStruct(){
-  // 구조(제목·담당자·항목) 변경은 잠깐 모았다가 한 번에 올림
-  const snap = { title: docData.title, subtitle: docData.subtitle, owners: clone(docData.owners||{}), sections: clone(docData.sections) };
-  structOp = d => { d.title = snap.title; d.subtitle = snap.subtitle; d.owners = snap.owners; d.sections = clone(snap.sections); };
-  clearTimeout(structTimer);
-  setStatus("저장 대기 중…");
-  structTimer = setTimeout(() => { if (structOp){ ops.push(structOp); structOp = null; flush(); } }, 1200);
-}
-async function flush(){
-  if (busy || !remote) return;
-  busy = true;
-  while (ops.length){
-    const batch = ops.splice(0);
-    setStatus("저장 중…");
-    let tries = 0, ok = false;
-    while (!ok){
-      const d = clone(remote.data);
-      batch.forEach(f => f(d));
-      try { const sha = await putRemote(d, remote.sha); remote = { data: d, sha }; ok = true; }
-      catch(e){
-        if ((e.status === 409 || e.status === 422) && tries++ < 4){
-          try { remote = await getRemote(); } catch(e2){ setStatus("저장하지 못했어요: " + errText(e2)); break; }
-          continue;
-        }
-        setStatus("저장하지 못했어요: " + errText(e) + ". 새로고침 후 다시 시도해 주세요.");
-        break;
-      }
-    }
-    if (!ok){ busy = false; return; }
+/* ---------- 링크 인코딩 (압축 + base64url) ---------- */
+const toB64u = bytes => { let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); };
+const fromB64u = s => Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")), c => c.charCodeAt(0));
+async function pipe(bytes, stream){ return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
+async function encodeData(d){
+  const raw = new TextEncoder().encode(JSON.stringify(d));
+  if (typeof CompressionStream === "function"){
+    try { return "z." + toB64u(await pipe(raw, new CompressionStream("deflate-raw"))); } catch(e){}
   }
-  busy = false;
-  if (!structOp) setStatus("저장됨 · " + new Date().toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"}));
-  syncView();
+  return "j." + toB64u(raw);
 }
-// 원격 상태 + 아직 안 올린 변경을 화면 데이터로
-function syncView(){
-  if (!remote) return;
-  const next = clone(remote.data);
-  ops.forEach(f => f(next));
-  if (structOp) structOp(next);
-  const structChanged = !docData || JSON.stringify({...next, checks:0}) !== JSON.stringify({...docData, checks:0});
-  if (editing && structChanged && docData){
-    // 편집 중에는 내 화면의 구조를 유지하고 체크만 갱신
-    docData.checks = next.checks || {};
-    renderChecks();
-    return;
-  }
-  docData = next;
-  structChanged ? build() : renderChecks();
-}
-async function poll(){
-  if (!conn || busy || ops.length || structOp || document.hidden) return;
-  try { const r = await getRemote(); if (!remote || r.sha !== remote.sha){ remote = r; syncView(); } setStatus("최신 상태 · 30초마다 자동 갱신"); }
-  catch(e){ setStatus("불러오지 못했어요: " + errText(e)); }
+async function decodeData(s){
+  const kind = s.slice(0,2), body = fromB64u(s.slice(2));
+  const bytes = kind === "z." ? await pipe(body, new DecompressionStream("deflate-raw")) : body;
+  const d = JSON.parse(new TextDecoder().decode(bytes));
+  if (!d || !Array.isArray(d.sections)) throw new Error("형식 오류");
+  return d;
 }
 
 /* ---------- 구조 탐색 ---------- */
@@ -379,8 +308,7 @@ $("#editBtn").addEventListener("click", () => {
     $("#editBtn").setAttribute("aria-pressed", String(editing));
     $("#editBtn").textContent = editing ? "편집 완료" : "편집";
     document.querySelectorAll("#filters .pill").forEach(p => p.disabled = editing);
-    $("#resetBox").hidden = editing;
-    if (!editing) syncView();
+    $("#resetBox").hidden = editing; $("#shareOut").hidden = true;
     build();
   }, 0);
 });
@@ -400,41 +328,37 @@ $("#resetYes").addEventListener("click", () => {
 });
 { const f = lsGet(LS+"-filter", null); const b = f && document.querySelector(`#filters .pill[data-f="${f}"]`); if (b) b.click(); }
 
-/* ---------- 연결 ---------- */
-function showGate(msg){
-  $("#gate").hidden = false; $("#main").hidden = true; $("#authBar").hidden = true;
-  if (msg) $("#gateErr").textContent = msg;
-  if (conn){ $("#repoIn").value = conn.repo; }
-}
-async function start(){
-  $("#gate").hidden = true; $("#main").hidden = false;
-  $("#who").textContent = "저장소: " + conn.repo;
-  $("#authBar").hidden = false;
-  setStatus("불러오는 중…");
-  try { remote = await getRemote(); }
-  catch(e){ showGate("연결하지 못했어요: " + errText(e)); return; }
-  docData = null;
-  syncView();
-  setStatus("최신 상태 · 30초마다 자동 갱신");
-}
-$("#gate").addEventListener("submit", e => {
-  e.preventDefault();
-  const repo = $("#repoIn").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/$/, "");
-  const token = $("#tokenIn").value.trim();
-  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)){ $("#gateErr").textContent = "저장소는 ‘아이디/저장소이름’ 형식으로 넣어 주세요."; return; }
-  if (!token){ $("#gateErr").textContent = "토큰을 넣어 주세요."; return; }
-  conn = {repo, token};
-  lsSet(LS+"-conn", conn);
-  $("#tokenIn").value = "";
-  $("#gateErr").textContent = "";
-  start();
+/* ---------- 다른 기기로 옮기기 ---------- */
+$("#shareBtn").addEventListener("click", async () => {
+  const url = location.origin + location.pathname + "#list=" + await encodeData(docData);
+  $("#shareOut").hidden = false;
+  $("#shareText").value = url;
+  try { await navigator.clipboard.writeText(url); $("#shareMsg").textContent = "링크를 복사했습니다. 다른 기기에서 열면 지금 목록과 체크가 그대로 옮겨집니다. 백업용으로 메모에 보관해 두셔도 됩니다."; }
+  catch(e){ $("#shareText").select(); $("#shareMsg").textContent = "아래 링크를 길게 눌러 복사하세요. 다른 기기에서 열면 지금 목록과 체크가 옮겨집니다."; }
 });
-$("#settingsBtn").addEventListener("click", () => {
-  lsDel(LS+"-conn");
-  showGate("이 기기에 저장된 토큰을 지웠습니다. 다시 연결하려면 정보를 넣어 주세요.");
-  conn = null; remote = null; docData = null;
-});
-setInterval(poll, POLL_MS);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
 
-if (conn) start(); else showGate("");
+/* ---------- 시작 ---------- */
+let pendingImport = null;
+async function checkHash(){
+  const m = location.hash.match(/^#list=(.+)$/);
+  if (!m) return;
+  try { pendingImport = await decodeData(m[1]); }
+  catch(e){ setStatus("링크를 읽지 못했습니다. 링크가 잘리지 않았는지 확인해 주세요."); history.replaceState(null, "", location.pathname); return; }
+  const n = pendingImport.sections.reduce((a,s)=>a+s.groups.reduce((b,g)=>b+g.items.reduce((c,it)=>c+1+(it.kids||[]).length,0),0),0);
+  $("#importMsg").textContent = docData.sections.length
+    ? `링크에 담긴 ‘${pendingImport.title||"체크리스트"}’(항목 ${n}개)로 이 기기의 목록과 체크를 바꿀까요? 지금 이 기기의 내용은 사라집니다.`
+    : `링크에 담긴 ‘${pendingImport.title||"체크리스트"}’(항목 ${n}개)를 이 기기에 저장할까요?`;
+  $("#importBox").hidden = false;
+}
+$("#importYes").addEventListener("click", () => {
+  docData = pendingImport; pendingImport = null; docData.checks = docData.checks || {};
+  persist(); $("#importBox").hidden = true; history.replaceState(null, "", location.pathname);
+  editing = false; build();
+});
+$("#importNo").addEventListener("click", () => { pendingImport = null; $("#importBox").hidden = true; history.replaceState(null, "", location.pathname); });
+
+if (!docData) docData = { title: "체크리스트", owners: {}, sections: [], checks: {} };
+build();
+setStatus(lsGet(LS+"-data", null) ? "이 기기에만 저장됩니다." : "아직 목록이 없습니다. 목록 링크를 열거나 ‘편집’에서 직접 추가하세요.");
+checkHash();
+window.addEventListener("hashchange", checkHash);
