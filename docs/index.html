@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>체크리스트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow column; sticky progress header; sections as quiet groups, items as large tap rows; edit mode turns rows into inline fields */
+:root{
+  --bg:#f3f6f5; --surface:#ffffff; --fg:#1d2a2a; --muted:#5f6f6e; --line:#d9e2e0;
+  --accent:#2f7d78; --accent-soft:#dcefed; --done:#8a9a98; --danger:#b8443f;
+  --tag-a:#e6eefb; --tag-a-fg:#2b4f8f; --tag-b:#fbe9ee; --tag-b-fg:#8f2b4c;
+  --f-display:"Gowun Batang",serif;
+  --f-body:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121817; --surface:#1a2221; --fg:#e4ecea; --muted:#9aaaa8; --line:#2c3836;
+  --accent:#5fbdb5; --accent-soft:#1f3634; --done:#6b7b79; --danger:#e8807a;
+  --tag-a:#1f2b40; --tag-a-fg:#a9c2ef; --tag-b:#3a1f28; --tag-b-fg:#efa9bf; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121817; --surface:#1a2221; --fg:#e4ecea; --muted:#9aaaa8; --line:#2c3836;
+  --accent:#5fbdb5; --accent-soft:#1f3634; --done:#6b7b79; --danger:#e8807a;
+  --tag-a:#1f2b40; --tag-a-fg:#a9c2ef; --tag-b:#3a1f28; --tag-b-fg:#efa9bf; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+h1{font-family:var(--f-display);font-size:2rem;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.date{color:var(--muted);font-size:.9rem;margin-top:2px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 12px;margin-top:12px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.prog-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-variant-numeric:tabular-nums}
+.prog-row strong{font-size:1.05rem}
+.track{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.fill{height:100%;background:var(--accent);width:0;transition:width .3s}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tools .sp{flex:1}
+.pill{font:inherit;font-size:.85rem;padding:5px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.pill:disabled{opacity:.45;cursor:default}
+.status{font-size:.8rem;color:var(--muted)}
+section{margin-top:28px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+h2{font-family:var(--f-display);font-size:1.3rem;margin:0}
+.count{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+h3{font-size:.95rem;font-weight:600;margin:18px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.note{background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-size:.88rem;margin:6px 0 8px;white-space:pre-wrap}
+ul{list-style:none;margin:8px 0 0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+ul ul{background:transparent;border:0;border-radius:0;margin:0;padding-left:34px}
+li+li{border-top:1px solid var(--line)}
+ul ul li{border-top:0!important}
+label.item{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;cursor:pointer}
+ul ul label.item{padding:5px 14px 5px 0}
+label.item input{appearance:none;flex:none;width:20px;height:20px;margin:2px 0 0;border:2px solid var(--muted);border-radius:6px;display:grid;place-content:center;cursor:pointer;background:var(--surface)}
+label.item input:checked{background:var(--accent);border-color:var(--accent)}
+label.item input:checked::after{content:"";width:10px;height:6px;border:2px solid var(--surface);border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
+label.item input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.txt{min-width:0;overflow-wrap:anywhere}
+.txt.empty{color:var(--muted);font-style:italic}
+input:checked + .txt{color:var(--done);text-decoration:line-through;text-decoration-color:var(--done)}
+.sub{font-size:.85rem;color:var(--muted);padding:0 14px 10px 46px;margin-top:-6px}
+.tag{font-size:.72rem;font-weight:500;padding:1px 8px;border-radius:99px;letter-spacing:.02em}
+.tag.m{background:var(--tag-a);color:var(--tag-a-fg)}
+.tag.s{background:var(--tag-b);color:var(--tag-b-fg)}
+.hidden-by-filter{display:none}
+.empty-state{margin-top:32px;padding:20px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);text-align:center}
+
+/* edit mode */
+.ed{font:inherit;font-size:.92rem;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 9px;min-width:0;width:100%}
+.ed:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+textarea.ed{resize:vertical;min-height:2.6em}
+.erow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 10px}
+.erow .grow{flex:1 1 220px;min-width:0;display:grid;gap:5px}
+.ebtns{display:flex;gap:4px;flex:none}
+.ib{font:inherit;font-size:.8rem;min-width:30px;height:30px;padding:0 8px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.ib:hover{border-color:var(--accent)}
+.ib.del{color:var(--danger)}
+.ib.armed{background:var(--danger);border-color:var(--danger);color:var(--surface)}
+.ib:focus-visible,.pill:focus-visible,.add:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.add{font:inherit;font-size:.85rem;color:var(--accent);background:transparent;border:1px dashed var(--accent);border-radius:8px;padding:6px 12px;cursor:pointer}
+.ehead{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.ehead .num{font-family:var(--f-display);font-weight:700;color:var(--muted);flex:none}
+.ehead .ed{flex:1 1 200px}
+.ehead select.ed{flex:0 0 auto;width:auto}
+.egroup{border-left:3px solid var(--line);padding-left:10px;margin-top:14px}
+.egroup .note-ed{margin-top:6px}
+.adds{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.kidrow{padding:4px 10px 4px 34px}
+.reset{margin-top:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.reset button{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.reset button.danger{border-color:var(--danger);color:var(--danger)}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+body{margin:0}
+[hidden]{display:none!important}
+.auth{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.auth button{font:inherit;font-size:.82rem;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+.gate{margin-top:40px;padding:28px 20px;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:grid;gap:14px;justify-items:center;text-align:center}
+.gate .pill{font-size:.95rem;padding:9px 18px}
+.gl{display:grid;gap:4px;width:100%;max-width:420px;text-align:left;font-size:.82rem;color:var(--muted)}
+.gate textarea{width:100%;min-height:9em;font:inherit;font-size:.82rem;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+.empty-state{display:grid;gap:10px;justify-items:center}
+.empty-state textarea{width:100%;min-height:10em;font:inherit;font-size:.82rem;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+.meta-ed{display:grid;gap:8px;margin-top:16px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.meta-ed label{display:grid;gap:4px;font-size:.82rem;color:var(--muted)}
+.meta-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="pageTitle">체크리스트</h1>
+  <div class="date" id="pageSub" hidden></div>
+  <div class="auth" id="authBar" hidden><span id="who"></span><button type="button" id="settingsBtn">연결 설정</button></div>
+
+  <form class="gate" id="gate" hidden>
+    <div id="gateMsg">처음 한 번만 연결 정보를 넣어 주세요. 이 기기 브라우저에만 저장됩니다.</div>
+    <label class="gl" for="repoIn">데이터 저장소 (아이디/저장소이름)
+      <input class="ed" id="repoIn" type="text" placeholder="예: myid/gguggu-data" autocomplete="off" autocapitalize="off" spellcheck="false" required></label>
+    <label class="gl" for="tokenIn">GitHub 토큰
+      <input class="ed" id="tokenIn" type="password" placeholder="github_pat_로 시작하는 값" autocomplete="off" required></label>
+    <button type="submit" class="pill" id="connectBtn">연결하기</button>
+    <div class="status" id="gateErr"></div>
+  </form>
+
+  <div id="main" hidden>
+    <div class="bar">
+      <div class="prog-row"><strong id="progText">0 / 0 완료</strong><span id="progPct">0%</span></div>
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="tools">
+        <div class="tools" role="group" aria-label="담당자 필터" id="filters">
+          <button type="button" class="pill" data-f="all" aria-pressed="true">전체</button>
+          <button type="button" class="pill" data-f="m" aria-pressed="false">담당자1</button>
+          <button type="button" class="pill" data-f="s" aria-pressed="false">담당자2</button>
+          <button type="button" class="pill" data-f="todo" aria-pressed="false">남은 것만</button>
+        </div>
+        <span class="sp"></span>
+        <button type="button" class="pill" id="editBtn" aria-pressed="false">편집</button>
+      </div>
+      <div class="status" id="status">불러오는 중…</div>
+    </div>
+
+    <div id="list"><div class="empty-state">목록을 불러오는 중입니다…</div></div>
+
+    <div class="reset" id="resetBox">
+      <button type="button" id="resetBtn">체크 모두 해제</button>
+      <span id="resetConfirm" hidden>정말 모두 해제할까요?
+        <button type="button" class="danger" id="resetYes">해제</button>
+        <button type="button" id="resetNo">취소</button></span>
+    </div>
+  </div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

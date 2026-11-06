@@ -1,0 +1,13 @@
+{
+  "name": "gguggu",
+  "version": "1.0.0",
+  "description": "GitHub Pages checklist that stores data in a private GitHub repo",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --format=esm --minify --target=es2020 --outfile=docs/app.js"
+  },
+  "dependencies": {},
+  "private": true,
+  "devDependencies": {
+    "esbuild": "0.25.0"
+  }
+}
