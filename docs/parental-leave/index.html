@@ -291,6 +291,75 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     .pl-combined .pl-pay-min, .pl-stack .pl-pay-min { white-space: normal; }
     .pl-paybar { justify-content: flex-end; }
   }
+
+  /* ---------- 정리된 레이아웃 ---------- */
+  .pl { gap: var(--cds-gap-lg); max-width: 72rem; }
+  .pl-page { gap: var(--cds-gap-lg); }
+  .pl-pagetabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--color-bg); padding-top: 4px; }
+  .pl-take { font-size: var(--cds-font-size-body); }
+  .pl-kpis { gap: var(--cds-gap-sm); }
+  .pl-kpi { padding: var(--cds-pad-md) var(--cds-pad-lg); }
+  .pl-warns-top li { font-size: var(--cds-font-size-body); padding: 8px 12px; }
+  .pl-fold { padding: 0; gap: 0; }
+  .pl-fold > *:not(summary) { margin-inline: var(--cds-pad-lg); }
+  .pl-fold > *:last-child { margin-bottom: var(--cds-pad-lg); }
+  .pl-fold > .pl-note { margin-bottom: var(--cds-gap-md); }
+  .pl-fold > .pl-fields, .pl-fold > .pl-field, .pl-fold > .pl-check { margin-bottom: var(--cds-gap-md); }
+  .pl-fold-sum { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: var(--cds-pad-md) var(--cds-pad-lg); padding-right: 40px; position: relative; border-radius: var(--cds-radius); }
+  .pl-fold-sum::-webkit-details-marker { display: none; }
+  .pl-fold-sum:hover { background: color-mix(in srgb, var(--color-fg) 4%, transparent); }
+  .pl-fold-sum:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .pl-fold-title { font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-heading); }
+  .pl-fold-meta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .pl-fold-cue { position: absolute; right: 16px; top: 50%; width: 9px; height: 9px; border-right: 2px solid var(--color-fg-muted); border-bottom: 2px solid var(--color-fg-muted); transform: translateY(-70%) rotate(45deg); transition: transform var(--cds-dur-slow); }
+  .pl-fold[open] > .pl-fold-sum .pl-fold-cue { transform: translateY(-30%) rotate(-135deg); }
+  .pl-fold[open] > .pl-fold-sum { border-bottom: 1px solid var(--color-border-line); margin-bottom: var(--cds-gap-md); border-radius: var(--cds-radius) var(--cds-radius) 0 0; }
+  .pl-more { border-top: 1px solid var(--color-border-line); padding-top: var(--cds-pad-sm); }
+  .pl-more > summary { cursor: pointer; font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--color-fg-muted); padding: 4px 0; }
+  .pl-more > summary:hover { color: var(--color-fg); }
+  .pl-more-body { display: grid; gap: var(--cds-gap-sm); padding-top: var(--cds-pad-sm); font-size: var(--cds-font-size-caption); line-height: 1.65; color: var(--color-fg-muted); }
+  .pl-more-body p { margin: 0; }
+  .pl-combined td { vertical-align: middle; padding-block: 8px; }
+  .pl-combined .pl-amt { display: block; font-variant-numeric: tabular-nums; }
+  .pl-tagline { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .pl-tag { font-size: 11px; line-height: 1.5; padding: 0 6px; border-radius: 999px; white-space: nowrap; color: var(--color-fg-muted); background: color-mix(in srgb, var(--color-fg) 6%, transparent); }
+  .pl-tag.is-leave { color: color-mix(in srgb, var(--c) 75%, var(--color-fg)); background: color-mix(in srgb, var(--c) 13%, transparent); }
+  .pl-tag.is-extra { color: var(--color-warn); background: color-mix(in srgb, var(--color-warn) 12%, transparent); }
+  .pl-combined .pl-strong { font-weight: 600; }
+  .pl-combined .pl-muted { color: var(--color-fg-muted); }
+  .pl-combined .pl-month { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pl-combined tr.pl-total td { font-weight: 700; }
+  .pl-combined tr.pl-subtotal td { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); padding-block: 4px; border-bottom: 0; }
+  .pl-table.pl-combined { min-width: 32rem; }
+  .pl-page { scroll-margin-top: 64px; }
+  .pl-kpi-label { display: block; }
+  .pl-kpi-label .pl-dot { display: inline-block; margin-right: 6px; vertical-align: 1px; }
+  @media (max-width: 640px) {
+    .pl-table.pl-combined { min-width: 0; }
+    .pl-fold-meta { flex-basis: 100%; }
+    .pl-stack .pl-tagline { justify-content: flex-end; }
+    .pl-combined td.pl-num { align-items: center; }
+    .pl-combined td.pl-num > .pl-amt { margin-left: auto; }
+    .pl-combined td.pl-num { flex-wrap: wrap; }
+    .pl-combined .pl-tagline { flex-basis: 100%; }
+    .pl-stack tr.pl-subtotal { border: 0; padding-block: 0; margin-bottom: 0; background: transparent; }
+    /* 휴대폰: 요약 카드 2열, 월별 표는 한 달을 두 줄 카드로 */
+    .pl-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pl-kpi { padding: var(--cds-pad-sm) var(--cds-pad-md); }
+    .pl .pl-kpi-value { font-size: 20px; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 12px; row-gap: 2px; padding: 8px 12px; margin-bottom: 6px; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td { display: block; padding: 0; border: 0; margin: 0; text-align: left; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td::before { display: block; max-width: none; font-size: 11px; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td:nth-child(1) { order: 1; font-weight: 700; border-bottom: 0; padding-bottom: 0; align-self: center; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td:nth-child(1)::before { content: none; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td:nth-child(4) { order: 2; text-align: right; font-size: var(--cds-font-size-heading); }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td:nth-child(4)::before { content: none; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td:nth-child(2) { order: 3; padding-top: 6px; border-top: 1px solid var(--color-border-line); }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td:nth-child(3) { order: 4; padding-top: 6px; border-top: 1px solid var(--color-border-line); }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) td:nth-child(5) { display: none; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) .pl-amt { margin: 0; }
+    .pl-combined tr:not(.pl-total):not(.pl-subtotal) .pl-tagline { justify-content: flex-start; }
+  }
 </style>
 <script src="d3.min.js"></script>
 <script>
@@ -348,7 +417,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   <header class="pl-head" id="top">
     <span class="pl-eyebrow">육아휴직 · 대체인력 · 지원금 · 6+6 부모육아휴직</span>
     <h1>육아휴직 통합 관리 대시보드</h1>
-    <p class="pl-take">만유 · 세은 탭은 부부가 6+6 부모육아휴직제로 받을 월별 육아휴직 급여와 수입을, 사업장 탭은 HR이 챙길 일정과 고용노동부 안내 기준 사업장 지원금(우선지원대상기업 · 30인 미만)을 보여 줍니다. 두 탭은 휴직 개시일·종료일·복직 예정일을 함께 씁니다.</p>
+    <p class="pl-take">만유 · 세은 탭은 부부가 받을 월별 수입을, 사업장 탭은 회사가 챙길 일정과 지원금을 보여 줍니다.</p>
   </header>
 
   <div class="pl-pagetabs" role="tablist" aria-label="보기 선택">
@@ -358,11 +427,33 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 
   <!-- ===================== 사업장 ===================== -->
   <section class="pl-page" id="employer" data-page="employer" hidden>
-    <section class="pl-card pl-settings" id="employer-settings">
-      <div class="pl-card-head">
-        <h2>일정 · 지원 방식 설정</h2>
-        <p class="pl-note">휴직 개시일을 바꾸면 나머지 날짜도 같은 간격만큼 함께 움직이고, 휴직 종료일을 바꾸면 복직 예정일이 그다음 날로 맞춰집니다. 지원금은 30인 미만 사업장 기준으로만 계산합니다.</p>
+    <section class="pl-kpis" aria-label="사업장 핵심 요약">
+      <div class="pl-card pl-kpi pl-r-worker">
+        <span class="pl-kpi-label"><i class="pl-dot"></i>육아휴직 시작일</span>
+        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="LS">—</b>
+        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="LE">—</span>까지 · <span data-draw="months" data-of="leave">—</span>개월</span>
       </div>
+      <div class="pl-card pl-kpi pl-r-substitute pl-only-sub">
+        <span class="pl-kpi-label"><i class="pl-dot"></i>인수인계 시작일 (대체인력 입사)</span>
+        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="HS">—</b>
+        <span class="pl-kpi-sub">휴직 전 인수인계 <span data-draw="anchor-date" data-anchor="HE">—</span>까지</span>
+      </div>
+      <div class="pl-card pl-kpi pl-kpi-benefit pl-r-employer">
+        <span class="pl-kpi-label"><i class="pl-dot"></i>예상 지원 혜택 · <span data-draw="scn-name">—</span></span>
+        <b class="pl-kpi-value"><span data-draw="benefit-total" data-source="benefits">—</span><small>만원</small></b>
+        <span class="pl-kpi-sub">우선지원대상기업 · 30인 미만 기준 추정. 아래 시나리오 비교를 함께 보세요.</span>
+      </div>
+      <div class="pl-card pl-kpi pl-r-worker">
+        <span class="pl-kpi-label"><i class="pl-dot"></i>복직 예정일</span>
+        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="RT">—</b>
+        <span class="pl-kpi-sub">복직 후 6개월 계속 고용해야 육아휴직 지원금 잔여 50% 신청 가능</span>
+      </div>
+    </section>
+    <ul class="pl-warns pl-warns-top" data-draw="warnings" data-scope="employer" aria-live="polite"></ul>
+
+    <details class="pl-card pl-settings pl-fold" id="employer-settings">
+      <summary class="pl-fold-sum"><span class="pl-fold-title">설정 · 날짜와 지원 방식 바꾸기</span><span class="pl-fold-meta" data-draw="set-sum" data-scope="employer">—</span><span class="pl-fold-cue" aria-hidden="true"></span></summary>
+      <p class="pl-note">휴직 개시일을 바꾸면 나머지 날짜도 같은 간격만큼 함께 움직이고, 휴직 종료일을 바꾸면 복직 예정일이 그다음 날로 맞춰집니다. 지원금은 30인 미만 사업장 기준으로만 계산합니다.</p>
       <div class="pl-fields">
         <div class="pl-field pl-r-worker">
           <label for="pl-e-ls"><i class="pl-dot"></i>육아휴직 개시일</label>
@@ -401,48 +492,62 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       </div>
       <label class="pl-check" for="pl-e-male"><input id="pl-e-male" class="pl-bool" data-param="male" type="checkbox">휴직자가 남성이고, 사업장의 1~3번째 남성 육아휴직 사례 (월 10만원 추가)</label>
       <label class="pl-check pl-only-sub" for="pl-e-ph"><input id="pl-e-ph" class="pl-bool" data-param="ph" type="checkbox">복직 후 1개월 인수인계 운영 (대체인력 계약을 복직 후 1개월까지 연장)</label>
-      <ul class="pl-warns" data-draw="warnings" data-scope="employer" aria-live="polite"></ul>
       <div class="pl-settings-foot">
         <p class="pl-note">여기서 바꾼 값은 이 기기 브라우저에만 저장되고, 다른 사람에게는 보이지 않습니다.</p>
         <button type="button" class="pl-btn pl-reset">기본값으로 되돌리기</button>
       </div>
-    </section>
+    </details>
 
-    <section class="pl-kpis" aria-label="사업장 핵심 요약">
-      <div class="pl-card pl-kpi pl-r-worker">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>육아휴직 시작일</span>
-        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="LS">—</b>
-        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="LE">—</span>까지 · <span data-draw="months" data-of="leave">—</span>개월</span>
-      </div>
-      <div class="pl-card pl-kpi pl-r-substitute pl-only-sub">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>인수인계 시작일 (대체인력 입사)</span>
-        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="HS">—</b>
-        <span class="pl-kpi-sub">휴직 전 인수인계 <span data-draw="anchor-date" data-anchor="HE">—</span>까지</span>
-      </div>
-      <div class="pl-card pl-kpi pl-kpi-benefit pl-r-employer">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>예상 지원 혜택 · <span data-draw="scn-name">—</span></span>
-        <b class="pl-kpi-value"><span data-draw="benefit-total" data-source="benefits">—</span><small>만원</small></b>
-        <span class="pl-kpi-sub">우선지원대상기업 · 30인 미만 기준 추정. 아래 시나리오 비교를 함께 보세요.</span>
-      </div>
-      <div class="pl-card pl-kpi pl-r-worker">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>복직 예정일</span>
-        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="RT">—</b>
-        <span class="pl-kpi-sub">복직 후 6개월 계속 고용해야 육아휴직 지원금 잔여 50% 신청 가능</span>
-      </div>
-    </section>
-
-    <section class="pl-card" id="employer-milestones">
+    <section class="pl-card" id="benefits">
       <div class="pl-card-head">
-        <h2>주요 마일스톤</h2>
-        <p class="pl-note">오늘 날짜 기준으로 남은 일수를 표시합니다. 점 색은 해당 일정의 주체입니다.</p>
+        <h2>예상 지원금 · 방식별 비교</h2>
+        <p class="pl-note">우선지원대상기업 · 30인 미만 기준 추정치입니다. 행을 누르면 그 방식으로 바뀝니다.</p>
       </div>
-      <ol class="pl-ms-list" data-draw="milestones" data-tab="employer" data-source="milestones"></ol>
+      <div class="pl-tablewrap">
+        <table class="pl-table pl-stack">
+          <thead>
+            <tr>
+              <th>지원 방식</th>
+              <th>구성</th>
+              <th class="pl-num">예상 합계(만원)</th>
+            </tr>
+          </thead>
+          <tbody data-draw="scn-compare" data-source="benefits"></tbody>
+        </table>
+      </div>
+      <details class="pl-more">
+        <summary>세부 산정 보기 · <span data-draw="scn-name">—</span></summary>
+        <div class="pl-more-body">
+      <div class="pl-tablewrap">
+        <table class="pl-table pl-stack">
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th class="pl-num">월 최대(만원)</th>
+              <th class="pl-num">적용 월액(만원)</th>
+              <th class="pl-num">개월</th>
+              <th class="pl-num">소계(만원)</th>
+              <th>지급 방식</th>
+              <th>근거</th>
+            </tr>
+          </thead>
+          <tbody data-draw="benefits-body" data-source="benefits"></tbody>
+        </table>
+      </div>
+        </div>
+      </details>
+      <details class="pl-more">
+        <summary>고용노동부 일생활균형 안내 기준</summary>
+        <div class="pl-more-body">        <p>세 지원금 모두 우선지원대상기업 사업주만 받을 수 있습니다. 대체인력 지원금은 휴직 개시 2개월 전 이후 새로 채용해 30일 이상 계속 고용한 경우에 월 최대 140만원(대체인력 임금의 80% 한도)이며, 2026.1.1 이후 채용분은 3개월마다 전액 신청합니다. 휴직 전 최대 2개월, 복직 후 최대 1개월 인수인계 기간도 포함됩니다.</p>
+        <p><b>육아휴직 지원금은 지금도 50%를 3개월마다, 나머지 50%를 복직 후 6개월 이상 계속 고용한 뒤 한꺼번에 신청합니다.</b> 특례를 받으면 대체인력 지원금은 전체 기간 중복 지원이 제한됩니다. 모든 지원금은 휴직 종료일부터 12개월 안에 신청해야 합니다.</p>
+        <p>30인 기준은 "30인 미만"이라, 피보험자가 정확히 30명이면 30인 이상 기준(대체인력 130만원, 업무분담 40만원)이 적용됩니다. 업무분담 지원금과 대체인력 지원금을 같은 휴직에 함께 받을 수 있는지는 안내 페이지에 나와 있지 않아 택일 시나리오로 비교했습니다.</p></div>
+      </details>
     </section>
 
     <section class="pl-card" id="timeline">
       <div class="pl-card-head">
-        <h2>통합 타임라인</h2>
-        <p class="pl-note">선택한 지원 방식에 맞는 업무만 표시합니다. 업무 이름이나 막대에 마우스를 올리거나 탭하면 비고가 보입니다.</p>
+        <h2>업무 일정</h2>
+        <p class="pl-note">업무를 누르거나 마우스를 올리면 필요 서류와 준비사항이 보입니다.</p>
       </div>
       <div class="pl-toolbar">
         <div class="pl-tabs" role="group" aria-label="주체별 보기">
@@ -463,69 +568,9 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       <div class="pl-gantt" id="gantt" data-draw="gantt" data-roles="employer,worker,substitute" data-filter="role" data-group="phase" data-bands="LS:LE:worker:육아휴직 기간" data-source="tasks"></div>
     </section>
 
-    <section class="pl-roles" aria-label="주체별 업무">
-      <article class="pl-card pl-role pl-r-worker" data-role="worker">
-        <div class="pl-role-head"><i class="pl-dot"></i><h3>만유 (휴직자)</h3></div>
-        <p class="pl-role-desc">신청서 제출, 휴직 개시, 급여 신청, 복직</p>
-        <ol class="pl-role-list" data-draw="role-list" data-role="worker" data-source="tasks"></ol>
-      </article>
-      <article class="pl-card pl-role pl-r-employer" data-role="employer">
-        <div class="pl-role-head"><i class="pl-dot"></i><h3>사업장 (HR/행정)</h3></div>
-        <p class="pl-role-desc">채용 또는 업무분담, 승인, 4대보험·고용24 신고, 지원금 신청</p>
-        <ol class="pl-role-list" data-draw="role-list" data-role="employer" data-source="tasks"></ol>
-      </article>
-      <article class="pl-card pl-role pl-r-substitute pl-only-sub" data-role="substitute">
-        <div class="pl-role-head"><i class="pl-dot"></i><h3>대체인력</h3></div>
-        <p class="pl-role-desc">입사, 인수인계, 휴직 기간 전담 근무, 계약 종료</p>
-        <ol class="pl-role-list" data-draw="role-list" data-role="substitute" data-source="tasks"></ol>
-      </article>
-    </section>
-
-    <section class="pl-card" id="benefits">
-      <div class="pl-card-head">
-        <h2>사업장 지원금 · 시나리오 비교</h2>
-        <p class="pl-note">우선지원대상기업 · 30인 미만 기준, 적용 월액 × 개월 수로 계산한 추정치입니다. 개월 수는 역(달력)으로 세고 남은 일수는 일할했습니다. 행을 누르면 그 지원 방식으로 바뀝니다.</p>
-      </div>
-      <div class="pl-tablewrap">
-        <table class="pl-table pl-stack">
-          <thead>
-            <tr>
-              <th>지원 방식</th>
-              <th>구성</th>
-              <th class="pl-num">예상 합계(만원)</th>
-            </tr>
-          </thead>
-          <tbody data-draw="scn-compare" data-source="benefits"></tbody>
-        </table>
-      </div>
-      <h3 class="pl-sec-title">선택한 방식의 세부 산정 · <span data-draw="scn-name">—</span></h3>
-      <div class="pl-tablewrap">
-        <table class="pl-table pl-stack">
-          <thead>
-            <tr>
-              <th>항목</th>
-              <th class="pl-num">월 최대(만원)</th>
-              <th class="pl-num">적용 월액(만원)</th>
-              <th class="pl-num">개월</th>
-              <th class="pl-num">소계(만원)</th>
-              <th>지급 방식</th>
-              <th>근거</th>
-            </tr>
-          </thead>
-          <tbody data-draw="benefits-body" data-source="benefits"></tbody>
-        </table>
-      </div>
-      <div class="pl-notice" role="note">
-        <strong>고용노동부 일생활균형 안내 기준</strong>
-        <p>세 지원금 모두 우선지원대상기업 사업주만 받을 수 있습니다. 대체인력 지원금은 휴직 개시 2개월 전 이후 새로 채용해 30일 이상 계속 고용한 경우에 월 최대 140만원(대체인력 임금의 80% 한도)이며, 2026.1.1 이후 채용분은 3개월마다 전액 신청합니다. 휴직 전 최대 2개월, 복직 후 최대 1개월 인수인계 기간도 포함됩니다.</p>
-        <p><b>육아휴직 지원금은 지금도 50%를 3개월마다, 나머지 50%를 복직 후 6개월 이상 계속 고용한 뒤 한꺼번에 신청합니다.</b> 특례를 받으면 대체인력 지원금은 전체 기간 중복 지원이 제한됩니다. 모든 지원금은 휴직 종료일부터 12개월 안에 신청해야 합니다.</p>
-        <p>30인 기준은 "30인 미만"이라, 피보험자가 정확히 30명이면 30인 이상 기준(대체인력 130만원, 업무분담 40만원)이 적용됩니다. 업무분담 지원금과 대체인력 지원금을 같은 휴직에 함께 받을 수 있는지는 안내 페이지에 나와 있지 않아 택일 시나리오로 비교했습니다.</p>
-      </div>
-    </section>
-
     <section class="pl-card" id="checklist">
       <div class="pl-card-head">
-        <h2>신청 전 확인 체크리스트</h2>
+        <h2>신청 전 체크리스트</h2>
         <p class="pl-note">고용노동부 일생활균형 안내(2026.11.06 열람) 기준입니다. 선택한 지원 방식에 맞는 항목만 보입니다. 체크 표시는 이 화면을 보는 사람에게만 저장됩니다.</p>
         <p class="pl-ck-progress"><span data-draw="ck-progress">—</span></p>
       </div>
@@ -583,15 +628,43 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
         </div>
       </div>
     </section>
+
+
+
+
+
+
   </section>
 
   <!-- ===================== 근로자 ===================== -->
   <section class="pl-page" id="worker" data-page="worker">
-    <section class="pl-card pl-settings" id="worker-settings">
-      <div class="pl-card-head">
-        <h2>부부 육아휴직 설정 (6+6 부모육아휴직제)</h2>
-        <p class="pl-note"><b>금액은 모두 예시값입니다.</b> 통상임금, 월 급여, 추가 수입, 자녀 출생일을 직접 입력하면 다시 계산됩니다. 만유 휴직 날짜는 사업장 탭과 같은 값을 씁니다.</p>
+    <section class="pl-kpis" aria-label="근로자 핵심 요약">
+      <div class="pl-card pl-kpi pl-r-worker">
+        <span class="pl-kpi-label"><i class="pl-dot"></i>만유 휴직</span>
+        <b class="pl-kpi-value"><span data-draw="months" data-of="leave">—</span><small>개월</small></b>
+        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="LS">—</span> ~ <span data-draw="anchor-date" data-anchor="LE">—</span></span>
       </div>
+      <div class="pl-card pl-kpi pl-r-spouse">
+        <span class="pl-kpi-label"><i class="pl-dot"></i>세은 휴직</span>
+        <b class="pl-kpi-value"><span data-draw="months" data-of="spouse">—</span><small>개월</small></b>
+        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="SLS">—</span> ~ <span data-draw="anchor-date" data-anchor="SLE">—</span></span>
+      </div>
+      <div class="pl-card pl-kpi pl-r-worker">
+        <span class="pl-kpi-label"><i class="pl-dot"></i>부부 예상 수령 합계</span>
+        <b class="pl-kpi-value"><span data-draw="pay-total" data-who="both" data-source="pay_rules">—</span><small>원</small></b>
+        <span class="pl-kpi-sub">만유 <span data-draw="pay-total" data-who="me" data-source="pay_rules">—</span>원 + 세은 <span data-draw="pay-total" data-who="spouse" data-source="pay_rules">—</span>원</span>
+      </div>
+      <div class="pl-card pl-kpi">
+        <span class="pl-kpi-label">6+6 부모육아휴직제</span>
+        <b class="pl-kpi-value" data-draw="six-label">—</b>
+        <span class="pl-kpi-sub" data-draw="six-detail">—</span>
+      </div>
+    </section>
+    <ul class="pl-warns pl-warns-top" data-draw="warnings" data-scope="worker" aria-live="polite"></ul>
+
+    <details class="pl-card pl-settings pl-fold" id="worker-settings">
+      <summary class="pl-fold-sum"><span class="pl-fold-title">설정 · 날짜와 금액 바꾸기</span><span class="pl-fold-meta" data-draw="set-sum" data-scope="worker">—</span><span class="pl-fold-cue" aria-hidden="true"></span></summary>
+      <p class="pl-note"><b>금액은 모두 예시값입니다.</b> 통상임금, 월 급여, 추가 수입, 자녀 출생일을 직접 입력하면 다시 계산됩니다. 만유 휴직 날짜는 사업장 탭과 같은 값을 씁니다.</p>
       <div class="pl-fields">
         <p class="pl-group-title">만유 (근로자)</p>
         <div class="pl-field pl-r-worker">
@@ -658,48 +731,45 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
           <label class="pl-check" for="pl-w-p66"><input id="pl-w-p66" class="pl-bool" data-param="p66" type="checkbox">6+6 부모육아휴직제 적용</label>
         </div>
       </div>
-      <ul class="pl-warns" data-draw="warnings" data-scope="worker" aria-live="polite"></ul>
       <div class="pl-settings-foot">
         <p class="pl-note">여기서 바꾼 값은 이 기기 브라우저에만 저장되고, 다른 사람에게는 보이지 않습니다.</p>
         <button type="button" class="pl-btn pl-reset">기본값으로 되돌리기</button>
       </div>
-    </section>
+    </details>
 
-    <section class="pl-kpis" aria-label="근로자 핵심 요약">
-      <div class="pl-card pl-kpi pl-r-worker">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>만유 휴직</span>
-        <b class="pl-kpi-value"><span data-draw="months" data-of="leave">—</span><small>개월</small></b>
-        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="LS">—</span> ~ <span data-draw="anchor-date" data-anchor="LE">—</span></span>
-      </div>
-      <div class="pl-card pl-kpi pl-r-spouse">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>세은 휴직</span>
-        <b class="pl-kpi-value"><span data-draw="months" data-of="spouse">—</span><small>개월</small></b>
-        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="SLS">—</span> ~ <span data-draw="anchor-date" data-anchor="SLE">—</span></span>
-      </div>
-      <div class="pl-card pl-kpi pl-r-worker">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>부부 예상 수령 합계</span>
-        <b class="pl-kpi-value"><span data-draw="pay-total" data-who="both" data-source="pay_rules">—</span><small>원</small></b>
-        <span class="pl-kpi-sub">만유 <span data-draw="pay-total" data-who="me" data-source="pay_rules">—</span>원 + 세은 <span data-draw="pay-total" data-who="spouse" data-source="pay_rules">—</span>원</span>
-      </div>
-      <div class="pl-card pl-kpi">
-        <span class="pl-kpi-label">6+6 부모육아휴직제</span>
-        <b class="pl-kpi-value" data-draw="six-label">—</b>
-        <span class="pl-kpi-sub" data-draw="six-detail">—</span>
-      </div>
-    </section>
-
-    <section class="pl-card" id="worker-milestones">
+    <section class="pl-card" id="pay">
       <div class="pl-card-head">
-        <h2>부부 마일스톤</h2>
-        <p class="pl-note">오늘 날짜 기준으로 남은 일수를 표시합니다.</p>
+        <h2>부부 월별 수입 · <span data-draw="pay-range">—</span></h2>
+        <p class="pl-note">휴직 중에는 육아휴직 급여, 일하는 기간에는 월 급여, 여기에 추가 수입을 더한 금액입니다.</p>
       </div>
-      <ol class="pl-ms-list" data-draw="milestones" data-tab="worker" data-source="milestones"></ol>
+      <div class="pl-tablewrap">
+        <table class="pl-table pl-combined pl-stack">
+          <thead>
+            <tr>
+              <th>월</th>
+              <th class="pl-num pl-r-worker">만유(원)</th>
+              <th class="pl-num pl-r-spouse">세은(원)</th>
+              <th class="pl-num">부부 합계(원)</th>
+              <th class="pl-num">누적(원)</th>
+            </tr>
+          </thead>
+          <tbody data-draw="pay-combined" data-source="pay_rules"></tbody>
+        </table>
+      </div>
+      <details class="pl-more">
+        <summary>계산 방법과 주의사항</summary>
+        <div class="pl-more-body">
+          <p>육아휴직 급여는 각자 휴직 시작일부터 한 달 단위 회차로 계산합니다. 통상임금 × 지급률에 회차별 월 상한과 하한(70만원)을 적용하고, 한 달이 다 차지 않는 회차는 일수 비율로 나눴습니다. 휴직하지 않은 날은 설정한 월 급여를 그 달 일수 비율로 넣었습니다.</p>
+          <p>6+6(부모함께육아휴직제): 자녀 생후 18개월 이내에 부모 모두 휴직하면 첫 6개월 상한이 250 · 250 · 300 · 350 · 400 · 450만원(통상임금 100%), 7개월차부터는 일반 기준(80%, 상한 160만원)입니다. 5개월차 400만원은 요청에 따라 적용한 값이고, 고용노동부 일생활균형 안내 페이지에는 350만원으로 적혀 있으니 고용센터(1350)에서 확인하세요. 하한 70만원은 그 페이지에 없고 다른 자료를 따랐습니다.</p>
+          <p>휴직 중 회사에서 금품을 받으면 그 달 금품과 육아휴직 급여의 합이 통상임금을 넘는 만큼 급여가 줄어듭니다. 만유 추가 수입이 회사 지급분이라면 해당되며, 이 표는 감액을 반영하지 않았습니다.</p>
+        </div>
+      </details>
     </section>
 
     <section class="pl-card" id="couple-timeline">
       <div class="pl-card-head">
-        <h2>부부 육아휴직 타임라인</h2>
-        <p class="pl-note">만유와 세은의 휴직 기간과 신청 일정입니다.</p>
+        <h2>부부 일정</h2>
+        <p class="pl-note">업무를 누르거나 마우스를 올리면 필요 서류, 준비사항, 신청 기한이 보입니다.</p>
       </div>
       <div class="pl-legend" aria-label="범례">
         <span class="pl-r-worker"><i class="pl-dot"></i>만유</span>
@@ -711,57 +781,10 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       <div class="pl-gantt" id="couple-gantt" data-draw="gantt" data-roles="worker,spouse" data-group="role" data-bands="LS:LE:worker:만유 휴직,SLS:SLE:spouse:세은 휴직" data-source="tasks"></div>
     </section>
 
-    <section class="pl-card" id="pay">
-      <div class="pl-card-head">
-        <h2>월별 육아휴직 급여 (예상)</h2>
-        <p class="pl-note">각자 휴직 시작일부터 한 달 단위로 나눈 회차별 예상 수령액입니다. 통상임금 × 지급률에 회차별 월 상한과 하한(70만원)을 적용하고, 한 달이 다 차지 않는 회차는 일수 비율로 나눴습니다. 신청 기간은 회차가 끝난 다음 날부터 그다음 달 말일까지로 표시했습니다(해당 월 휴직분은 다음 달 말일까지 신청).</p>
-      </div>
-      <div class="pl-pays">
-        <div class="pl-card-head">
-          <h3 class="pl-sec-title pl-r-worker"><i class="pl-dot"></i> 만유</h3>
-          <div class="pl-pay-sum" data-draw="pay-sum" data-who="me" data-source="pay_rules"></div>
-        </div>
-        <div class="pl-card-head">
-          <h3 class="pl-sec-title pl-r-spouse"><i class="pl-dot"></i> 세은</h3>
-          <div class="pl-pay-sum" data-draw="pay-sum" data-who="spouse" data-source="pay_rules"></div>
-        </div>
-      </div>
-      <h3 class="pl-sec-title">부부 월별 수입 (육아휴직 급여 + 근무 기간 월 급여 + 추가 수입) · <span data-draw="pay-range">—</span></h3>
-      <p class="pl-note">두 사람의 수입을 같은 기준(달력 월)으로 합쳤습니다. 육아휴직 중인 날은 육아휴직 급여, 휴직하지 않은 날은 각자의 월 급여(설정 칸)를 그 달 일수 비율로 넣고, 추가 수입을 더했습니다. 회차가 두 달에 걸치면 일수 비율로 나눴고, 내역 칸의 날짜는 그 회차의 신청 기한입니다.</p>
-      <p class="pl-note"><b>확인 필요:</b> 만유 추가 수입이 회사에서 휴직을 이유로 받는 금품이라면, 고용노동부 안내에 따라 그 달 금품과 육아휴직 급여의 합이 통상임금을 넘는 만큼 육아휴직 급여가 줄어듭니다. 이 표는 감액을 반영하지 않았습니다.</p>
-      <div class="pl-tablewrap">
-        <table class="pl-table pl-combined pl-stack">
-          <thead>
-            <tr>
-              <th>월</th>
-              <th class="pl-r-worker">만유 내역</th>
-              <th class="pl-num pl-r-worker">만유(원)</th>
-              <th class="pl-r-spouse">세은 내역</th>
-              <th class="pl-num pl-r-spouse">세은(원)</th>
-              <th class="pl-num">부부 월 합계(원)</th>
-              <th class="pl-num">부부 누적 합계(원)</th>
-            </tr>
-          </thead>
-          <tbody data-draw="pay-combined" data-source="pay_rules"></tbody>
-        </table>
-      </div>
-      <div class="pl-notice" role="note">
-        <strong>부모함께육아휴직제(6+6) 기준</strong>
-        <p>자녀 생후 18개월 이내에 부모가 모두(동시 또는 순차) 육아휴직을 쓰면 첫 6개월 상한이 1개월 250 · 2개월 250 · 3개월 300 · 4개월 350 · 5개월 400 · 6개월 450만원으로 오릅니다(통상임금 100%). 7개월차부터는 일반 기준(80%, 상한 160만원)입니다.</p>
-        <p>5개월차 상한은 요청에 따라 400만원을 적용했습니다. 고용노동부 일생활균형 안내 페이지에는 350만원으로 적혀 있고 다른 자료 다수는 400만원이라, 확정 전에 고용센터(1350)에서 확인하세요. 하한 70만원은 이 페이지에 없고 다른 자료를 따랐습니다. 휴직 중 회사에서 금품을 받아 급여와 합한 금액이 통상임금을 넘으면 넘는 만큼 급여가 줄어듭니다.</p>
-      </div>
-    </section>
 
-    <section class="pl-roles" aria-label="근로자 업무">
-      <article class="pl-card pl-role pl-r-worker" data-role="worker">
-        <div class="pl-role-head"><i class="pl-dot"></i><h3>만유가 할 일</h3></div>
-        <ol class="pl-role-list" data-draw="role-list" data-role="worker" data-source="tasks"></ol>
-      </article>
-      <article class="pl-card pl-role pl-r-spouse" data-role="spouse">
-        <div class="pl-role-head"><i class="pl-dot"></i><h3>세은이 할 일</h3></div>
-        <ol class="pl-role-list" data-draw="role-list" data-role="spouse" data-source="tasks"></ol>
-      </article>
-    </section>
+
+
+
   </section>
 
   <details class="pl-details" id="sources">
@@ -1003,6 +1026,13 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   dash.draw('anchor-date', (el) => { el.textContent = fmtD(anchors()[el.dataset.anchor]); });
   dash.draw('months', (el) => { const v = monthsOf(anchors())[el.dataset.of]; el.textContent = Number.isFinite(v) ? one(v) : '—'; });
   dash.draw('scn-name', (el) => { el.textContent = SCN[scn()].name; });
+  dash.draw('set-sum', (el) => {
+    const A = anchors();
+    const man = (n) => comma(Math.round(n / 10000)) + '만원';
+    el.textContent = el.dataset.scope === 'worker'
+      ? '만유 ' + fmtD(A.LS) + '~' + md(A.LE) + ' · 세은 ' + fmtD(A.SLS) + '~' + fmtD(A.SLE) + ' · 통상임금 ' + man(num('wage')) + ' / ' + man(num('swage'))
+      : '휴직 ' + fmtD(A.LS) + '~' + md(A.LE) + ' · ' + SCN[scn()].name;
+  });
   dash.draw('ck-progress', (el) => {
     const shown = Array.from(document.querySelectorAll('.pl-ck-in')).filter((i) => !i.closest('[hidden]'));
     const done = ckSet();
@@ -1058,7 +1088,8 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     }
     if (M.leave > 18) w.push('육아휴직은 최대 1년 6개월입니다.');
     if (el.dataset.scope === 'employer' && M.leave > 12) w.push('1년을 넘는 휴직은 부모 모두 3개월 이상 사용한 경우 등에만 가능합니다. 만유 · 세은 탭에서 세은 기간을 확인하세요.');
-    el.replaceChildren(...(w.length ? w.map((t) => mk('li', '', t)) : [mk('li', 'is-ok', '입력한 날짜에 순서 문제가 없습니다.')]));
+    el.replaceChildren(...w.map((t) => mk('li', '', t)));
+    el.hidden = !w.length;
   });
 
   /* ---------- employer subsidy ---------- */
@@ -1267,33 +1298,37 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       x2 += b.extra;
       cum += sum;
       const tr = document.createElement('tr');
-      const note = (x) => { const td = mk('td', 'pl-band'); x.notes.forEach((n) => td.append(mk('span', 'pl-pay-min', n))); return td; };
-      const money = (x) => {
-        const td = mk('td', 'pl-num', comma(x.amt));
-        const parts = [];
-        if (x.leave) parts.push('육아휴직 급여 ' + comma(x.leave));
-        if (x.pay) parts.push('월 급여 ' + comma(x.pay));
-        if (x.extra) parts.push('추가 ' + comma(x.extra));
-        if (parts.length > 1) td.append(mk('span', 'pl-pay-min', parts.join(' + ')));
+      const money = (x, who) => {
+        const td = mk('td', 'pl-num');
+        td.append(mk('span', 'pl-amt', comma(x.amt)));
+        const leaveNote = x.notes.find((n) => /개월차/.test(n));
+        let tag = '근무';
+        let cls = 'is-work';
+        if (leaveNote) {
+          const m = leaveNote.match(/^(\d+)개월차 · (\S+)/);
+          tag = '휴직 ' + (m ? m[1] + '개월차' + (m[2] === '부모함께' ? ' · 6+6' : '') : '');
+          cls = 'is-leave pl-r-' + (who === 'me' ? 'worker' : 'spouse');
+          if (x.pay) tag += ' + 근무';
+        }
+        const line = mk('span', 'pl-tagline');
+        line.append(mk('span', 'pl-tag ' + cls, tag));
+        if (x.extra) line.append(mk('span', 'pl-tag is-extra', '추가 ' + comma(Math.round(x.extra / 10000)) + '만'));
+        td.append(line);
         return td;
       };
-      const sumTd = mk('td', 'pl-num', sum ? comma(sum) : '—');
-      sumTd.style.fontWeight = '600';
-      const cumTd = mk('td', 'pl-num', comma(cum));
-      cumTd.style.fontWeight = '600';
-      tr.append(mk('td', '', key.replace('-', '.')), note(a), money(a), note(b), money(b), sumTd, cumTd);
+      const sumTd = mk('td', 'pl-num pl-strong', sum ? comma(sum) : '—');
+      const cumTd = mk('td', 'pl-num pl-muted', comma(cum));
+      tr.append(mk('td', 'pl-month', key.replace('-', '.')), money(a, 'me'), money(b, 'spouse'), sumTd, cumTd);
       rows.push(tr);
     }
-    const foot = mk('tr', 'is-band-start');
-    const cells = [mk('td', '', '총 합계'), mk('td', '', ''), mk('td', 'pl-num', comma(t1)), mk('td', '', ''), mk('td', 'pl-num', comma(t2)), mk('td', 'pl-num', comma(t1 + t2)), mk('td', 'pl-num', comma(cum))];
-    cells.forEach((c) => { c.style.fontWeight = '700'; });
-    foot.append(...cells);
+    const foot = mk('tr', 'is-band-start pl-total');
+    foot.append(mk('td', '', '총 합계'), mk('td', 'pl-num', comma(t1)), mk('td', 'pl-num', comma(t2)), mk('td', 'pl-num', comma(t1 + t2)), mk('td', '', ''));
     const sub = (label, x, y) => {
-      const tr = mk('tr', '');
-      tr.append(mk('td', 'pl-band', label), mk('td', '', ''), mk('td', 'pl-num', comma(x)), mk('td', '', ''), mk('td', 'pl-num', comma(y)), mk('td', 'pl-num', comma(x + y)), mk('td', '', ''));
+      const tr = mk('tr', 'pl-subtotal');
+      tr.append(mk('td', '', label), mk('td', 'pl-num', comma(x)), mk('td', 'pl-num', comma(y)), mk('td', 'pl-num', comma(x + y)), mk('td', '', ''));
       return tr;
     };
-    tb.replaceChildren(...rows, foot, sub('그중 육아휴직 급여', l1, l2), sub('그중 월 급여 (근무 기간)', t1 - l1 - x1, t2 - l2 - x2), sub('그중 추가 수입', x1, x2));
+    tb.replaceChildren(...rows, foot, sub('육아휴직 급여', l1, l2), sub('월 급여 (근무)', t1 - l1 - x1, t2 - l2 - x2), sub('추가 수입', x1, x2));
     labelCells(tb);
   });
 
