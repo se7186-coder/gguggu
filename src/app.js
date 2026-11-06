@@ -1,11 +1,10 @@
 // 체크리스트 — 기기별 저장 버전
-// 처음 열면 기본 목록(src/default-data.json)으로 시작합니다.
+// 처음 열면 기본 목록(docs/default-data.json)으로 시작합니다. 빌드 없이 이 파일만 고치면 됩니다.
+// 목록을 직접 편집하지 않은 기기는 기본 목록이 바뀌면 체크를 유지한 채 새 목록으로 바뀝니다.
 // 목록과 체크는 이 기기 브라우저(localStorage)에만 저장됩니다. 서버로 보내지 않습니다.
 // 다른 기기로 옮길 때는 "백업 링크"를 씁니다. 링크의 # 뒷부분에 목록과 체크가 들어 있고,
 // # 뒷부분은 웹 서버로 전송되지 않습니다.
 // 데이터 형식: { title, subtitle, owners:{m,s}, sections:[...], checks:{<항목 id>:true} }
-
-import DEFAULT_DATA from "./default-data.json";
 
 const LETTERS = "가나다라마바사아자차카타파하";
 const LS = "gguggu-checklist";
@@ -162,6 +161,9 @@ function buildEdit(root){
     root.append(s);
   });
   root.append(el("div",{class:"adds",style:"margin-top:28px"}, el("button",{type:"button",class:"add","data-act":"addSection",text:"+ 섹션 추가"})));
+  root.append(el("div",{class:"adds",style:"margin-top:28px"},
+    el("button",{type:"button",class:"ib del","data-act":"resetDefault",text:"기본 목록으로 되돌리기"}),
+    el("span",{class:"status",text:"이 기기에서 고친 목록을 버리고 사이트의 기본 목록으로 바꿉니다. 같은 항목의 체크는 유지됩니다."})));
 }
 
 /* ---------- 그리기 ---------- */
@@ -280,6 +282,24 @@ $("#list").addEventListener("click", e => {
     const loc = locate(id); const j = loc.i + (act==="up"?-1:1);
     if (j<0 || j>=loc.arr.length) return;
     [loc.arr[loc.i], loc.arr[j]] = [loc.arr[j], loc.arr[loc.i]];
+  } else if (act==="resetDefault"){
+    if (armed !== b){
+      if (armed){ armed.classList.remove("armed"); armed.textContent = armed.dataset.act==="del" ? "✕" : "기본 목록으로 되돌리기"; }
+      armed = b; b.classList.add("armed"); b.textContent = "정말 되돌릴까요? 한 번 더 누르세요";
+      clearTimeout(armTimer); armTimer = setTimeout(() => { b.classList.remove("armed"); b.textContent="기본 목록으로 되돌리기"; armed=null; }, 3500);
+      return;
+    }
+    armed = null; clearTimeout(armTimer);
+    loadDefault().then(def => {
+      if (!def){ setStatus("기본 목록을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요."); return; }
+      const ids = new Set(); def.sections.forEach(s => s.groups.forEach(g => g.items.forEach(it => { ids.add(it.id); (it.kids||[]).forEach(k => ids.add(k.id)); })));
+      const keep = {}; Object.keys(docData.checks||{}).forEach(k => { if (ids.has(k)) keep[k] = true; });
+      adopt(def, keep); persist(); setStatus("기본 목록으로 되돌렸습니다.");
+      editing = false; $("#editBtn").setAttribute("aria-pressed","false"); $("#editBtn").textContent = "편집";
+      document.querySelectorAll("#filters .pill").forEach(p => p.disabled = false); $("#resetBox").hidden = false;
+      build();
+    });
+    return;
   } else if (act==="del"){
     if (armed !== b){
       if (armed){ armed.classList.remove("armed"); armed.textContent="✕"; }
@@ -354,15 +374,49 @@ async function checkHash(){
   $("#importBox").hidden = false;
 }
 $("#importYes").addEventListener("click", () => {
-  docData = pendingImport; pendingImport = null; docData.checks = docData.checks || {};
+  docData = pendingImport; pendingImport = null; docData.checks = docData.checks || {}; delete docData.base; docData.base = "imported";
   persist(); $("#importBox").hidden = true; history.replaceState(null, "", location.pathname);
   editing = false; build();
 });
 $("#importNo").addEventListener("click", () => { pendingImport = null; $("#importBox").hidden = true; history.replaceState(null, "", location.pathname); });
 
-const firstVisit = !docData;
-if (firstVisit){ docData = clone(DEFAULT_DATA); docData.checks = {}; persist(); }
-build();
-setStatus(firstVisit ? "기본 목록으로 시작했습니다. 체크는 이 기기에만 저장됩니다." : "이 기기에만 저장됩니다.");
-checkHash();
+/* ---------- 기본 목록 ---------- */
+// 구조(체크 제외)를 문자열로 만들어 해시: 기기 목록이 받은 기본 목록 그대로인지 판단
+const structStr = o => JSON.stringify({...o, checks: undefined, base: undefined});
+const hash = str => { let x = 5381; for (let i = 0; i < str.length; i++) x = ((x * 33) ^ str.charCodeAt(i)) >>> 0; return x.toString(16); };
+// 이전 버전(기본 목록이 app.js에 들어 있던 때)에서 받은 기본 목록의 해시
+const LEGACY_BASES = ["374557b8"];
+function untouched(d){
+  const h = hash(structStr(d));
+  return d.base ? d.base === h : LEGACY_BASES.includes(h);
+}
+function adopt(def, checks){
+  docData = clone(def);
+  docData.checks = checks || {};
+  docData.base = hash(structStr(docData));
+}
+async function loadDefault(){
+  try {
+    const r = await fetch("default-data.json", {cache: "no-cache"});
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    if (!d || !Array.isArray(d.sections)) throw new Error("형식 오류");
+    return d;
+  } catch(e){ return null; }
+}
+
+(async () => {
+  const def = await loadDefault();
+  if (!docData){
+    if (def){ adopt(def); persist(); setStatus("기본 목록으로 시작했습니다. 체크는 이 기기에만 저장됩니다."); }
+    else { docData = { title: "체크리스트", owners: {}, sections: [], checks: {} }; setStatus("기본 목록을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해 주세요."); }
+  } else if (def && untouched(docData) && structStr(def) !== structStr({...docData, base: undefined})){
+    adopt(def, docData.checks); persist();
+    setStatus("기본 목록이 바뀌어 새 목록으로 바꿨습니다. 체크는 그대로입니다.");
+  } else {
+    setStatus("이 기기에만 저장됩니다.");
+  }
+  build();
+  checkHash();
+})();
 window.addEventListener("hashchange", checkHash);
