@@ -136,6 +136,10 @@
   .in-group label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
   .in-group input[type="date"], .in-group input[type="number"] { font: inherit; font-size: 14px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; width: 100%; box-sizing: border-box; font-variant-numeric: tabular-nums; }
   .in-group input:focus-visible { outline: 2px solid var(--c, var(--apply)); outline-offset: 1px; }
+  .in-grid { align-items: start; }
+  .in-group { align-content: start; }
+  .in-help { grid-column: 1 / -1; font-size: 12px; color: var(--muted); line-height: 1.5; font-variant-numeric: tabular-nums; }
+  .in-help b { color: var(--sub); font-weight: 600; }
   .in-group .chk { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg); cursor: pointer; }
   .in-group .chk input { width: 1rem; height: 1rem; accent-color: var(--leave); }
   .in-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
@@ -166,26 +170,24 @@
   <header>
     <p class="eyebrow">우선지원대상기업 · 30인 미만 · 육아휴직 1인</p>
     <h1>사업장 지원금 일정표</h1>
-    <p class="lead">근로자 육아휴직 기간과 대체인력 고용 기간을 입력하면 지원 기간, 금액, 신청 일자가 다시 계산됩니다. 막대나 항목을 누르면 아래에 필요 서류와 신청 일자가 보입니다.</p>
+    <p class="lead">근로자 육아휴직 기간, 대체인력 고용 기간과 월 임금을 입력하면 지원 기간, 금액, 신청 일자가 다시 계산됩니다. 막대나 항목을 누르면 아래에 필요 서류와 신청 일자가 보입니다.</p>
   </header>
 
   <section class="card inputs" aria-labelledby="in-title">
-    <h2 id="in-title">기간 입력</h2>
+    <h2 id="in-title">기간 · 임금 입력</h2>
     <div class="in-grid">
       <fieldset class="in-group" style="--c:var(--leave)">
-        <legend><i class="sw" style="background:var(--leave)"></i>근로자 육아휴직 기간</legend>
-        <label for="in-ls">시작일<input id="in-ls" type="date" data-key="ls" min="2020-01-01" max="2035-12-31"></label>
-        <label for="in-le">종료일<input id="in-le" type="date" data-key="le" min="2020-01-01" max="2035-12-31"></label>
+        <legend><i class="sw" style="background:var(--leave)"></i>근로자 육아휴직</legend>
+        <label for="in-ls">휴직 시작일<input id="in-ls" type="date" data-key="ls" min="2020-01-01" max="2035-12-31"></label>
+        <label for="in-le">휴직 종료일<input id="in-le" type="date" data-key="le" min="2020-01-01" max="2035-12-31"></label>
+        <label class="chk" for="in-male"><input id="in-male" type="checkbox" data-key="male">휴직자가 남성이고 사업장 1~3번째 사례 (남성 인센티브)</label>
       </fieldset>
       <fieldset class="in-group" style="--c:var(--sub)">
-        <legend><i class="sw" style="background:var(--sub)"></i>대체인력 고용 기간</legend>
-        <label for="in-hs">시작일<input id="in-hs" type="date" data-key="hs" min="2020-01-01" max="2035-12-31"></label>
-        <label for="in-he">종료일<input id="in-he" type="date" data-key="he" min="2020-01-01" max="2035-12-31"></label>
-      </fieldset>
-      <fieldset class="in-group" style="--c:var(--sub)">
-        <legend>대체인력 월 임금 · 남성 인센티브</legend>
-        <label for="in-wage">월 임금 (원)<input id="in-wage" type="number" data-key="wage" min="0" max="100000000" step="10000" inputmode="numeric"></label>
-        <label class="chk" for="in-male"><input id="in-male" type="checkbox" data-key="male">휴직자가 남성이고 사업장 1~3번째 사례</label>
+        <legend><i class="sw" style="background:var(--sub)"></i>대체인력</legend>
+        <label for="in-hs">고용 시작일<input id="in-hs" type="date" data-key="hs" min="2020-01-01" max="2035-12-31"></label>
+        <label for="in-he">고용 종료일<input id="in-he" type="date" data-key="he" min="2020-01-01" max="2035-12-31"></label>
+        <label for="in-wage">월 임금액 · 사업주가 지급하는 금액 (원)<input id="in-wage" type="number" data-key="wage" min="0" max="100000000" step="10000" inputmode="numeric"></label>
+        <small class="in-help" id="wage-note"></small>
       </fieldset>
     </div>
     <div class="in-foot">
@@ -256,7 +258,7 @@
   <section class="card" aria-labelledby="c-title">
     <h2 id="c-title">계산 기준과 확인할 점</h2>
     <ul class="checks">
-      <li>대체인력 지원금은 월 최대 140만원(30인 미만)이며 대체인력 임금의 80%를 넘지 못합니다. 휴직 전 인수인계는 최대 2개월, 복직 후 인수인계는 최대 1개월까지 인정됩니다.</li>
+      <li>대체인력 지원금은 월 최대 140만원(30인 미만)이며, "지급대상 기간에 대하여 사업주가 지급한 월 임금액의 100분의 80을 초과할 수 없습니다"(고용창출장려금·고용안정장려금의 신청 및 지급에 관한 규정 별표 5). 인수인계 기간에도 같게 적용됩니다. 임금액이 세전인지 세후인지는 규정에 따로 정의가 없어 확인하지 못했습니다. 휴직 전 인수인계는 최대 2개월, 복직 후 인수인계는 최대 1개월까지 인정됩니다.</li>
       <li>대체인력은 휴직 시작일 전 2개월이 되는 날 이후 새로 고용해 30일 이상 계속 고용해야 합니다. 정확히 2개월 전 날짜에 채용하면 경계일이라 포함 여부를 고용센터(1350)에 확인하세요.</li>
       <li>개월 수는 달마다 사용 일수를 그 달 일수로 나눠 더했습니다. 법령은 "역(曆)에 의해 계산하고, 1개월에 이르지 못한 남은 일수는 해당 월의 총 일수로 나누어 계산"합니다(고용보험법 시행규칙 제52조). 휴직이 달 중간에 시작하면 끝수가 조금 다를 수 있습니다.</li>
       <li>신청 시작일은 법령 문구를 따랐습니다. 휴직 전 인수인계분은 "휴직 시작 후 30일이 지난 날", 복직 후 인수인계분은 "복직 후 1개월이 지난 날", 육아휴직 지원금 잔여 50%는 "휴직이 끝난 후 6개월이 지난 날"부터입니다(고용보험법 시행규칙 제51조제2항). "지난 날"을 어느 날로 셈지는 하루 차이가 날 수 있습니다.</li>
@@ -380,6 +382,8 @@
     document.getElementById('t-leave').textContent = man(leaveTotal);
     document.getElementById('t-male').textContent = state.male ? '남성 인센티브 ' + man(c.aMale) + ' 포함 시 ' + man(leaveTotal + c.aMale) : '남성 인센티브 해당 시 +' + man(MONTHLY_MALE * (c.leaveOk ? c.mLeave : 0));
     document.getElementById('t-all').textContent = man(subTotal + leaveTotal + c.aMale);
+    const wn = document.getElementById('wage-note');
+    wn.replaceChildren(document.createTextNode('지원 월액 '), mk('b', '', man(c.monthly)), document.createTextNode(' = 월 최대 140만원과 임금 ' + won(Number(state.wage) || 0) + '원 × 80% = ' + won((Number(state.wage) || 0) * SUB_RATE) + '원 중 작은 금액. 인수인계 기간에도 같게 적용됩니다.'));
     document.getElementById('in-summary').textContent = '육아휴직 ' + one(c.mLeave) + '개월 · 대체인력 ' + one(months(c.HS, c.HE)) + '개월 · 대체인력 지원 월 ' + man(c.monthly) + (c.monthly < MONTHLY_SUB ? ' (임금 80% 한도)' : '');
 
     const w = [];
