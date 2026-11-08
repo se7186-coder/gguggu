@@ -110,6 +110,9 @@
 
   /* table */
   .tablewrap { overflow-x: auto; }
+  .ins-list { margin: 0; padding-left: 18px; white-space: normal; min-width: 220px; }
+  .ins-list li { margin: 2px 0; }
+  #insurance td { vertical-align: top; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 44rem; }
   th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--muted); white-space: nowrap; }
   td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -154,6 +157,8 @@
     .tablewrap td::before { content: attr(data-label); color: var(--muted); font-size: 12px; text-align: left; flex: none; font-weight: 400; }
     .tablewrap td:empty { display: none; }
     .tablewrap td.cat { font-size: 12px; text-align: left; }
+    #insurance td { flex-direction: column; text-align: left; gap: 2px; }
+    .ins-list { min-width: 0; }
     .tablewrap td.cat::before { content: none; }
     .detail .meta { display: grid; gap: 4px; }
   }
@@ -318,10 +323,10 @@
 
   <section class="card" id="insurance" aria-labelledby="ins-title">
     <h2 id="ins-title">4대보험 휴직·복직 처리</h2>
-    <p class="note" style="margin-bottom:10px">보험별로 휴직 때 신청하고 복직 때 되돌립니다. 신고 기한(다음 달 15일)과 서식 이름은 처음 주신 명세와 업계 안내 기준이라 각 공단에 확인하세요. 법령 근거는 국가법령정보센터 원문(2026.11.08 열람)입니다.</p>
+    <p class="note" style="margin-bottom:10px">보험별로 휴직 때 신청하고 복직 때 되돌립니다. 신고 기한(다음 달 15일)과 서식 이름은 처음 주신 명세와 업계 안내 기준이라 각 공단에 확인하세요. 각 보험의 휴직 처리는 공단마다 따로 신고합니다 (4대사회보험 정보연계센터에서 함께 처리되는지는 확인하지 못함). EDI 주소는 이 환경에서 접속해 확인하지 못했습니다. 법령 근거는 국가법령정보센터 원문(2026.11.08 열람)입니다.</p>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>보험</th><th>휴직 시</th><th>복직 시</th><th>휴직 중 보험료</th><th>제출처</th><th>근거</th></tr></thead>
+        <thead><tr><th>보험</th><th>사업장이 할 일</th><th>휴직 중 보험료</th><th>제출처</th><th>근거</th></tr></thead>
         <tbody id="ins-body"></tbody>
       </table>
     </div>
@@ -534,9 +539,11 @@
     const ib = document.getElementById('ins-body');
     if (ib) ib.replaceChildren(...INS.map((x) => {
       const tr = mk('tr', '');
-      const cells = [[x.name, 'cat'], ['휴직 ' + fmt(c.LS) + ' → ' + x.startLabel + ' (' + fmt(nm15(c.LS)) + '까지)', ''], ['복직 ' + fmt(c.RT) + ' → ' + x.endLabel + ' (' + fmt(nm15(c.RT)) + '까지)', ''], [x.fee, ''], [x.office, ''], [x.basis, '']];
-      const heads = ['보험', '휴직 시', '복직 시', '휴직 중 보험료', '제출처', '근거'];
-      cells.forEach(([v, cl], i) => { const td = mk('td', cl, v); td.dataset.label = heads[i]; tr.append(td); });
+      const heads = ['보험', '사업장이 할 일', '휴직 중 보험료', '제출처', '근거'];
+      const ol = (items) => { const o = mk('ol', 'ins-list'); items.forEach((t) => o.append(mk('li', '', t))); return o; };
+      const cells = [x.name, ol(x.todo(c)), x.fee, ol([]), x.basis];
+      x.ch.forEach(([n, href, how]) => { const li = mk('li', ''); if (href) { const a = mk('a', '', n); a.href = href; a.target = '_blank'; a.rel = 'noopener'; li.append(a); } else li.append(document.createTextNode(n)); li.append(document.createTextNode(' — ' + how)); cells[3].append(li); });
+      cells.forEach((v, i) => { const td = mk('td', i === 0 ? 'cat' : '', typeof v === 'string' ? v : ''); if (typeof v !== 'string') td.append(v); td.dataset.label = heads[i]; tr.append(td); });
       tr.style.setProperty('--c', 'var(--ins)');
       return tr;
     }));
@@ -578,7 +585,7 @@
       { name: '4대보험 휴직·복직 신고', total: '보험료 처리', color: 'var(--ins)', rows: INS.map((x) => ({
         id: x.id, name: x.name, when: x.when(c), type: 'ctx', s: c.LS, e: c.LE,
         points: [[c.LS, x.startLabel + ' ~' + md(nm15(c.LS))], [c.RT, x.endLabel + ' ~' + md(nm15(c.RT))]], due: [nm15(c.RT), '', true],
-        info: { amount: '—', apply: x.apply(c), office: x.office, docs: x.docs, prep: x.prep(c), src: x.src },
+        info: { amount: '—', apply: x.apply(c), office: x.office, todo: x.todo(c), ch: x.ch, docs: x.docs, prep: x.prep(c), src: x.src },
       })) },
       { name: '세액공제 (별도)', foldable: true, total: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : (c.taxLeave6 ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님'), color: 'var(--tax)', rows: [
         { id: 'tax', name: '육아휴직 복귀자 세액공제', when: '복직 ' + fmt(c.RT) + ' · 과세연도 ' + new Date(c.RT).getUTCFullYear() + ' · 신고 ' + fmt(c.taxFileDue) + '까지', amt: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : (c.taxLeave6 ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님'), type: 'bar', s: c.RT, e: c.taxYearEnd, soft: !(c.taxByDate && c.taxLeave6),
@@ -721,6 +728,8 @@
       Object.keys(FORM_LINKS).forEach((k) => { if (x.includes(k)) FORM_LINKS[k].forEach(([t, href]) => { const a = mk('a', '', t + ' 받기'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; li.append(a); }); });
       ul.append(li);
     }); kids.push(ul); };
+    if (r.info.todo) list('사업장이 할 일', r.info.todo);
+    if (r.info.ch) { kids.push(mk('h4', '', '제출처')); const ul = mk('ul', ''); r.info.ch.forEach(([n, href, how]) => { const li = mk('li', ''); if (href) { const a = mk('a', '', n + ' (' + href.replace('https://', '') + ')'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; li.append(a); } else li.append(document.createTextNode(n)); li.append(document.createTextNode(' — ' + how)); ul.append(li); }); kids.push(ul); }
     list('제출 서류 (' + (r.info.office || '소재지 관할 고용센터') + ')', r.info.docs);
     list('요건 · 준비사항', r.info.prep);
     kids.push(mk('p', 'src', '근거: ' + r.info.src + ' (2026.11.06 원문 열람)'));
@@ -737,27 +746,33 @@
   const LAW = '국가법령정보센터 2026.11.08 열람';
   const INS = [
     { id: 'ins-np', name: '국민연금', startLabel: '납부예외 신청', endLabel: '납부재개 신고', office: '국민연금공단',
+      todo: (c) => ['휴직 전: 휴직 중 회사가 주는 소득이 있는지 확인 (직전 기준소득월액의 50% 이상이 계속 나오면 납부예외 불가 · 국민연금공단 사업장 안내 인용, 원문 미열람)', '휴직 후 ' + fmt(nm15(c.LS)) + '까지: 납부예외 신고 (사유: 휴직)', '복직 후 ' + fmt(nm15(c.RT)) + '까지: 납부재개 신고 · 복직일이 그 달 2일 이후면 그 달부터 낼지 다음 달부터 낼지 함께 적음 (업계 안내)'],
+      ch: [['국민연금 EDI', 'https://edi.nps.or.kr', '온라인'], ['관할 국민연금공단 지사', '', '방문 · 팩스 · 우편']],
       when: (c) => '납부예외 ' + range(c.LS, c.LE),
       fee: '납부예외 신청 시 내지 않을 수 있음',
       basis: '국민연금법 제91조제1항제1호',
       apply: (c) => '휴직: ' + fmt(nm15(c.LS)) + '까지 납부예외 신청 · 복직: ' + fmt(nm15(c.RT)) + '까지 납부재개 신고 (기한은 명세·업계 안내 기준, 확인 필요)',
-      docs: ['연금보험료 납부예외 신청서 · 납부재개 신고서 (서식 이름은 업계 안내 기준, 확인 필요)', '4대사회보험 정보연계센터(EDI)로 신고 가능'],
+      docs: ['연금보험료 납부예외 신청서 · 납부재개 신고서 (서식 이름은 업계 안내 기준, 확인 필요)'],
       prep: () => ['법령: 휴직 중인 경우 그 사유가 계속되는 기간에는 연금보험료를 내지 아니할 수 있음 (제91조제1항제1호)', '납부예외 기간은 가입기간에 들어가지 않아 나중에 받을 연금이 줄 수 있음 (업계 안내, 확인 필요)', '휴직 중 보수를 지급하면 납부예외가 어려울 수 있음 (업계 안내, 확인 필요)'],
       src: '국민연금법 제91조 (2026.10.20. 시행, ' + LAW + ') · 신고 기한·서식은 업계 안내' },
     { id: 'ins-nh', name: '건강보험', startLabel: '납입고지 유예 신청', endLabel: '유예 해지 신청', office: '국민건강보험공단',
+      todo: (c) => ['휴직 후 ' + fmt(nm15(c.LS)) + '까지: 휴직자 납입고지 유예 신청 (의무 아님 · 업계 안내)', '복직 후 ' + fmt(nm15(c.RT)) + '까지: 납입고지 유예 해지 신청', '복직 후: 유예된 휴직 기간 보험료가 한꺼번에 고지됨 → 근로자 급여에서 일시 또는 나눠서 공제 (업계 안내, 분할 기준은 공단 확인)'],
+      ch: [['건강보험 EDI', 'https://edi.nhis.or.kr', '온라인'], ['관할 국민건강보험공단 지사', '', '방문 · 팩스 · 우편']],
       when: (c) => '납입고지 유예 ' + range(c.LS, c.LE),
       fee: '휴직 전 달 보수월액 기준 산정, 일부 경감 가능, 고지 유예 후 복직 때 납부',
       basis: '국민건강보험법 제70조제2항 · 제75조제1항제5호 · 제79조제5항',
       apply: (c) => '휴직: ' + fmt(nm15(c.LS)) + '까지 납입고지 유예 신청 · 복직: ' + fmt(nm15(c.RT)) + '까지 유예 해지 신청 (기한은 명세·업계 안내 기준, 확인 필요)',
-      docs: ['휴직자 등 직장가입자 보험료 납입고지 유예 신청서 · 유예 해지 신청서 (서식 이름은 업계 안내 기준, 확인 필요)', '4대사회보험 정보연계센터(EDI)로 신고 가능'],
+      docs: ['휴직자 등 직장가입자 보험료 납입고지 유예 신청서 · 유예 해지 신청서 (서식 이름은 업계 안내 기준, 확인 필요)'],
       prep: () => ['법령: 휴직자 보험료는 휴직 전 달의 보수월액을 기준으로 산정 (제70조제2항)', '법령: 휴직자는 보험료 일부를 경감할 수 있음 (제75조제1항제5호) · 경감 비율은 보건복지부 고시로 정하며 확인하지 못함', '법령: 휴직자 보험료는 휴직 사유가 끝날 때까지 납입 고지를 유예할 수 있음 (제79조제5항)', '복직 후 유예된 보험료가 고지됨 · 일괄 또는 분할 납부 방법은 공단 확인 (명세: 필요시 분할납부 신청)'],
       src: '국민건강보험법 제70조·제75조·제79조 (2026.10.8. 시행, ' + LAW + ') · 신고 기한·서식은 업계 안내' },
     { id: 'ins-ei', name: '고용보험 · 산재보험', startLabel: '휴직 신고', endLabel: '복직 신고', office: '근로복지공단',
+      todo: (c) => ['휴직 후 ' + fmt(nm15(c.LS)) + '까지: 근로자 휴직 등 신고 (휴직 사유·기간)', '휴직 중 상여금 등 보수를 주면 그 금액은 고용·산재보험료 부과 대상 (업계 안내)', '복직 후 ' + fmt(nm15(c.RT)) + '까지: 복직 신고 (휴직 종료일)', '별도: 근로자의 육아휴직 급여 신청에 필요한 육아휴직 확인서는 고용센터(고용24)에 제출 (근거 조문 미열람)'],
+      ch: [['고용·산재보험 토탈서비스', 'https://total.comwel.or.kr', '온라인'], ['관할 근로복지공단 지사', '', '방문 · 팩스 · 우편']],
       when: (c) => '휴직 기간 ' + range(c.LS, c.LE),
       fee: '보수를 지급하지 않으면 보험료 부담이 사실상 없음 (업계 안내)',
       basis: '조문 미확인 · 업계 안내 기준',
       apply: (c) => '휴직: ' + fmt(nm15(c.LS)) + '까지 휴직 신고 · 복직: ' + fmt(nm15(c.RT)) + '까지 복직 신고 (기한은 명세·업계 안내 기준, 확인 필요)',
-      docs: ['근로자 휴직 등 신고서 (서식 이름은 업계 안내 기준, 확인 필요)', '4대사회보험 정보연계센터(EDI) 또는 고용·산재보험 토탈로 신고 가능'],
+      docs: ['근로자 휴직 등 신고서 (서식 이름은 업계 안내 기준, 확인 필요)'],
       prep: () => ['보수를 지급하지 않는 휴직 기간은 보험료 부담이 사실상 없다는 업계 안내 · 근거 조문은 확인하지 못함', '휴직·복직 사실을 근로복지공단에 신고', '육아휴직 급여(고용보험)는 근로자가 따로 고용센터에 신청'],
       src: '업계 안내 (조문 미확인) · 근로복지공단에 확인 필요' },
   ];
