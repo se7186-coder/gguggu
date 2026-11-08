@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="대체인력 지원금과 육아휴직 지원금의 지원 기간, 신청 일자, 마감, 제출 서류를 보여 주는 간트차트 (30인 미만 사업장)">
+<title>사업장 지원금 일정표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+  /* Layout: 요약 한 줄 → 지원금 종류별로 묶은 간트차트(라벨 열 고정, 막대 영역 가로 스크롤) → 선택한 항목 상세 → 금액·서류 표 */
+  :root {
+    --bg: #f5f6f4;
+    --panel: #ffffff;
+    --fg: #1f2622;
+    --muted: #5d665f;
+    --line: #e2e6e1;
+    --grid: #eef1ed;
+    --sub: #d9590b;      /* 대체인력 지원금 */
+    --leave: #2f7a3a;    /* 육아휴직 지원금 */
+    --apply: #2b5c8f;    /* 신청 시점 */
+    --due: #c2362b;      /* 마감 · 오늘 */
+    --font-display: 'Gowun Batang', 'AppleMyungjo', 'Batang', serif;
+    --font-body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+    --label-w: 13.5rem;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121513; --panel: #1b1f1c; --fg: #e6eae6; --muted: #a2aba4; --line: #2c322d; --grid: #222823;
+      --sub: #ff8a3d; --leave: #6cc77a; --apply: #79a9e0; --due: #ff6b5e; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121513; --panel: #1b1f1c; --fg: #e6eae6; --muted: #a2aba4; --line: #2c322d; --grid: #222823;
+    --sub: #ff8a3d; --leave: #6cc77a; --apply: #79a9e0; --due: #ff6b5e; color-scheme: dark;
+  }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.55; }
+  .wrap { max-width: 72rem; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
+  .eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 0; }
+  h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(26px, 4vw, 34px); line-height: 1.2; margin: 4px 0 6px; text-wrap: balance; }
+  .lead { margin: 0; color: var(--muted); max-width: 62ch; }
+  .totals { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; padding: 14px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .totals div { display: grid; gap: 0; }
+  .totals span { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .totals b { font-family: var(--font-display); font-weight: 400; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .totals small { font-size: 12px; color: var(--muted); }
+  .totals .grand b { color: var(--fg); }
+  .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+  .card h2 { margin: 0 0 4px; font-size: 17px; font-weight: 600; }
+  .note { margin: 0; font-size: 12.5px; color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); margin: 12px 0 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .lg-bar { width: 18px; height: 9px; border-radius: 2px; background: var(--muted); }
+  .lg-ctx { width: 18px; height: 9px; border-radius: 2px; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--muted) 45%, transparent) 0 3px, transparent 3px 6px); border: 1px solid color-mix(in srgb, var(--muted) 50%, transparent); }
+  .lg-pt { width: 9px; height: 9px; background: var(--apply); transform: rotate(45deg); }
+  .lg-due { width: 9px; height: 9px; border: 2px solid var(--due); transform: rotate(45deg); }
+  .lg-today { width: 0; height: 12px; border-left: 2px dashed var(--due); }
+
+  /* gantt */
+  .scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; border-top: 1px solid var(--line); }
+  .gantt { --track-min: 680px; display: grid; grid-template-columns: var(--label-w) minmax(var(--track-min), 1fr); position: relative; min-width: calc(var(--label-w) + var(--track-min)); }
+  .g-label, .g-track, .g-axis-l, .g-axis, .g-group-l, .g-group-t { min-width: 0; }
+  .g-label, .g-axis-l, .g-group-l { position: sticky; left: 0; z-index: 3; background: var(--panel); border-right: 1px solid var(--line); }
+  .g-axis-l { border-bottom: 1px solid var(--line); }
+  .g-axis { position: relative; height: 34px; border-bottom: 1px solid var(--line); }
+  .tick { position: absolute; bottom: 7px; transform: translateX(-50%); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tick.year { color: var(--fg); font-weight: 600; }
+  .g-group-l, .g-group-t { padding: 14px 0 6px; }
+  .g-group-l { padding-left: 2px; padding-right: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-weight: 600; font-size: 14px; }
+  .g-group-l small { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .g-group-t { position: relative; }
+  .g-label { padding: 6px 10px 6px 2px; font-size: 13px; line-height: 1.35; cursor: pointer; display: grid; gap: 1px; }
+  .g-label .when { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .g-label .amt { font-size: 11.5px; font-weight: 600; color: var(--c); font-variant-numeric: tabular-nums; }
+  .g-track { position: relative; min-height: 50px; cursor: pointer; }
+  .row-hot { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+  .g-label.row-hot { background: color-mix(in srgb, var(--fg) 5%, var(--panel)); }
+  .g-label:focus-visible { outline: 2px solid var(--apply); outline-offset: -2px; }
+  .overlay { position: absolute; top: 0; bottom: 0; left: var(--label-w); right: 0; pointer-events: none; z-index: 1; }
+  .mline { position: absolute; top: 34px; bottom: 0; border-left: 1px solid var(--grid); }
+  .mline.year { border-left-color: color-mix(in srgb, var(--muted) 45%, transparent); }
+  .today { position: absolute; top: 34px; bottom: 0; border-left: 2px dashed var(--due); }
+  .today span { position: absolute; top: 4px; left: 4px; font-size: 11px; font-weight: 600; color: var(--due); white-space: nowrap; background: var(--panel); padding: 0 3px; border-radius: 3px; }
+  .leaveband { position: absolute; top: 34px; bottom: 0; background: color-mix(in srgb, var(--leave) 8%, transparent); border-inline: 1px dashed color-mix(in srgb, var(--leave) 45%, transparent); }
+  .leaveband span { position: absolute; top: 4px; left: 6px; font-size: 11px; color: var(--leave); white-space: nowrap; font-weight: 600; }
+  .bar { position: absolute; top: 62%; height: 14px; margin-top: -7px; border-radius: 4px; background: var(--c); z-index: 2; }
+  .bar.ctx { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 40%, transparent) 0 4px, transparent 4px 8px); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); }
+  .bar-label { display: none; position: absolute; top: 50%; transform: translateY(-50%); font-size: 11.5px; font-weight: 600; white-space: nowrap; color: var(--fg); z-index: 2; padding-left: 6px; font-variant-numeric: tabular-nums; }
+  .pt { position: absolute; top: 62%; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; transform: rotate(45deg); background: var(--apply); border: 2px solid var(--panel); border-radius: 2px; z-index: 3; box-sizing: border-box; }
+  .pt.due { background: var(--panel); border: 2.5px solid var(--due); width: 14px; height: 14px; margin: -7px 0 0 -7px; }
+  .pt.est { opacity: .55; }
+  .pt-label { position: absolute; top: 3px; transform: translateX(-50%); font-size: 11px; font-weight: 600; white-space: nowrap; color: var(--apply); z-index: 3; font-variant-numeric: tabular-nums; }
+  .pt.due + .pt-label { color: var(--due); }
+  .arrow { position: absolute; top: 62%; height: 2px; margin-top: -1px; background: color-mix(in srgb, var(--apply) 45%, transparent); z-index: 1; }
+
+  /* detail */
+  .detail { display: grid; gap: 10px; border-left: 4px solid var(--c, var(--apply)); }
+  .detail .cat { font-size: 12px; font-weight: 600; color: var(--c); margin: 0; }
+  .detail h3 { margin: 0; font-size: 17px; }
+  .detail .meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .detail .meta b { font-weight: 600; }
+  .detail h4 { margin: 4px 0 0; font-size: 13px; }
+  .detail ul { margin: 0; padding-left: 1.2em; display: grid; gap: 3px; font-size: 13.5px; }
+  .detail .src { font-size: 12px; color: var(--muted); margin: 0; }
+  .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+
+  /* table */
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 44rem; }
+  th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--muted); white-space: nowrap; }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.cat { font-weight: 600; color: var(--c); white-space: nowrap; }
+  tr.sum td { font-weight: 700; border-bottom: 0; }
+  tr.subsum td { font-weight: 600; background: color-mix(in srgb, var(--c) 6%, transparent); }
+  .checks { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 13px; }
+  .checks li::marker { color: var(--due); }
+  .sources { font-size: 12px; color: var(--muted); }
+  .sources a { color: inherit; }
+  @media (max-width: 640px) {
+    :root { --label-w: 9.5rem; }
+    .g-label { font-size: 12.5px; }
+    .totals b { font-size: 20px; }
+    .g-group-l small { flex-basis: 100%; padding-left: 18px; }
+  }
+
+  /* 입력 */
+  .inputs { display: grid; gap: 12px; }
+  .inputs h2 { margin: 0; }
+  .in-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 12px; }
+  .in-group { margin: 0; padding: 10px 12px 12px; border: 1px solid var(--line); border-radius: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+  .in-group label:has(input[type="number"]), .in-group .chk { grid-column: 1 / -1; }
+  .in-group legend { font-size: 13px; font-weight: 600; padding: 0 4px; display: flex; align-items: center; gap: 6px; }
+  .in-group label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+  .in-group input[type="date"], .in-group input[type="number"] { font: inherit; font-size: 14px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; width: 100%; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  .in-group input:focus-visible { outline: 2px solid var(--c, var(--apply)); outline-offset: 1px; }
+  .in-group .chk { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg); cursor: pointer; }
+  .in-group .chk input { width: 1rem; height: 1rem; accent-color: var(--leave); }
+  .in-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+  .in-summary { margin: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { font: inherit; font-size: 12.5px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .btn:hover { border-color: var(--muted); }
+  .btn:focus-visible { outline: 2px solid var(--apply); outline-offset: 2px; }
+  .warns { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .warns li { font-size: 13px; padding: 6px 10px; border-radius: 6px; color: var(--due); background: color-mix(in srgb, var(--due) 9%, transparent); }
+  .forms { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
+  .forms li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 8px; }
+  .f-cat { grid-column: 1; font-size: 12px; font-weight: 600; color: var(--c); }
+  .f-name { grid-column: 1; font-size: 13.5px; }
+  .f-links { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 6px; }
+  .f-links a { font-size: 12.5px; font-weight: 600; text-decoration: none; color: var(--apply); border: 1px solid color-mix(in srgb, var(--apply) 45%, transparent); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+  .f-links a:hover { background: color-mix(in srgb, var(--apply) 10%, transparent); }
+  .f-links a:focus-visible { outline: 2px solid var(--apply); outline-offset: 2px; }
+  .note a { color: var(--apply); }
+  .detail li a { font-size: 12px; margin-left: 6px; color: var(--apply); }
+  @media (max-width: 640px) { .forms li { grid-template-columns: minmax(0, 1fr); } .f-links { grid-column: 1; grid-row: auto; margin-top: 6px; } }
+  .none { position: absolute; top: 50%; left: 8px; transform: translateY(-50%); font-size: 11.5px; color: var(--muted); }
+</style>
+<style>* { box-sizing: border-box; } html, body { margin: 0; } body { font-size: 14px; } [hidden] { display: none !important; }</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">우선지원대상기업 · 30인 미만 · 육아휴직 1인</p>
+    <h1>사업장 지원금 일정표</h1>
+    <p class="lead">근로자 육아휴직 기간과 대체인력 고용 기간을 입력하면 지원 기간, 금액, 신청 일자가 다시 계산됩니다. 막대나 항목을 누르면 아래에 필요 서류와 신청 일자가 보입니다.</p>
+  </header>
+
+  <section class="card inputs" aria-labelledby="in-title">
+    <h2 id="in-title">기간 입력</h2>
+    <div class="in-grid">
+      <fieldset class="in-group" style="--c:var(--leave)">
+        <legend><i class="sw" style="background:var(--leave)"></i>근로자 육아휴직 기간</legend>
+        <label for="in-ls">시작일<input id="in-ls" type="date" data-key="ls" min="2020-01-01" max="2035-12-31"></label>
+        <label for="in-le">종료일<input id="in-le" type="date" data-key="le" min="2020-01-01" max="2035-12-31"></label>
+      </fieldset>
+      <fieldset class="in-group" style="--c:var(--sub)">
+        <legend><i class="sw" style="background:var(--sub)"></i>대체인력 고용 기간</legend>
+        <label for="in-hs">시작일<input id="in-hs" type="date" data-key="hs" min="2020-01-01" max="2035-12-31"></label>
+        <label for="in-he">종료일<input id="in-he" type="date" data-key="he" min="2020-01-01" max="2035-12-31"></label>
+      </fieldset>
+      <fieldset class="in-group" style="--c:var(--sub)">
+        <legend>대체인력 월 임금 · 남성 인센티브</legend>
+        <label for="in-wage">월 임금 (원)<input id="in-wage" type="number" data-key="wage" min="0" max="100000000" step="10000" inputmode="numeric"></label>
+        <label class="chk" for="in-male"><input id="in-male" type="checkbox" data-key="male">휴직자가 남성이고 사업장 1~3번째 사례</label>
+      </fieldset>
+    </div>
+    <div class="in-foot">
+      <p class="in-summary" id="in-summary"></p>
+      <button type="button" class="btn" id="in-reset">처음 값으로</button>
+    </div>
+    <ul class="warns" id="warns" aria-live="polite"></ul>
+  </section>
+
+  <section class="totals" aria-label="예상 지원금 합계">
+    <div><span><i class="sw" style="background:var(--sub)"></i>대체인력 지원금</span><b id="t-sub">—</b></div>
+    <div><span><i class="sw" style="background:var(--leave)"></i>육아휴직 지원금</span><b id="t-leave">—</b><small id="t-male"></small></div>
+    <div class="grand"><span>합계</span><b id="t-all">—</b></div>
+  </section>
+
+  <section class="card" aria-labelledby="g-title">
+    <h2 id="g-title">지원금 간트차트</h2>
+    <p class="note" id="g-note">지원금마다 막대(지원 대상 기간) 위에 신청 시작(◆)과 마감(◇)을 겹쳐 표시했습니다. 육아휴직 지원금과 남성 인센티브는 3개월마다 신청하는 회차를 모두 표시합니다.</p>
+    <div class="legend" aria-label="범례">
+      <span><i class="lg-bar" style="background:var(--sub)"></i>대체인력 지원 대상 기간</span>
+      <span><i class="lg-bar" style="background:var(--leave)"></i>육아휴직 지원 대상 기간</span>
+      <span><i class="lg-ctx"></i>참고 기간 (고용·의무)</span>
+      <span><i class="lg-pt"></i>신청 시작</span>
+      <span><i class="lg-due"></i>신청 마감</span>
+      <span><i class="lg-today"></i>오늘</span>
+    </div>
+    <div class="scroller">
+      <div class="gantt" id="gantt" role="list"></div>
+    </div>
+    <p class="hint">휴대폰에서는 차트를 옆으로 밀어 볼 수 있습니다.</p>
+  </section>
+
+  <section class="card detail" id="detail" aria-live="polite"></section>
+
+  <section class="card" aria-labelledby="t-title">
+    <h2 id="t-title">지원금별 금액 · 신청 일자 · 제출 서류</h2>
+    <p class="note" style="margin-bottom:10px">제출처는 모두 사업장 소재지 관할 고용센터입니다. 금액은 월 최대액 기준 추정입니다.</p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>지원금 종류</th><th>세부 항목</th><th>대상 기간</th><th class="num">계산</th><th class="num">금액</th><th>신청 일자</th><th>제출 서류</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:12px"><b>대체인력 지원금 서류</b> ① 출산육아기 고용안정장려금 지급신청서(대체인력 지원금, 별지 제26호) ② 육아휴직 실시 증명서류 사본(인사발령 문서 등) ③ 사업주 가족관계등록부 또는 주민등록등본 ④ 대체인력 근로계약서 사본 ⑤ 대체인력 월별 임금대장 사본<br>
+      <b>육아휴직 지원금 서류</b> ⑥ 출산육아기 고용안정장려금 지급신청서(육아휴직 지원금, 별지 제25호) ⑦ 육아휴직 실시 증명서류 사본 ⑧ 사업주 가족관계등록부 또는 주민등록등본</p>
+  </section>
+
+  <section class="card" id="forms" aria-labelledby="f-title">
+    <h2 id="f-title">신청서 서식 내려받기</h2>
+    <p class="note">국가법령정보센터의 「고용창출장려금·고용안정장려금의 신청 및 지급에 관한 규정」(고용노동부고시 제2026-52호, 2026.7.1. 시행) 별지 서식입니다. 누르면 국가법령정보센터에서 파일을 받습니다.</p>
+    <ul class="forms">
+      <li style="--c:var(--sub)">
+        <span class="f-cat">대체인력 지원금</span>
+        <span class="f-name">[별지 제26호] 출산육아기 고용안정장려금 지급 신청서(대체인력지원금)</span>
+        <span class="f-links"><a href="https://www.law.go.kr/LSW/flDownload.do?flSeq=168598591" target="_blank" rel="noopener">한글(HWPX)</a><a href="https://www.law.go.kr/LSW/flDownload.do?flSeq=168598597" target="_blank" rel="noopener">PDF</a></span>
+      </li>
+      <li style="--c:var(--leave)">
+        <span class="f-cat">육아휴직 지원금 · 남성 인센티브</span>
+        <span class="f-name">[별지 제25호] 출산육아기 고용안정장려금 지급 신청서(육아휴직, 육아기 근로시간 단축 지원금)</span>
+        <span class="f-links"><a href="https://www.law.go.kr/LSW/flDownload.do?flSeq=168598583" target="_blank" rel="noopener">한글(HWPX)</a><a href="https://www.law.go.kr/LSW/flDownload.do?flSeq=168598589" target="_blank" rel="noopener">PDF</a></span>
+      </li>
+    </ul>
+    <p class="note">서식이 개정되면 링크가 바뀔 수 있습니다. 열리지 않으면 <a href="https://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EA%B3%A0%EC%9A%A9%EC%B0%BD%EC%B6%9C%EC%9E%A5%EB%A0%A4%EA%B8%88%C2%B7%EA%B3%A0%EC%9A%A9%EC%95%88%EC%A0%95%EC%9E%A5%EB%A0%A4%EA%B8%88%EC%9D%98%EC%8B%A0%EC%B2%AD%EB%B0%8F%EC%A7%80%EA%B8%89%EC%97%90%EA%B4%80%ED%95%9C%EA%B7%9C%EC%A0%95" target="_blank" rel="noopener">규정 본문</a>의 별표·서식 목록에서 받으세요. 나머지 첨부 서류(인사발령 문서, 가족관계등록부, 근로계약서, 임금대장)는 사업장에서 준비하는 서류라 정해진 서식이 없습니다.</p>
+  </section>
+
+  <section class="card" aria-labelledby="c-title">
+    <h2 id="c-title">계산 기준과 확인할 점</h2>
+    <ul class="checks">
+      <li>대체인력 지원금은 월 최대 140만원(30인 미만)이며 대체인력 임금의 80%를 넘지 못합니다. 휴직 전 인수인계는 최대 2개월, 복직 후 인수인계는 최대 1개월까지 인정됩니다.</li>
+      <li>대체인력은 휴직 시작일 전 2개월이 되는 날 이후 새로 고용해 30일 이상 계속 고용해야 합니다. 정확히 2개월 전 날짜에 채용하면 경계일이라 포함 여부를 고용센터(1350)에 확인하세요.</li>
+      <li>개월 수는 달마다 사용 일수를 그 달 일수로 나눠 더했습니다. 공식 안내의 "역(曆)에 의해 산정"과 일부 끝수가 다를 수 있습니다.</li>
+      <li>3개월마다 신청하는 회차의 구분, 복직 후 인수인계분을 신청할 수 있는 첫날, 남성 인센티브의 별도 서류는 공식 안내에 없어 확인하지 못했습니다.</li>
+      <li>육아휴직 지원금은 30일 이상 부여해야 하고, 잔여 50%는 복직 후 6개월 이상 계속 고용한 뒤 신청합니다. 감원방지 기간에 다른 근로자를 고용조정으로 이직시키면 대체인력 지원금이 제한됩니다.</li>
+    </ul>
+  </section>
+
+  <p class="sources">출처: 고용노동부 일생활균형 <a href="https://www.worklife.kr/website_renew/index/employerSupport/substitute_worker_subsidy.asp" target="_blank" rel="noopener">대체인력 지원금</a> · <a href="https://www.worklife.kr/website_renew/index/employerSupport/parental_leave_reduction_subsidy.asp" target="_blank" rel="noopener">육아휴직 지원금</a> (2026.11.06 원문 열람). 실제 지급액은 고용센터 심사로 정해집니다.</p>
+</div>
+
+<script>
+(() => {
+  const DEFAULTS = { ls: '2027-02-01', le: '2027-07-31', hs: '2026-12-01', he: '2027-08-31', wage: 3000000, male: false };
+  const KEY = 'subsidy-gantt:v1';
+  const MONTHLY_SUB = 1400000;   // 대체인력 지원금 월 최대 (30인 미만)
+  const SUB_RATE = 0.8;          // 대체인력 임금 80% 한도
+  const MONTHLY_LEAVE = 300000;  // 육아휴직 지원금 월액
+  const MONTHLY_MALE = 100000;   // 남성 육아휴직 인센티브 월액
+  const PRE_MAX = 2;             // 휴직 전 인수인계 최대 개월
+  const POST_MAX = 1;            // 복직 후 인수인계 최대 개월
+
+  const DOCS_SUB = ['출산육아기 고용안정장려금 지급신청서 (대체인력 지원금, 별지 제26호)', '육아휴직 실시 증명서류 사본 (인사발령 문서 등)', '사업주 가족관계등록부 또는 주민등록등본', '대체인력 근로계약서 사본', '대체인력 월별 임금대장 사본'];
+  const DOCS_LEAVE = ['출산육아기 고용안정장려금 지급신청서 (육아휴직 지원금, 별지 제25호)', '육아휴직 실시 증명서류 사본 (인사발령 문서 등)', '사업주 가족관계등록부 또는 주민등록등본'];
+  const SRC_SUB = '고용노동부 일생활균형 · 대체인력 지원금';
+  const SRC_LEAVE = '고용노동부 일생활균형 · 육아휴직 지원금';
+  // 국가법령정보센터 별지 서식 파일 (2026.7.1. 시행본)
+  const FORM_LINKS = {
+    '별지 제26호': [['HWPX', 'https://www.law.go.kr/LSW/flDownload.do?flSeq=168598591'], ['PDF', 'https://www.law.go.kr/LSW/flDownload.do?flSeq=168598597']],
+    '별지 제25호': [['HWPX', 'https://www.law.go.kr/LSW/flDownload.do?flSeq=168598583'], ['PDF', 'https://www.law.go.kr/LSW/flDownload.do?flSeq=168598589']],
+  };
+
+  let state = Object.assign({}, DEFAULTS);
+  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && typeof s === 'object') Object.assign(state, s); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+  /* ---------- dates ---------- */
+  const DAY = 864e5;
+  const day = (s) => { const [y, m, d] = String(s).split('-').map(Number); return Date.UTC(y, m - 1, d); };
+  const iso = (t) => new Date(t).toISOString().slice(0, 10);
+  const addD = (t, n) => t + n * DAY;
+  const addM = (t, n) => { const d = new Date(t); const y = d.getUTCFullYear(), m = d.getUTCMonth() + n, dd = d.getUTCDate(); const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); return Date.UTC(y, m, Math.min(dd, last)); };
+  const monthStart = (t) => { const d = new Date(t); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1); };
+  const fmt = (t) => iso(t).replace(/-/g, '.');
+  const md = (t) => iso(t).slice(5).replace('-', '.');
+  const range = (s, e) => (e < s ? '—' : fmt(s) + ' ~ ' + (new Date(s).getUTCFullYear() === new Date(e).getUTCFullYear() ? md(e) : fmt(e)));
+  // 달마다 (사용 일수 / 그 달 일수)를 더한 개월 수
+  const months = (s, e) => {
+    if (!(e >= s)) return 0;
+    let total = 0;
+    for (let m = monthStart(s); m <= e; m = addM(m, 1)) {
+      const next = addM(m, 1);
+      const a = Math.max(s, m), b = Math.min(e, next - DAY);
+      if (b >= a) total += (Math.round((b - a) / DAY) + 1) / Math.round((next - m) / DAY);
+    }
+    return total;
+  };
+  const one = (x) => (Math.round(x * 100) / 100).toString();
+  const won = (x) => Math.round(x).toLocaleString('ko-KR');
+  const man = (x) => { const v = Math.round(x / 1000) / 10; return (Number.isInteger(v) ? v.toLocaleString('ko-KR') : v.toLocaleString('ko-KR', { maximumFractionDigits: 1 })) + '만원'; };
+
+  /* ---------- model ---------- */
+  const compute = () => {
+    const LS = day(state.ls), LE = day(state.le), HS = day(state.hs), HE = day(state.he);
+    const RT = addD(LE, 1);
+    const hireFrom = addM(LS, -2);                   // 휴직 시작 2개월 전
+    const monthly = Math.min(MONTHLY_SUB, Math.max(0, Number(state.wage) || 0) * SUB_RATE);
+    const preS = Math.max(HS, addM(LS, -PRE_MAX)), preE = Math.min(HE, addD(LS, -1));
+    const midS = Math.max(HS, LS), midE = Math.min(HE, LE);
+    const postS = RT, postE = Math.min(HE, addD(addM(RT, POST_MAX), -1));
+    const eligibleHire = HS >= hireFrom && months(HS, HE) > 0 && Math.round((HE - HS) / DAY) + 1 >= 30;
+    const mPre = eligibleHire ? months(preS, preE) : 0;
+    const mMid = eligibleHire ? months(midS, midE) : 0;
+    const mPost = eligibleHire ? months(postS, postE) : 0;
+    const mLeave = months(LS, LE);
+    const leaveOk = Math.round((LE - LS) / DAY) + 1 >= 30;
+    const firstApply = addM(monthStart(LS), 1);      // 휴직 시작 달의 다음 달 1일
+    const cycle = []; for (let t = firstApply; t <= addM(LE, 2); t = addM(t, 3)) cycle.push(t);
+    const due = addM(LE, 12);
+    const postApply = addM(LE, 1);
+    const postDue = addM(postApply, 12);
+    const rest50 = addM(RT, 6);
+    const layoffE = Math.min(addD(addM(HS, 12), -1), HE);
+    return {
+      LS, LE, HS, HE, RT, hireFrom, monthly, preS, preE, midS, midE, postS, postE, eligibleHire, leaveOk,
+      mPre, mMid, mPost, mLeave, firstApply, cycle, due, postApply, postDue, rest50, layoffE,
+      aPre: monthly * mPre, aMid: monthly * mMid, aPost: monthly * mPost,
+      aLeave: leaveOk ? MONTHLY_LEAVE * mLeave : 0, aMale: leaveOk && state.male ? MONTHLY_MALE * mLeave : 0,
+    };
+  };
+
+  /* ---------- inputs ---------- */
+  const inputs = document.querySelectorAll('[data-key]');
+  const fill = () => inputs.forEach((i) => { if (i.type === 'checkbox') i.checked = !!state[i.dataset.key]; else if (i !== document.activeElement) i.value = state[i.dataset.key]; });
+  inputs.forEach((i) => i.addEventListener('change', () => {
+    const k = i.dataset.key;
+    if (i.type === 'checkbox') state[k] = i.checked;
+    else if (i.type === 'number') { const n = Number(i.value); if (i.value === '' || !(n >= 0)) return; state[k] = Math.round(n); }
+    else { if (!i.value || !i.validity.valid) return; state[k] = i.value; }
+    save(); render();
+  }));
+  inputs.forEach((i) => i.addEventListener('blur', fill));
+  document.getElementById('in-reset').addEventListener('click', () => { state = Object.assign({}, DEFAULTS); save(); fill(); render(); });
+
+  /* ---------- render ---------- */
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const g = document.getElementById('gantt');
+  const detail = document.getElementById('detail');
+  let current = 'mid';
+  let byId = new Map();
+
+  const render = () => {
+    const c = compute();
+    // 육아휴직 지원금 50% 신청 회차: 휴직 시작 달의 다음 달 1일부터 3개월마다, 휴직 마지막 달까지 담도록
+    const cyc = c.cycle;
+    const cycText = cyc.map((t, i) => (i + 1) + '회 ' + (i ? md(t) : fmt(t))).join(' · ');
+    const subTotal = c.aPre + c.aMid + c.aPost;
+    const leaveTotal = c.aLeave;
+    document.getElementById('t-sub').textContent = man(subTotal);
+    document.getElementById('t-leave').textContent = man(leaveTotal);
+    document.getElementById('t-male').textContent = state.male ? '남성 인센티브 ' + man(c.aMale) + ' 포함 시 ' + man(leaveTotal + c.aMale) : '남성 인센티브 해당 시 +' + man(MONTHLY_MALE * (c.leaveOk ? c.mLeave : 0));
+    document.getElementById('t-all').textContent = man(subTotal + leaveTotal + c.aMale);
+    document.getElementById('in-summary').textContent = '육아휴직 ' + one(c.mLeave) + '개월 · 대체인력 ' + one(months(c.HS, c.HE)) + '개월 · 대체인력 지원 월 ' + man(c.monthly) + (c.monthly < MONTHLY_SUB ? ' (임금 80% 한도)' : '');
+
+    const w = [];
+    if (c.LE < c.LS) w.push('육아휴직 종료일이 시작일보다 빠릅니다.');
+    if (c.HE < c.HS) w.push('대체인력 고용 종료일이 시작일보다 빠릅니다.');
+    if (!c.leaveOk) w.push('육아휴직이 30일 미만이라 육아휴직 지원금 대상이 아닙니다.');
+    if (c.HS < c.hireFrom) w.push('대체인력 채용일이 휴직 시작 2개월 전(' + fmt(c.hireFrom) + ')보다 빨라 대체인력 지원금 대상이 아닙니다.');
+    else if (c.HS === c.hireFrom) w.push('대체인력 채용일이 휴직 시작 2개월 전 날짜(' + fmt(c.hireFrom) + ')와 같습니다. 경계일이라 포함 여부를 고용센터(1350)에 확인하세요.');
+    if (Math.round((c.HE - c.HS) / DAY) + 1 < 30) w.push('대체인력을 30일 이상 계속 고용해야 대체인력 지원금 대상입니다.');
+    if (c.HE < c.LS) w.push('대체인력 고용이 휴직 시작 전에 끝나 휴직 기간 지원금이 없습니다.');
+    if (c.mLeave > 18) w.push('육아휴직은 최대 1년 6개월입니다.');
+    else if (c.mLeave > 12) w.push('1년을 넘는 육아휴직은 부모 모두 3개월 이상 사용한 경우 등에만 가능합니다.');
+    if (c.HS < addM(c.LS, -PRE_MAX) && c.HS >= c.hireFrom) w.push('휴직 전 인수인계는 최대 2개월까지만 계산했습니다.');
+    if (c.monthly < MONTHLY_SUB) w.push('대체인력 임금의 80%(' + won(c.monthly) + '원)가 월 최대 140만원보다 적어 80% 금액으로 계산했습니다.');
+    const ul = document.getElementById('warns');
+    ul.replaceChildren(...w.map((t) => mk('li', '', t)));
+    ul.hidden = !w.length;
+
+    const GROUPS = [
+      { name: '대체인력 지원금', total: man(subTotal), color: 'var(--sub)', rows: [
+        { id: 'hire', name: '대체인력 고용', when: range(c.HS, c.HE), type: 'ctx', s: c.HS, e: c.HE,
+          info: { amount: '—', apply: '—', docs: [], prep: ['휴직 시작일 전 2개월이 되는 날(' + fmt(c.hireFrom) + ') 이후 새로 고용(또는 파견 사용)', '30일 이상 계속 고용', '고용보험 가입, 신고 월평균 보수 124만원 이상', '사업주(대표이사)의 배우자·직계 존비속이 아닐 것'], src: SRC_SUB } },
+        { id: 'pre', name: '휴직 전 인수인계', when: range(c.preS, c.preE), amt: man(c.aPre), type: 'bar', s: c.preS, e: c.preE, show: c.mPre > 0,
+          points: [[addM(c.LS, 1), '신청 ' + md(addM(c.LS, 1))]], due: [c.due, '마감 ' + md(c.due)],
+          calc: man(c.monthly) + ' × ' + one(c.mPre) + '개월', applyText: fmt(addM(c.LS, 1)) + '부터 (휴직 시작 1개월 후)',
+          info: { amount: man(c.aPre) + ' (' + man(c.monthly) + ' × ' + one(c.mPre) + '개월, 최대 2개월)', apply: fmt(addM(c.LS, 1)) + '부터 (휴직 시작 1개월 후), 마감 ' + fmt(c.due), docs: DOCS_SUB, prep: ['월 지원액은 대체인력 임금의 80% 한도'], src: SRC_SUB } },
+        { id: 'mid', name: '육아휴직 기간', when: range(c.midS, c.midE), amt: man(c.aMid), type: 'bar', s: c.midS, e: c.midE, show: c.mMid > 0,
+          points: [[c.firstApply, '신청 ' + md(c.firstApply)]], due: [c.due, '마감 ' + md(c.due)],
+          calc: man(c.monthly) + ' × ' + one(c.mMid) + '개월', applyText: fmt(c.firstApply) + '부터 3개월마다',
+          info: { amount: man(c.aMid) + ' (' + man(c.monthly) + ' × ' + one(c.mMid) + '개월)', apply: fmt(c.firstApply) + '부터 3개월마다 (휴직 시작 달의 다음 달부터), 마감 ' + fmt(c.due), docs: DOCS_SUB, prep: ['2026.1.1 이후 새로 고용한 대체인력은 사후지급 없이 전액 지급', '첫 신청 이후 3개월마다 신청 · 회차 구분은 공식 안내에 없음'], src: SRC_SUB } },
+        { id: 'post', name: '복직 후 인수인계', when: range(c.postS, c.postE), amt: man(c.aPost), type: 'bar', s: c.postS, e: c.postE, show: c.mPost > 0,
+          points: [[c.postApply, '신청 ' + md(c.postApply) + '경']], due: [c.postDue, '마감 ' + md(c.postDue) + '경', true],
+          calc: man(c.monthly) + ' × ' + one(c.mPost) + '개월', applyText: fmt(c.postApply) + '경부터 (종료 1개월 경과 후)',
+          info: { amount: man(c.aPost) + ' (' + man(c.monthly) + ' × ' + one(c.mPost) + '개월, 최대 1개월, 육아휴직에 한함)', apply: fmt(c.postApply) + '경부터 (육아휴직 종료 후 1개월이 지난 날부터), 12개월 이내', docs: DOCS_SUB, prep: ['대체인력이 복직 후 1개월 안에 그만두면 그 다음 날부터 신청', '신청 가능 첫날(1개월이 지난 날)의 정확한 날짜는 확인 필요'], src: SRC_SUB } },
+        { id: 'noLayoff', name: '감원방지 기간', when: range(addM(c.HS, -3), c.layoffE), type: 'ctx', s: addM(c.HS, -3), e: c.layoffE,
+          info: { amount: '—', apply: '—', docs: [], prep: ['대체인력 고용 3개월 전부터 고용 후 1년까지 (계약이 그 전에 끝나면 종료일까지) 다른 근로자를 고용조정으로 이직시키지 않음', '위반 아님: 대체인력보다 나중에 고용된 근로자 조정, 근로자 귀책 징계해고, 정년, 계약기간 만료, 자발적 퇴직'], src: SRC_SUB } },
+      ] },
+      { name: '육아휴직 지원금', total: man(leaveTotal), color: 'var(--leave)', rows: [
+        { id: 'leave', name: '육아휴직 지원금', when: range(c.LS, c.LE), amt: man(c.aLeave), type: 'bar', s: c.LS, e: c.LE, show: c.aLeave > 0,
+          points: cyc.map((t, i) => [t, (i + 1) + '회 ' + md(t)]).concat([[c.rest50, '잔여 50% ' + md(c.rest50)]]), due: [c.due, '마감 ' + md(c.due)],
+          calc: '30만원 × ' + one(c.mLeave) + '개월', applyText: '50%: ' + fmt(c.firstApply) + '부터 3개월마다 · 잔여 50%: ' + fmt(c.rest50) + '부터',
+          info: { amount: man(c.aLeave) + ' (30만원 × ' + one(c.mLeave) + '개월) · 50%는 휴직 중, 50%는 복직 6개월 후', apply: '50%: ' + cycText + ' (3개월마다) · 잔여 50%: ' + fmt(c.rest50) + '부터 · 마감 ' + fmt(c.due), docs: DOCS_LEAVE, prep: ['육아휴직을 30일 이상 부여해야 대상', '50%는 휴직 시작 달의 다음 달부터 3개월마다 신청 (마지막 회차는 휴직 마지막 달까지 담도록 계산) · 회차별 대상 월 구분은 공식 안내에 없음', '잔여 50%의 계속 고용 증빙 방법은 공식 안내에 없음'], src: SRC_LEAVE } },
+        { id: 'male', name: '남성 육아휴직 인센티브', when: (state.male ? '' : '해당 시 · ') + range(c.LS, c.LE), amt: man(MONTHLY_MALE * (c.leaveOk ? c.mLeave : 0)), type: 'bar', s: c.LS, e: c.LE, soft: !state.male, show: c.leaveOk,
+          points: cyc.map((t, i) => [t, (i + 1) + '회 ' + md(t), !state.male]).concat([[c.rest50, '잔여 ' + md(c.rest50), !state.male]]), due: [c.due, '', true],
+          calc: '10만원 × ' + one(c.mLeave) + '개월', applyText: '육아휴직 지원금과 함께',
+          info: { amount: man(MONTHLY_MALE * (c.leaveOk ? c.mLeave : 0)) + ' (10만원 × ' + one(c.mLeave) + '개월)', apply: '육아휴직 지원금과 함께 · 50%: ' + cycText + ' · 잔여 50%: ' + fmt(c.rest50) + '부터', docs: ['별도 서류는 공식 안내에 없음 (육아휴직 지원금 신청서로 신청하는 것으로 보이나 확인 필요)'], prep: ['휴직자가 남성이고 사업장의 1~3번째 남성 육아휴직 사례일 때만'], src: SRC_LEAVE } },
+        { id: 'keep', name: '복직 후 6개월 계속 고용', when: range(c.RT, addD(c.rest50, -1)), type: 'ctx', s: c.RT, e: addD(c.rest50, -1),
+          info: { amount: '—', apply: '—', docs: [], prep: ['잔여 50%를 받으려면 복직 후 6개월 이상 계속 고용', '휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함 (위반 시 500만원 이하 벌금)'], src: SRC_LEAVE } },
+      ] },
+    ];
+
+    // 차트 구간
+    const starts = [c.HS, c.LS, addM(c.HS, -3)];
+    const ends = [c.postDue, c.due, c.HE, addM(c.RT, 6)];
+    const D0 = addM(monthStart(Math.min(...starts)), 0);
+    const D1 = addM(monthStart(Math.max(...ends)), 2);
+    const pct = (t) => Math.max(0, Math.min(100, ((t - D0) / (D1 - D0)) * 100));
+    const endPct = (t) => pct(t + DAY);
+    const nMonths = Math.round((D1 - D0) / (30.44 * DAY));
+    g.style.setProperty('--track-min', Math.max(560, nMonths * 30) + 'px');
+
+    const parts = [];
+    const overlay = mk('div', 'overlay');
+    for (let t = D0; t < D1; t = addM(t, 1)) { const l = mk('div', 'mline' + (new Date(t).getUTCMonth() === 0 ? ' year' : '')); l.style.left = pct(t) + '%'; overlay.append(l); }
+    if (c.LE >= c.LS) { const band = mk('div', 'leaveband'); band.style.left = pct(c.LS) + '%'; band.style.width = endPct(c.LE) - pct(c.LS) + '%'; band.append(mk('span', '', '육아휴직')); overlay.append(band); }
+    const now = new Date(); const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    if (today >= D0 && today < D1) { const tl = mk('div', 'today'); tl.style.left = pct(today) + '%'; tl.append(mk('span', '', '오늘 ' + md(today))); overlay.append(tl); }
+    parts.push(overlay, mk('div', 'g-axis-l'));
+    const axis = mk('div', 'g-axis');
+    for (let t = D0; t < D1; t = addM(t, 1)) {
+      const d = new Date(t); const jan = d.getUTCMonth() === 0;
+      const tick = mk('span', 'tick' + (jan ? ' year' : ''), jan ? String(d.getUTCFullYear()) : (d.getUTCMonth() + 1) + '월');
+      tick.style.left = pct(t + 15 * DAY) + '%';
+      axis.append(tick);
+    }
+    parts.push(axis);
+
+    byId = new Map();
+    GROUPS.forEach((grp) => {
+      const gl = mk('div', 'g-group-l');
+      const sw = mk('i', 'sw'); sw.style.background = grp.color;
+      gl.append(sw, mk('span', '', grp.name), mk('small', '', grp.total));
+      parts.push(gl, mk('div', 'g-group-t'));
+      grp.rows.forEach((r) => {
+        r.group = grp; byId.set(r.id, r);
+        const lab = mk('div', 'g-label'); lab.style.setProperty('--c', grp.color); lab.tabIndex = 0; lab.setAttribute('role', 'listitem'); lab.dataset.id = r.id;
+        lab.append(mk('span', '', r.name), mk('span', 'when', r.when));
+        if (r.amt) lab.append(mk('span', 'amt', r.amt));
+        const tr = mk('div', 'g-track'); tr.style.setProperty('--c', grp.color); tr.dataset.id = r.id;
+        if (r.show !== false && r.e >= r.s) {
+          const left = pct(r.s), right = endPct(r.e);
+          const bar = mk('div', 'bar' + (r.type === 'ctx' ? ' ctx' : ''));
+          bar.style.left = left + '%'; bar.style.width = Math.max(0.4, right - left) + '%';
+          if (r.soft) bar.style.opacity = '.55';
+          tr.append(bar);
+          if (r.points) {
+            const last = r.due[0];
+            const ar = mk('div', 'arrow'); ar.style.left = right + '%'; ar.style.width = Math.max(0, pct(last) - right) + '%';
+            if (r.soft) ar.style.opacity = '.5';
+            tr.append(ar);
+            r.points.forEach(([t, txt, e]) => {
+              const p = mk('div', 'pt' + (e ? ' est' : '')); p.style.left = pct(t) + '%'; tr.append(p);
+              if (txt) { const pl = mk('span', 'pt-label', txt); pl.style.left = pct(t) + '%'; if (r.soft) pl.style.opacity = '.6'; tr.append(pl); }
+            });
+            const dp = mk('div', 'pt due' + (r.due[2] ? ' est' : '')); dp.style.left = pct(last) + '%'; tr.append(dp);
+            if (r.due[1]) { const dl = mk('span', 'pt-label', r.due[1]); dl.style.left = pct(last) + '%'; tr.append(dl); }
+          }
+        } else if (r.show === false) {
+          tr.append(mk('span', 'none', '지원 대상 아님'));
+        }
+        parts.push(lab, tr);
+      });
+    });
+    g.replaceChildren(...parts);
+
+    // 표
+    const tb = document.getElementById('tbody');
+    const rowsT = [];
+    const trow = (grp, color, name, when, calc, amt, apply, docs, cls) => {
+      const tr = mk('tr', cls || ''); tr.style.setProperty('--c', color);
+      tr.append(mk('td', 'cat', grp), mk('td', '', name), mk('td', '', when), mk('td', 'num', calc), mk('td', 'num', amt), mk('td', '', apply), mk('td', '', docs));
+      return tr;
+    };
+    GROUPS[0].rows.filter((r) => r.calc).forEach((r) => rowsT.push(trow('대체인력 지원금', 'var(--sub)', r.name, r.when, r.calc, r.amt, r.applyText, '①~⑤')));
+    rowsT.push(trow('대체인력 지원금', 'var(--sub)', '소계', '', '', man(subTotal), '', '', 'subsum'));
+    const L = GROUPS[1].rows;
+    rowsT.push(trow('육아휴직 지원금', 'var(--leave)', '육아휴직 지원금 50%', L[0].when, '30만원 × ' + one(c.mLeave) + ' × 50%', man(c.aLeave / 2), cycText + ' (3개월마다)', '⑥~⑧'));
+    rowsT.push(trow('육아휴직 지원금', 'var(--leave)', '육아휴직 지원금 잔여 50%', L[0].when, '30만원 × ' + one(c.mLeave) + ' × 50%', man(c.aLeave / 2), fmt(c.rest50) + '부터 한꺼번에', '⑥~⑧'));
+    rowsT.push(trow('육아휴직 지원금', 'var(--leave)', '남성 육아휴직 인센티브' + (state.male ? '' : ' (해당 시)'), L[1].when, L[1].calc, L[1].amt, '육아휴직 지원금과 함께 (' + cycText + ' · 잔여 ' + fmt(c.rest50) + ')', '확인 필요'));
+    rowsT.push(trow('육아휴직 지원금', 'var(--leave)', '소계', '', '', man(leaveTotal + c.aMale), '', state.male ? '' : '(남성 인센티브 제외)', 'subsum'));
+    const sum = mk('tr', 'sum'); sum.append(mk('td', '', '합계'), mk('td', ''), mk('td', ''), mk('td', ''), mk('td', 'num', man(subTotal + leaveTotal + c.aMale)), mk('td', '', '마감 ' + fmt(c.due)), mk('td', ''));
+    rowsT.push(sum);
+    tb.replaceChildren(...rowsT);
+
+    show(current);
+  };
+
+  const show = (id) => {
+    const r = byId.get(id); if (!r) return;
+    current = id;
+    g.querySelectorAll('[data-id]').forEach((n) => n.classList.toggle('row-hot', n.dataset.id === id));
+    detail.style.setProperty('--c', r.group.color);
+    const kids = [mk('p', 'cat', r.group.name), mk('h3', '', r.name)];
+    const meta = mk('div', 'meta');
+    const pair = (k, v) => { const s = mk('span', ''); s.append(mk('b', '', k + ' '), document.createTextNode(v)); return s; };
+    meta.append(pair('기간', r.when));
+    if (r.info.amount !== '—') meta.append(pair('금액', r.info.amount));
+    if (r.info.apply !== '—') meta.append(pair('신청', r.info.apply));
+    kids.push(meta);
+    const list = (title, items) => { if (!items.length) return; kids.push(mk('h4', '', title)); const ul = mk('ul', ''); items.forEach((x) => {
+      const li = mk('li', '', x);
+      Object.keys(FORM_LINKS).forEach((k) => { if (x.includes(k)) FORM_LINKS[k].forEach(([t, href]) => { const a = mk('a', '', t + ' 받기'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; li.append(a); }); });
+      ul.append(li);
+    }); kids.push(ul); };
+    list('제출 서류 (소재지 관할 고용센터)', r.info.docs);
+    list('요건 · 준비사항', r.info.prep);
+    kids.push(mk('p', 'src', '근거: ' + r.info.src + ' (2026.11.06 원문 열람)'));
+    detail.replaceChildren(...kids);
+  };
+  g.addEventListener('click', (e) => { const el = e.target.closest('[data-id]'); if (el) show(el.dataset.id); });
+  g.addEventListener('pointerover', (e) => { if (e.pointerType !== 'mouse') return; const el = e.target.closest('[data-id]'); if (el) show(el.dataset.id); });
+  g.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset.id) { e.preventDefault(); show(e.target.dataset.id); } });
+  g.addEventListener('focusin', (e) => { if (e.target.dataset && e.target.dataset.id) show(e.target.dataset.id); });
+
+  fill();
+  render();
+})();
+</script>
+
+</body>
+</html>
