@@ -120,11 +120,41 @@
   .checks li::marker { color: var(--due); }
   .sources { font-size: 12px; color: var(--muted); }
   .sources a { color: inherit; }
+  .lg-band { width: 18px; height: 12px; background: color-mix(in srgb, var(--leave) 12%, transparent); border: 1px dashed color-mix(in srgb, var(--leave) 50%, transparent); }
+  .dates { display: none; }
+  /* 좁은 화면용 간트차트: 이름 위, 막대 아래 */
+  .gantt.narrow { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+  .gantt.narrow .g-label, .gantt.narrow .g-group-l { position: static; border-right: 0; }
+  .gantt.narrow .g-axis-l, .gantt.narrow .g-group-t { display: none; }
+  .gantt.narrow .overlay { left: 0; }
+  .gantt.narrow .g-label { padding: 10px 0 2px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; background: var(--panel); position: relative; z-index: 3; }
+  .gantt.narrow .g-group-l { position: relative; z-index: 3; background: var(--panel); }
+  .gantt.narrow .g-label > span:first-child { font-weight: 600; }
+  .gantt.narrow .dates { display: block; flex-basis: 100%; font-size: 11.5px; font-weight: 600; color: var(--apply); }
+  .gantt.narrow .g-track { min-height: 26px; }
+  .gantt.narrow .bar, .gantt.narrow .pt, .gantt.narrow .arrow { top: 50%; }
+  .gantt.narrow .pt-label, .gantt.narrow .leaveband span { display: none; }
+  .gantt.narrow .today span { top: 4px; }
+  .gantt.narrow .g-group-l { padding-top: 22px; }
   @media (max-width: 640px) {
     :root { --label-w: 9.5rem; }
     .g-label { font-size: 12.5px; }
+    .totals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 12px 14px; }
+    .totals > div:last-child { grid-column: 1 / -1; }
     .totals b { font-size: 20px; }
     .g-group-l small { flex-basis: 100%; padding-left: 18px; }
+    /* 표는 행마다 카드로 */
+    .tablewrap { overflow-x: visible; }
+    .tablewrap table { min-width: 0; }
+    .tablewrap thead { display: none; }
+    .tablewrap table, .tablewrap tbody, .tablewrap tr, .tablewrap td { display: block; width: 100%; }
+    .tablewrap tr { border: 1px solid var(--line); border-left: 4px solid var(--c, var(--line)); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+    .tablewrap td { border: 0; padding: 3px 0; display: flex; justify-content: space-between; gap: 12px; text-align: right; white-space: normal; }
+    .tablewrap td::before { content: attr(data-label); color: var(--muted); font-size: 12px; text-align: left; flex: none; font-weight: 400; }
+    .tablewrap td:empty { display: none; }
+    .tablewrap td.cat { font-size: 12px; text-align: left; }
+    .tablewrap td.cat::before { content: none; }
+    .detail .meta { display: grid; gap: 4px; }
   }
 
   /* 입력 */
@@ -223,12 +253,13 @@
       <span><i class="lg-ctx"></i>참고 기간 (고용·의무)</span>
       <span><i class="lg-pt"></i>신청 시작</span>
       <span><i class="lg-due"></i>신청 마감</span>
+      <span><i class="lg-band"></i>육아휴직 기간</span>
       <span><i class="lg-today"></i>오늘</span>
     </div>
     <div class="scroller">
       <div class="gantt" id="gantt" role="list"></div>
     </div>
-    <p class="hint">휴대폰에서는 차트를 옆으로 밀어 볼 수 있습니다.</p>
+    <p class="hint" id="g-hint">휴대폰에서는 차트를 옆으로 밀어 볼 수 있습니다.</p>
   </section>
 
   <section class="card detail" id="detail" aria-live="polite"></section>
@@ -483,7 +514,11 @@
     const pct = (t) => Math.max(0, Math.min(100, ((t - D0) / (D1 - D0)) * 100));
     const endPct = (t) => pct(t + DAY);
     const nMonths = Math.round((D1 - D0) / (30.44 * DAY));
-    g.style.setProperty('--track-min', Math.max(560, nMonths * 30) + 'px');
+    // 좁은 화면(휴대폰·작은 태블릿): 항목 이름을 막대 위로 올리고 막대를 화면 폭에 맞춤 (가로 스크롤 없음)
+    const narrow = (g.parentElement.clientWidth || 800) < 760;
+    g.classList.toggle('narrow', narrow);
+    const hint = document.getElementById('g-hint'); if (hint) hint.hidden = narrow;
+    g.style.setProperty('--track-min', narrow ? '0px' : Math.max(560, nMonths * 30) + 'px');
 
     const parts = [];
     const overlay = mk('div', 'overlay');
@@ -495,6 +530,7 @@
     const axis = mk('div', 'g-axis');
     for (let t = D0; t < D1; t = addM(t, 1)) {
       const d = new Date(t); const jan = d.getUTCMonth() === 0;
+      if (narrow && (d.getUTCMonth() % 3 !== 0 || pct(t + 15 * DAY) > 93)) continue;
       const tick = mk('span', 'tick' + (jan ? ' year' : ''), jan ? String(d.getUTCFullYear()) : (d.getUTCMonth() + 1) + '월');
       tick.style.left = pct(t + 15 * DAY) + '%';
       axis.append(tick);
@@ -524,6 +560,10 @@
         const lab = mk('div', 'g-label'); lab.style.setProperty('--c', grp.color); lab.tabIndex = 0; lab.setAttribute('role', 'listitem'); lab.dataset.id = r.id;
         lab.append(mk('span', '', r.name), mk('span', 'when', r.when));
         if (r.amt) lab.append(mk('span', 'amt', r.amt));
+        if (r.points) {
+          const ds = r.points.filter((p) => p[1]).map((p) => p[1]).concat(r.due && r.due[1] ? [r.due[1]] : []);
+          if (ds.length) lab.append(mk('span', 'dates', ds.join(' · ')));
+        }
         const tr = mk('div', 'g-track'); tr.style.setProperty('--c', grp.color); tr.dataset.id = r.id;
         if (r.show !== false && r.e >= r.s) {
           const left = pct(r.s), right = endPct(r.e);
@@ -557,6 +597,8 @@
     const trow = (grp, color, name, when, calc, amt, apply, docs, cls) => {
       const tr = mk('tr', cls || ''); tr.style.setProperty('--c', color);
       tr.append(mk('td', 'cat', grp), mk('td', '', name), mk('td', '', when), mk('td', 'num', calc), mk('td', 'num', amt), mk('td', '', apply), mk('td', '', docs));
+      const heads = ['지원금 종류', '세부 항목', '대상 기간', '계산', '금액', '신청 일자', '제출 서류'];
+      Array.from(tr.children).forEach((td, i) => { td.dataset.label = heads[i]; });
       return tr;
     };
     GROUPS[0].rows.filter((r) => r.calc).forEach((r) => rowsT.push(trow('대체인력 지원금', 'var(--sub)', r.name, r.when, r.calc, r.amt, r.applyText, '①~⑤')));
@@ -602,6 +644,8 @@
   g.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset.id) { e.preventDefault(); show(e.target.dataset.id); } });
   g.addEventListener('focusin', (e) => { if (e.target.dataset && e.target.dataset.id) show(e.target.dataset.id); });
 
+  let resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
   fill();
   render();
 })();
