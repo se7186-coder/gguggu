@@ -40,7 +40,7 @@
   .wrap { max-width: 72rem; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
   .eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 0; }
   h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(26px, 4vw, 34px); line-height: 1.2; margin: 4px 0 6px; text-wrap: balance; }
-  .lead { margin: 0; color: var(--muted); max-width: 62ch; }
+  .lead { margin: 0; color: var(--muted); font-size: 13px; }
   .totals { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; padding: 14px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
   .totals div { display: grid; gap: 0; }
   .totals span { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
@@ -161,6 +161,13 @@
   .note a { color: var(--apply); }
   .detail li a { font-size: 12px; margin-left: 6px; color: var(--apply); }
   @media (max-width: 640px) { .forms li { grid-template-columns: minmax(0, 1fr); } .f-links { grid-column: 1; grid-row: auto; margin-top: 6px; } }
+  .g-fold { font: inherit; font-weight: 600; font-size: 14px; color: var(--fg); background: transparent; border: 0; padding: 4px 6px 4px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; cursor: pointer; text-align: left; border-radius: 6px; }
+  .g-fold:hover { background: color-mix(in srgb, var(--tax) 10%, transparent); }
+  .g-fold:focus-visible { outline: 2px solid var(--tax); outline-offset: 2px; }
+  .g-fold small { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .g-fold-cue { color: var(--tax); width: 1em; }
+  .g-fold-txt { font-size: 11.5px; font-weight: 600; color: var(--tax); border: 1px solid color-mix(in srgb, var(--tax) 45%, transparent); border-radius: 999px; padding: 0 8px; }
+  .tax-note { margin: 0; font-size: 13px; line-height: 1.6; padding: 10px 14px; border-radius: 8px; color: var(--fg); background: color-mix(in srgb, var(--tax) 9%, var(--panel)); border: 1px solid color-mix(in srgb, var(--tax) 35%, transparent); border-left: 4px solid var(--tax); }
   .none { position: absolute; top: 50%; left: 8px; transform: translateY(-50%); font-size: 11.5px; color: var(--muted); }
 </style>
 <style>* { box-sizing: border-box; } html, body { margin: 0; } body { font-size: 14px; } [hidden] { display: none !important; }</style>
@@ -205,9 +212,11 @@
     <div><span><i class="sw" style="background:var(--tax)"></i>육아휴직 복귀자 세액공제 (별도)</span><b id="t-tax">—</b><small id="t-tax-note"></small></div>
   </section>
 
+  <p class="tax-note" id="tax-note" role="note" hidden></p>
+
   <section class="card" aria-labelledby="g-title">
     <h2 id="g-title">지원금 간트차트</h2>
-    <p class="note" id="g-note">지원금마다 막대(지원 대상 기간) 위에 신청 시작(◆)과 마감(◇)을 겹쳐 표시했습니다. 육아휴직 지원금과 남성 인센티브는 3개월마다 신청하는 회차를 모두 표시합니다.</p>
+    <p class="note" id="g-note">지원금마다 막대(지원 대상 기간) 위에 신청 시작(◆)과 마감(◇)을 겹쳐 표시했습니다. 육아휴직 지원금과 남성 인센티브는 3개월마다 신청할 수 있는 날 중 휴직 기간 안의 날을 표시합니다(신청 횟수는 고용센터 확인).</p>
     <div class="legend" aria-label="범례">
       <span><i class="lg-bar" style="background:var(--sub)"></i>대체인력 지원 대상 기간</span>
       <span><i class="lg-bar" style="background:var(--leave)"></i>육아휴직 지원 대상 기간</span>
@@ -274,7 +283,7 @@
 
 <script>
 (() => {
-  const DEFAULTS = { ls: '2027-02-01', le: '2027-07-31', hs: '2026-12-01', he: '2027-08-31', wage: 3000000, male: false };
+  const DEFAULTS = { ls: '2027-02-01', le: '2027-07-31', hs: '2026-12-02', he: '2027-09-01', wage: 3000000, male: true, taxOpen: false };
   const KEY = 'subsidy-gantt:v1';
   const MONTHLY_SUB = 1400000;   // 대체인력 지원금 월 최대 (30인 미만)
   const SUB_RATE = 0.8;          // 대체인력 임금 80% 한도
@@ -383,14 +392,14 @@
 
   const render = () => {
     const c = compute();
-    // 육아휴직 지원금 50% 신청 회차: 휴직 시작 달의 다음 달 1일부터 3개월마다, 휴직 마지막 달까지 담도록
-    const cyc = c.cycle;
+    // 육아휴직 지원금 50% 신청 회차: 휴직 시작 달의 다음 달 1일부터 3개월마다, 휴직 기간 안의 날만
+    const cyc = c.cycle.filter((t) => t <= c.LE);
     const cycText = cyc.map((t, i) => (i + 1) + '회 ' + (i ? md(t) : fmt(t))).join(' · ');
     const subTotal = c.aPre + c.aMid + c.aPost;
     const leaveTotal = c.aLeave;
     document.getElementById('t-sub').textContent = man(subTotal);
-    document.getElementById('t-leave').textContent = man(leaveTotal);
-    document.getElementById('t-male').textContent = state.male ? '남성 인센티브 ' + man(c.aMale) + ' 포함 시 ' + man(leaveTotal + c.aMale) : '남성 인센티브 해당 시 +' + man(MONTHLY_MALE * (c.leaveOk ? c.mLeave : 0));
+    document.getElementById('t-leave').textContent = man(leaveTotal + c.aMale);
+    document.getElementById('t-male').textContent = state.male ? '육아휴직 지원금 ' + man(leaveTotal) + ' + 남성 인센티브 ' + man(c.aMale) : '남성 인센티브 해당 시 +' + man(MONTHLY_MALE * (c.leaveOk ? c.mLeave : 0));
     document.getElementById('t-all').textContent = man(subTotal + leaveTotal + c.aMale);
     const taxOk = c.taxByDate && c.taxLeave6;
     const taxIfAmended = !c.taxByDate && c.taxLeave6;
@@ -413,12 +422,16 @@
     if (c.mLeave > 18) w.push('육아휴직은 최대 1년 6개월입니다.');
     else if (c.mLeave > 12) w.push('1년을 넘는 육아휴직은 부모 모두 3개월 이상 사용한 경우 등에만 가능합니다.');
     if (c.HS < addM(c.LS, -PRE_MAX) && c.HS >= c.hireFrom) w.push('휴직 전 인수인계는 최대 2개월까지만 계산했습니다.');
-    if (!c.taxByDate) w.push('육아휴직 복귀자 세액공제: 현행 조세특례제한법 제29조의8제5항은 2026.12.31까지 복직시킨 경우만 공제합니다. 복직일(' + fmt(c.RT) + ')이 그 이후라 현재 법으로는 대상이 아닙니다. 법이 개정돼 기한이 복직일 이후로 늘어나면 과세연도 ' + new Date(c.RT).getUTCFullYear() + '에 해당하고, ' + fmt(c.taxFileDue) + '까지 법인세 신고 때 공제를 신청합니다(12월 결산 법인 기준).');
-    else if (!c.taxLeave6) w.push('육아휴직 복귀자 세액공제는 육아휴직을 연속 6개월 이상 사용한 경우만 대상입니다.');
+    const taxMsgs = [];
+    if (!c.taxByDate) taxMsgs.push('육아휴직 복귀자 세액공제: 현행 조세특례제한법 제29조의8제5항은 2026.12.31까지 복직시킨 경우만 공제합니다. 복직일(' + fmt(c.RT) + ')이 그 이후라 현재 법으로는 대상이 아닙니다. 법이 개정돼 기한이 복직일 이후로 늘어나면 과세연도 ' + new Date(c.RT).getUTCFullYear() + '에 해당하고, ' + fmt(c.taxFileDue) + '까지 법인세 신고 때 공제를 신청합니다(12월 결산 법인 기준).');
+    else if (!c.taxLeave6) taxMsgs.push('육아휴직 복귀자 세액공제는 육아휴직을 연속 6개월 이상 사용한 경우만 대상입니다.');
     if (c.monthly < MONTHLY_SUB) w.push('대체인력 임금의 80%(' + won(c.monthly) + '원)가 월 최대 140만원보다 적어 80% 금액으로 계산했습니다.');
     const ul = document.getElementById('warns');
     ul.replaceChildren(...w.map((t) => mk('li', '', t)));
     ul.hidden = !w.length;
+    const tn = document.getElementById('tax-note');
+    tn.textContent = taxMsgs.join(' ');
+    tn.hidden = !taxMsgs.length;
 
     const GROUPS = [
       { name: '대체인력 지원금', total: man(subTotal), color: 'var(--sub)', rows: [
@@ -439,11 +452,11 @@
         { id: 'noLayoff', name: '감원방지 기간', when: range(addM(c.HS, -3), c.layoffE), type: 'ctx', s: addM(c.HS, -3), e: c.layoffE,
           info: { amount: '—', apply: '—', docs: [], prep: ['대체인력 고용 3개월 전부터 고용 후 1년까지 (계약이 그 전에 끝나면 종료일까지) 다른 근로자를 고용조정으로 이직시키지 않음', '위반 아님: 대체인력보다 나중에 고용된 근로자 조정, 근로자 귀책 징계해고, 정년, 계약기간 만료, 자발적 퇴직'], src: SRC_SUB } },
       ] },
-      { name: '육아휴직 지원금', total: man(leaveTotal), color: 'var(--leave)', rows: [
+      { name: '육아휴직 지원금', total: man(leaveTotal + c.aMale), color: 'var(--leave)', rows: [
         { id: 'leave', name: '육아휴직 지원금', when: range(c.LS, c.LE), amt: man(c.aLeave), type: 'bar', s: c.LS, e: c.LE, show: c.aLeave > 0,
           points: cyc.map((t, i) => [t, (i + 1) + '회 ' + md(t)]).concat([[c.rest50, '잔여 50% ' + md(c.rest50)]]), due: [c.due, '마감 ' + md(c.due)],
           calc: '30만원 × ' + one(c.mLeave) + '개월', applyText: '50%: ' + fmt(c.firstApply) + '부터 3개월마다 · 잔여 50%: ' + fmt(c.rest50) + '부터',
-          info: { amount: man(c.aLeave) + ' (30만원 × ' + one(c.mLeave) + '개월) · 50%는 휴직 중, 50%는 복직 6개월 후', apply: '50%: ' + cycText + ' (3개월마다) · 잔여 50%: ' + fmt(c.rest50) + '부터 · 마감 ' + fmt(c.due), docs: DOCS_LEAVE, prep: ['육아휴직을 30일 이상 부여해야 대상', '50%는 휴직 시작 달의 다음 달부터 3개월마다 신청 (마지막 회차는 휴직 마지막 달까지 담도록 계산) · 회차별 대상 월 구분은 공식 안내에 없음', '잔여 50%의 계속 고용 증빙 방법은 공식 안내에 없음'], src: SRC_LEAVE } },
+          info: { amount: man(c.aLeave) + ' (30만원 × ' + one(c.mLeave) + '개월) · 50%는 휴직 중, 50%는 복직 6개월 후', apply: '50%: ' + cycText + ' (3개월마다) · 잔여 50%: ' + fmt(c.rest50) + '부터 · 마감 ' + fmt(c.due), docs: DOCS_LEAVE, prep: ['육아휴직을 30일 이상 부여해야 대상', '50%는 휴직 시작 달의 다음 달부터 3개월마다 신청할 수 있음 (휴직 기간 안의 신청 가능일만 표시) · 신청 횟수와 회차별 대상 월은 고용센터(1350) 확인 · 신청 기한은 휴직 종료 후 12개월', '잔여 50%의 계속 고용 증빙 방법은 공식 안내에 없음'], src: SRC_LEAVE } },
         { id: 'male', name: '남성 육아휴직 인센티브', when: (state.male ? '' : '해당 시 · ') + range(c.LS, c.LE), amt: man(MONTHLY_MALE * (c.leaveOk ? c.mLeave : 0)), type: 'bar', s: c.LS, e: c.LE, soft: !state.male, show: c.leaveOk,
           points: cyc.map((t, i) => [t, (i + 1) + '회 ' + md(t), !state.male]).concat([[c.rest50, '잔여 ' + md(c.rest50), !state.male]]), due: [c.due, '', true],
           calc: '10만원 × ' + one(c.mLeave) + '개월', applyText: '육아휴직 지원금과 함께',
@@ -451,7 +464,7 @@
         { id: 'keep', name: '복직 후 6개월 계속 고용', when: range(c.RT, addD(c.rest50, -1)), type: 'ctx', s: c.RT, e: addD(c.rest50, -1),
           info: { amount: '—', apply: '—', docs: [], prep: ['잔여 50%를 받으려면 복직 후 6개월 이상 피보험자로 계속 고용 (근로자 자기 사정으로 6개월을 못 채우면 그 근로자가 이직한 다음 날부터 신청)', '휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함 (위반 시 500만원 이하 벌금)'], src: SRC_LEAVE } },
       ] },
-      { name: '세액공제 (별도)', total: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : (c.taxLeave6 ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님'), color: 'var(--tax)', rows: [
+      { name: '세액공제 (별도)', foldable: true, total: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : (c.taxLeave6 ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님'), color: 'var(--tax)', rows: [
         { id: 'tax', name: '육아휴직 복귀자 세액공제', when: '복직 ' + fmt(c.RT) + ' · 과세연도 ' + new Date(c.RT).getUTCFullYear() + ' · 신고 ' + fmt(c.taxFileDue) + '까지', amt: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : (c.taxLeave6 ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님'), type: 'bar', s: c.RT, e: c.taxYearEnd, soft: !(c.taxByDate && c.taxLeave6),
           points: [[Date.UTC(new Date(c.RT).getUTCFullYear() + 1, 0, 1), '신고 시작', !(c.taxByDate && c.taxLeave6)]], due: [c.taxFileDue, '법인세 신고 ' + md(c.taxFileDue), !(c.taxByDate && c.taxLeave6)],
           calc: '1인 × 1,300만원', applyText: '과세연도 ' + new Date(c.RT).getUTCFullYear() + ' 법인세 신고 때 (' + fmt(c.taxFileDue) + '까지, 12월 결산 법인)',
@@ -492,8 +505,20 @@
     GROUPS.forEach((grp) => {
       const gl = mk('div', 'g-group-l');
       const sw = mk('i', 'sw'); sw.style.background = grp.color;
-      gl.append(sw, mk('span', '', grp.name), mk('small', '', grp.total));
+      const folded = grp.foldable && !state.taxOpen;
+      if (grp.foldable) {
+        // 세액공제 그룹은 접고 펼 수 있음 (처음에는 접힌 상태)
+        const btn = mk('button', 'g-fold');
+        btn.type = 'button';
+        btn.setAttribute('aria-expanded', String(!folded));
+        btn.append(mk('span', 'g-fold-cue', folded ? '▸' : '▾'), sw, mk('span', '', grp.name), mk('small', '', grp.total), mk('span', 'g-fold-txt', folded ? '펼치기' : '접기'));
+        btn.addEventListener('click', () => { state.taxOpen = !state.taxOpen; if (!state.taxOpen && current === 'tax') current = 'mid'; save(); render(); });
+        gl.append(btn);
+      } else {
+        gl.append(sw, mk('span', '', grp.name), mk('small', '', grp.total));
+      }
       parts.push(gl, mk('div', 'g-group-t'));
+      if (folded) return;
       grp.rows.forEach((r) => {
         r.group = grp; byId.set(r.id, r);
         const lab = mk('div', 'g-label'); lab.style.setProperty('--c', grp.color); lab.tabIndex = 0; lab.setAttribute('role', 'listitem'); lab.dataset.id = r.id;
@@ -542,7 +567,7 @@
     rowsT.push(trow('육아휴직 지원금', 'var(--leave)', '남성 육아휴직 인센티브' + (state.male ? '' : ' (해당 시)'), L[1].when, L[1].calc, L[1].amt, '육아휴직 지원금과 함께 (' + cycText + ' · 잔여 ' + fmt(c.rest50) + ')', '확인 필요'));
     rowsT.push(trow('육아휴직 지원금', 'var(--leave)', '소계', '', '', man(leaveTotal + c.aMale), '', state.male ? '' : '(남성 인센티브 제외)', 'subsum'));
     const T = GROUPS[2].rows[0];
-    rowsT.push(trow('세액공제 (별도)', 'var(--tax)', T.name, T.when, T.calc, T.amt, T.applyText, '세액공제신청서', ''));
+    if (state.taxOpen) rowsT.push(trow('세액공제 (별도)', 'var(--tax)', T.name, T.when, T.calc, T.amt, T.applyText, '세액공제신청서', ''));
     const sum = mk('tr', 'sum'); sum.append(mk('td', '', '지원금 합계 (세액공제 제외)'), mk('td', ''), mk('td', ''), mk('td', ''), mk('td', 'num', man(subTotal + leaveTotal + c.aMale)), mk('td', '', '마감 ' + fmt(c.due)), mk('td', ''));
     rowsT.push(sum);
     tb.replaceChildren(...rowsT);
