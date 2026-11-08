@@ -246,6 +246,11 @@
   @media (max-width: 640px) { .ck-group.is-req .ck-item { flex-wrap: wrap; gap: 6px; } .ck-group.is-req .ck-text { flex-basis: 100%; } .ck-group.is-req .ck-btns { margin-left: 0; } .ck-btn { padding: 6px 16px; } }
   .none { position: absolute; top: 50%; left: 8px; transform: translateY(-50%); font-size: 11.5px; color: var(--muted); }
 
+  .refs { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 8px; }
+  .refs li { display: grid; gap: 1px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13.5px; }
+  .refs .r-org { font-size: 12px; color: var(--muted); }
+  .refs a { color: var(--apply); font-weight: 600; overflow-wrap: anywhere; }
+  .refs small { font-size: 12.5px; color: var(--muted); }
   /* 섹션 바로가기 */
   .jump { position: sticky; top: 0; z-index: 20; margin: 0 -4px; padding: 8px 4px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
   .jump::-webkit-scrollbar { display: none; }
@@ -338,7 +343,7 @@
   <p class="tax-note" id="tax-note" role="note" hidden></p>
 
   <nav class="jump" aria-label="섹션 바로가기">
-    <a href="#checklist">체크리스트</a><a href="#amounts">금액·신청일</a><a href="#chart">간트차트</a><a href="#insurance">4대보험</a><a href="#forms">서식</a><a href="#calc">계산 기준</a>
+    <a href="#checklist">체크리스트</a><a href="#amounts">금액·신청일</a><a href="#chart">간트차트</a><a href="#insurance">4대보험</a><a href="#forms">서식</a><a href="#calc">계산 기준</a><a href="#refs">참조</a>
   </nav>
 
   <section class="card" id="checklist" aria-labelledby="ck-title">
@@ -426,12 +431,25 @@
       <li>신청 시작일은 법령 문구를 따랐습니다. 휴직 전 인수인계분은 "휴직 시작 후 30일이 지난 날", 복직 후 인수인계분은 "복직 후 1개월이 지난 날", 육아휴직 지원금 잔여 50%는 "휴직이 끝난 후 6개월이 지난 날"부터입니다(고용보험법 시행규칙 제51조제2항). "지난 날"을 어느 날로 셈지는 하루 차이가 날 수 있습니다.</li>
       <li>3개월마다 신청하는 회차별 대상 월의 구분과 남성 인센티브의 별도 서류는 참고 자료에서 확인하지 못했습니다.</li>
       <li>육아휴직 지원금은 30일 이상 부여해야 하고, 잔여 50%는 복직 후 6개월 이상 계속 고용한 뒤 신청합니다. 감원방지 기간에 다른 근로자를 고용조정으로 이직시키면 대체인력 지원금이 제한됩니다.</li>
+      <li>신청 기간을 지나 신청하면 지급하지 않습니다. 사업주가 다른 법령에 따라 국가나 지방자치단체에서 금전적 지원을 받으면 그 금액을 빼고 지원할 수 있습니다(고용보험법 제26조의2, 시행령 제40조의2 · 생활법령 「사업주에 대한 고용안정장려금 지원」 2026.11.08 열람). 이 일정표 금액에는 감액을 반영하지 않았습니다.</li>
     </ul>
     </div>
   </section>
 
 
-  <p class="sources">출처: 고용노동부 일생활균형 <a href="https://www.worklife.kr/website_renew/index/employerSupport/substitute_worker_subsidy.asp" target="_blank" rel="noopener">대체인력 지원금</a> · <a href="https://www.worklife.kr/website_renew/index/employerSupport/parental_leave_reduction_subsidy.asp" target="_blank" rel="noopener">육아휴직 지원금</a> (2026.11.06 원문 열람) · 법제처 찾기쉬운 생활법령정보 <a href="https://easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=1380&amp;ccfNo=2&amp;cciNo=3&amp;cnpClsNo=1" target="_blank" rel="noopener">육아휴직 및 육아기 근로시간 단축 › 사업주에 대한 지원 › 고용안정장려금</a> (2026.11.08 원문 열람) · 국가법령정보센터 서식 · 세액공제: <a href="https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A1%B0%EC%84%B8%ED%8A%B9%EB%A1%80%EC%A0%9C%ED%95%9C%EB%B2%95/%EC%A0%9C29%EC%A1%B0%EC%9D%988" target="_blank" rel="noopener">조세특례제한법 제29조의8</a>(2026.9.18. 시행) · 법제처 생활법령 <a href="https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=1380&amp;ccfNo=3&amp;cciNo=1&amp;cnpClsNo=2" target="_blank" rel="noopener">직장복귀 지원 › 세제혜택 등</a>(2026.11.08 열람). 실제 지급액은 고용센터 심사, 세액공제는 세무서가 정합니다.</p>
+  <section class="card" id="refs" aria-labelledby="r-title">
+    <h2 id="r-title">참조</h2>
+    <ul class="refs">
+      <li><span class="r-org">고용노동부 일생활균형</span><a href="https://www.worklife.kr/website_renew/index/employerSupport/parental_leave_reduction_subsidy.asp" target="_blank" rel="noopener">육아휴직·육아기 근로시간 단축지원금</a><small>육아휴직 지원금 · 남성 인센티브 금액, 신청 주기, 제출 서류, 체크리스트 요건 (2026.11.06 열람)</small></li>
+      <li><span class="r-org">고용노동부 일생활균형</span><a href="https://www.worklife.kr/website_renew/index/employerSupport/substitute_worker_subsidy.asp" target="_blank" rel="noopener">대체인력·업무분담지원금</a><small>대체인력 지원금 월 최대액, 인수인계 기간, 제출 서류, 체크리스트 요건 (2026.11.06 열람 · 업무분담지원금은 제외)</small></li>
+      <li><span class="r-org">법제처 찾기쉬운 생활법령정보</span><a href="https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&amp;csmSeq=1380&amp;ccfNo=1&amp;cciNo=2&amp;cnpClsNo=3" target="_blank" rel="noopener">사업주에 대한 고용안정장려금 지원</a><small>배우자 출산전후휴가 업무분담지원금(30명 미만 월 최대 60만원) 안내라 금액 계산에는 쓰지 않음 · 지급 제한(공공기관, 제외 업종, 체불 명단, 중대재해 명단, 신청 기간 경과)과 금액 감액 기준을 참고 (2026.10.15 기준 작성, 2026.11.08 열람)</small></li>
+      <li><span class="r-org">법제처 찾기쉬운 생활법령정보</span><a href="https://easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=1380&amp;ccfNo=2&amp;cciNo=3&amp;cnpClsNo=1" target="_blank" rel="noopener">육아휴직 및 육아기 근로시간 단축 › 사업주에 대한 지원 › 고용안정장려금</a><small>신청 시작일, 임금 80% 한도 (2026.11.08 열람)</small></li>
+      <li><span class="r-org">국가법령정보센터</span><a href="https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A1%B0%EC%84%B8%ED%8A%B9%EB%A1%80%EC%A0%9C%ED%95%9C%EB%B2%95/%EC%A0%9C29%EC%A1%B0%EC%9D%988" target="_blank" rel="noopener">조세특례제한법 제29조의8</a><small>육아휴직 복귀자 세액공제 (2026.9.18. 시행)</small></li>
+      <li><span class="r-org">법제처 찾기쉬운 생활법령정보</span><a href="https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=1380&amp;ccfNo=3&amp;cciNo=1&amp;cnpClsNo=2" target="_blank" rel="noopener">직장복귀 지원 › 세제혜택 등</a><small>세액공제 안내 (2026.11.08 열람)</small></li>
+      <li><span class="r-org">국가법령정보센터</span><span><a href="https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EB%AF%BC%EC%97%B0%EA%B8%88%EB%B2%95/%EC%A0%9C91%EC%A1%B0" target="_blank" rel="noopener">국민연금법 제91조</a> · <a href="https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EB%AF%BC%EA%B1%B4%EA%B0%95%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C79%EC%A1%B0" target="_blank" rel="noopener">국민건강보험법 제79조</a></span><small>4대보험 휴직 처리 근거 (2026.11.08 열람) · 신청서 서식은 「고용창출장려금·고용안정장려금의 신청 및 지급에 관한 규정」 별지</small></li>
+    </ul>
+    <p class="note">실제 지급액은 고용센터 심사, 세액공제는 세무서가 정합니다.</p>
+  </section>
 </div>
 
 <script>
