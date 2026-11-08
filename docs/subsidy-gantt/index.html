@@ -462,20 +462,21 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 
   // 섹션 펼치기/접기 (체크리스트 · 서식 · 계산 기준)
-  state.secFold = state.secFold || {};
+  // 기본은 접힘: 연 섹션만 secOpen에 기록
+  state.secOpen = state.secOpen || {}; delete state.secFold; delete state.ckFold;
   const applySecFold = () => document.querySelectorAll('.sec-fold').forEach((b) => {
-    const closed = !!state.secFold[b.dataset.fold];
+    const closed = !state.secOpen[b.dataset.fold];
     b.setAttribute('aria-expanded', String(!closed));
     b.querySelector('.sec-cue').textContent = closed ? '▸' : '▾';
     b.querySelector('.sec-txt').textContent = closed ? '펼치기' : '접기';
     document.getElementById(b.getAttribute('aria-controls')).hidden = closed;
   });
-  document.querySelectorAll('.sec-fold').forEach((b) => b.addEventListener('click', () => { state.secFold[b.dataset.fold] = !state.secFold[b.dataset.fold]; save(); applySecFold(); }));
+  document.querySelectorAll('.sec-fold').forEach((b) => b.addEventListener('click', () => { state.secOpen[b.dataset.fold] = !state.secOpen[b.dataset.fold]; save(); applySecFold(); }));
   applySecFold();
   document.querySelectorAll('.jump a').forEach((a) => a.addEventListener('click', () => {
     const sec = document.querySelector(a.getAttribute('href'));
     const b = sec && sec.querySelector('.sec-fold');
-    if (b && state.secFold[b.dataset.fold]) { state.secFold[b.dataset.fold] = false; save(); applySecFold(); }
+    if (b && !state.secOpen[b.dataset.fold]) { state.secOpen[b.dataset.fold] = true; save(); applySecFold(); }
   }));
 
   /* ---------- dates ---------- */
@@ -551,7 +552,7 @@
     save(); render();
   }));
   inputs.forEach((i) => i.addEventListener('blur', fill));
-  document.getElementById('in-reset').addEventListener('click', () => { state = Object.assign({}, DEFAULTS, { ck: state.ck, ckFold: state.ckFold, secFold: state.secFold || {} }); save(); fill(); render(); });
+  document.getElementById('in-reset').addEventListener('click', () => { state = Object.assign({}, DEFAULTS, { ck: state.ck, ckOpen: state.ckOpen, secOpen: state.secOpen || {}, taxOpen: state.taxOpen }); save(); fill(); render(); });
 
   /* ---------- render ---------- */
   const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -923,7 +924,7 @@
     const cue = mk('span', 'sec-cue', '▾'); cue.setAttribute('aria-hidden', 'true');
     fb.append(cue, mk('span', '', grp.g), mk('span', 'ck-gcount', ''));
     h.append(fb); box.append(h); box.dataset.g = grp.g;
-    fb.addEventListener('click', () => { state.ckFold = state.ckFold || {}; state.ckFold[grp.g] = !state.ckFold[grp.g]; save(); updateChecklist(eligibility()); });
+    fb.addEventListener('click', () => { state.ckOpen = state.ckOpen || {}; state.ckOpen[grp.g] = !state.ckOpen[grp.g]; save(); updateChecklist(eligibility()); });
     if (grp.note) box.append(mk('p', 'note', grp.note));
     grp.items.forEach(([id, text, sub, scope]) => {
       const row = mk(grp.req ? 'div' : 'label', 'ck-item');
@@ -968,7 +969,7 @@
     ckGroups.querySelectorAll('.ck-group').forEach((box) => {
       const items = [...box.querySelectorAll('.ck-item')];
       const done = items.filter((r) => ck[r.dataset.id]).length, no = items.filter((r) => ck[r.dataset.id] === 'n').length;
-      const folded = !!(state.ckFold && state.ckFold[box.dataset.g]);
+      const folded = !(state.ckOpen && state.ckOpen[box.dataset.g]);
       box.classList.toggle('is-folded', folded);
       const fb = box.querySelector('.ck-gfold'); fb.setAttribute('aria-expanded', String(!folded));
       fb.querySelector('.sec-cue').textContent = folded ? '▸' : '▾';
