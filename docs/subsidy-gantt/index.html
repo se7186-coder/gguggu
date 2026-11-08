@@ -198,6 +198,12 @@
   .detail li a { font-size: 12px; margin-left: 6px; color: var(--apply); }
   @media (max-width: 640px) { .forms li { grid-template-columns: minmax(0, 1fr); } .f-links { grid-column: 1; grid-row: auto; margin-top: 6px; } }
   .g-fold { font: inherit; font-weight: 600; font-size: 14px; color: var(--fg); background: transparent; border: 0; padding: 4px 6px 4px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; cursor: pointer; text-align: left; border-radius: 6px; }
+  .sec-h { margin: 0 0 4px; }
+  .sec-fold { font: inherit; color: inherit; background: transparent; border: 0; padding: 2px 0; display: flex; align-items: center; gap: 8px; cursor: pointer; width: 100%; text-align: left; }
+  .sec-fold:focus-visible { outline: 2px solid var(--accent, currentColor); outline-offset: 2px; border-radius: 4px; }
+  .sec-cue { width: 1em; color: var(--muted); }
+  .sec-txt { margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; white-space: nowrap; }
+  .sec-body[hidden] { display: none; }
   .g-fold:hover { background: color-mix(in srgb, var(--tax) 10%, transparent); }
   .g-fold:focus-visible { outline: 2px solid var(--tax); outline-offset: 2px; }
   .g-fold small { font-weight: 400; color: var(--muted); font-size: 12px; }
@@ -286,8 +292,34 @@
   <p class="elig-note" id="elig-note" role="alert" hidden></p>
   <p class="tax-note" id="tax-note" role="note" hidden></p>
 
+  <section class="card" id="checklist" aria-labelledby="ck-title">
+    <h2 id="ck-title" class="sec-h"><button type="button" class="sec-fold" data-fold="ck" aria-expanded="true" aria-controls="ck-body"><span class="sec-cue" aria-hidden="true">▾</span><span>신청 전 체크리스트</span><span class="sec-txt">접기</span></button></h2>
+    <div class="sec-body" id="ck-body">
+    <p class="note">고용노동부 일생활균형 안내(2026.11.06 열람) 기준입니다. <b>필수 요건</b>은 충족 또는 미충족을 고르면 지원금 판정에 바로 반영됩니다. 하나라도 미충족이면 해당 지원금은 "지원 대상 아님"으로 표시합니다. 선택은 이 브라우저에만 저장됩니다.</p>
+    <div class="ck-verdict" id="ck-verdict" aria-live="polite"></div>
+    <p class="ck-progress" id="ck-progress"></p>
+    <div class="ck-groups" id="ck-groups"></div>
+    <div class="ck-foot"><button type="button" class="btn" id="ck-reset">체크리스트 비우기</button></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="t-title">
+    <h2 id="t-title">지원금별 금액 · 신청 일자 · 제출 서류</h2>
+    <p class="note" style="margin-bottom:10px">제출처는 모두 사업장 소재지 관할 고용센터입니다. 금액은 월 최대액 기준 추정입니다.</p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>지원금 종류</th><th>세부 항목</th><th>대상 기간</th><th class="num">계산</th><th class="num">금액</th><th>신청 일자</th><th>제출 서류</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:12px"><b>대체인력 지원금 서류</b> ① 출산육아기 고용안정장려금 지급신청서(대체인력 지원금, 별지 제26호) ② 육아휴직 실시 증명서류 사본(인사발령 문서 등) ③ 사업주 가족관계등록부 또는 주민등록등본 ④ 대체인력 근로계약서 사본 ⑤ 대체인력 월별 임금대장 사본<br>
+      <b>육아휴직 지원금 서류</b> ⑥ 출산육아기 고용안정장려금 지급신청서(육아휴직 지원금, 별지 제25호) ⑦ 육아휴직 실시 증명서류 사본 ⑧ 사업주 가족관계등록부 또는 주민등록등본</p>
+  </section>
+
   <section class="card" aria-labelledby="g-title">
-    <h2 id="g-title">지원금 간트차트</h2>
+    <h2 id="g-title">지원금 간트차트 및 설명</h2>
     <p class="note" id="g-note">지원금마다 막대(지원 대상 기간) 위에 신청 시작(◆)과 마감(◇)을 겹쳐 표시했습니다. 육아휴직 지원금과 남성 인센티브는 3개월마다 신청할 수 있는 날 중 휴직 기간 안의 날을 표시합니다(신청 횟수는 고용센터 확인).</p>
     <div class="legend" aria-label="범례">
       <span><i class="lg-bar" style="background:var(--sub)"></i>대체인력 지원 대상 기간</span>
@@ -306,34 +338,9 @@
 
   <section class="card detail" id="detail" aria-live="polite"></section>
 
-  <section class="card" aria-labelledby="t-title">
-    <h2 id="t-title">지원금별 금액 · 신청 일자 · 제출 서류</h2>
-    <p class="note" style="margin-bottom:10px">제출처는 모두 사업장 소재지 관할 고용센터입니다. 금액은 월 최대액 기준 추정입니다.</p>
-    <div class="tablewrap">
-      <table>
-        <thead>
-          <tr><th>지원금 종류</th><th>세부 항목</th><th>대상 기간</th><th class="num">계산</th><th class="num">금액</th><th>신청 일자</th><th>제출 서류</th></tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <p class="note" style="margin-top:12px"><b>대체인력 지원금 서류</b> ① 출산육아기 고용안정장려금 지급신청서(대체인력 지원금, 별지 제26호) ② 육아휴직 실시 증명서류 사본(인사발령 문서 등) ③ 사업주 가족관계등록부 또는 주민등록등본 ④ 대체인력 근로계약서 사본 ⑤ 대체인력 월별 임금대장 사본<br>
-      <b>육아휴직 지원금 서류</b> ⑥ 출산육아기 고용안정장려금 지급신청서(육아휴직 지원금, 별지 제25호) ⑦ 육아휴직 실시 증명서류 사본 ⑧ 사업주 가족관계등록부 또는 주민등록등본</p>
-  </section>
-
-  <section class="card" id="insurance" aria-labelledby="ins-title">
-    <h2 id="ins-title">4대보험 휴직·복직 처리</h2>
-    <p class="note" style="margin-bottom:10px">보험별로 휴직 때 신청하고 복직 때 되돌립니다. 신고 기한(다음 달 15일)과 서식 이름은 처음 주신 명세와 업계 안내 기준이라 각 공단에 확인하세요. 각 보험의 휴직 처리는 공단마다 따로 신고합니다 (4대사회보험 정보연계센터에서 함께 처리되는지는 확인하지 못함). EDI 주소는 이 환경에서 접속해 확인하지 못했습니다. 법령 근거는 국가법령정보센터 원문(2026.11.08 열람)입니다.</p>
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>보험</th><th>사업장이 할 일</th><th>휴직 중 보험료</th><th>제출처</th><th>근거</th></tr></thead>
-        <tbody id="ins-body"></tbody>
-      </table>
-    </div>
-  </section>
-
   <section class="card" id="forms" aria-labelledby="f-title">
-    <h2 id="f-title">신청서 서식 내려받기</h2>
+    <h2 id="f-title" class="sec-h"><button type="button" class="sec-fold" data-fold="forms" aria-expanded="true" aria-controls="forms-body"><span class="sec-cue" aria-hidden="true">▾</span><span>신청서 서식 내려받기</span><span class="sec-txt">접기</span></button></h2>
+    <div class="sec-body" id="forms-body">
     <p class="note">국가법령정보센터의 「고용창출장려금·고용안정장려금의 신청 및 지급에 관한 규정」(고용노동부고시 제2026-52호, 2026.7.1. 시행) 별지 서식입니다. 누르면 국가법령정보센터에서 파일을 받습니다.</p>
     <ul class="forms">
       <li style="--c:var(--sub)">
@@ -348,10 +355,12 @@
       </li>
     </ul>
     <p class="note">서식이 개정되면 링크가 바뀔 수 있습니다. 열리지 않으면 <a href="https://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EA%B3%A0%EC%9A%A9%EC%B0%BD%EC%B6%9C%EC%9E%A5%EB%A0%A4%EA%B8%88%C2%B7%EA%B3%A0%EC%9A%A9%EC%95%88%EC%A0%95%EC%9E%A5%EB%A0%A4%EA%B8%88%EC%9D%98%EC%8B%A0%EC%B2%AD%EB%B0%8F%EC%A7%80%EA%B8%89%EC%97%90%EA%B4%80%ED%95%9C%EA%B7%9C%EC%A0%95" target="_blank" rel="noopener">규정 본문</a>의 별표·서식 목록에서 받으세요. 나머지 첨부 서류(인사발령 문서, 가족관계등록부, 근로계약서, 임금대장)는 사업장에서 준비하는 서류라 정해진 서식이 없습니다.</p>
+    </div>
   </section>
 
   <section class="card" aria-labelledby="c-title">
-    <h2 id="c-title">계산 기준과 확인할 점</h2>
+    <h2 id="c-title" class="sec-h"><button type="button" class="sec-fold" data-fold="calc" aria-expanded="true" aria-controls="calc-body"><span class="sec-cue" aria-hidden="true">▾</span><span>계산 기준과 확인할 점</span><span class="sec-txt">접기</span></button></h2>
+    <div class="sec-body" id="calc-body">
     <ul class="checks">
       <li>대체인력 지원금은 월 최대 140만원(30인 미만)이며, "지급대상 기간에 대하여 사업주가 지급한 월 임금액의 100분의 80을 초과할 수 없습니다"(고용창출장려금·고용안정장려금의 신청 및 지급에 관한 규정 별표 5). 인수인계 기간에도 같게 적용됩니다. 임금액이 세전인지 세후인지는 규정에 따로 정의가 없어 확인하지 못했습니다. 휴직 전 인수인계는 최대 2개월, 복직 후 인수인계는 최대 1개월까지 인정됩니다.</li>
       <li>대체인력은 휴직 시작일 전 2개월이 되는 날 이후 새로 고용해 30일 이상 계속 고용해야 합니다. 정확히 2개월 전 날짜에 채용하면 경계일이라 포함 여부를 고용센터(1350)에 확인하세요.</li>
@@ -360,15 +369,18 @@
       <li>3개월마다 신청하는 회차별 대상 월의 구분과 남성 인센티브의 별도 서류는 참고 자료에서 확인하지 못했습니다.</li>
       <li>육아휴직 지원금은 30일 이상 부여해야 하고, 잔여 50%는 복직 후 6개월 이상 계속 고용한 뒤 신청합니다. 감원방지 기간에 다른 근로자를 고용조정으로 이직시키면 대체인력 지원금이 제한됩니다.</li>
     </ul>
+    </div>
   </section>
 
-  <section class="card" id="checklist" aria-labelledby="ck-title">
-    <h2 id="ck-title">신청 전 체크리스트</h2>
-    <p class="note">고용노동부 일생활균형 안내(2026.11.06 열람) 기준입니다. <b>필수 요건</b>은 충족 또는 미충족을 고르면 지원금 판정에 바로 반영됩니다. 하나라도 미충족이면 해당 지원금은 "지원 대상 아님"으로 표시합니다. 선택은 이 브라우저에만 저장됩니다.</p>
-    <div class="ck-verdict" id="ck-verdict" aria-live="polite"></div>
-    <p class="ck-progress" id="ck-progress"></p>
-    <div class="ck-groups" id="ck-groups"></div>
-    <div class="ck-foot"><button type="button" class="btn" id="ck-reset">체크리스트 비우기</button></div>
+  <section class="card" id="insurance" aria-labelledby="ins-title">
+    <h2 id="ins-title">4대보험 휴직·복직 처리</h2>
+    <p class="note" style="margin-bottom:10px">보험별로 휴직 때 신청하고 복직 때 되돌립니다. 신고 기한(다음 달 15일)과 서식 이름은 처음 주신 명세와 업계 안내 기준이라 각 공단에 확인하세요. 각 보험의 휴직 처리는 공단마다 따로 신고합니다 (4대사회보험 정보연계센터에서 함께 처리되는지는 확인하지 못함). EDI 주소는 이 환경에서 접속해 확인하지 못했습니다. 법령 근거는 국가법령정보센터 원문(2026.11.08 열람)입니다.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>보험</th><th>사업장이 할 일</th><th>휴직 중 보험료</th><th>제출처</th><th>근거</th></tr></thead>
+        <tbody id="ins-body"></tbody>
+      </table>
+    </div>
   </section>
 
   <p class="sources">출처: 고용노동부 일생활균형 <a href="https://www.worklife.kr/website_renew/index/employerSupport/substitute_worker_subsidy.asp" target="_blank" rel="noopener">대체인력 지원금</a> · <a href="https://www.worklife.kr/website_renew/index/employerSupport/parental_leave_reduction_subsidy.asp" target="_blank" rel="noopener">육아휴직 지원금</a> (2026.11.06 원문 열람) · 법제처 찾기쉬운 생활법령정보 <a href="https://easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=1380&amp;ccfNo=2&amp;cciNo=3&amp;cnpClsNo=1" target="_blank" rel="noopener">육아휴직 및 육아기 근로시간 단축 › 사업주에 대한 지원 › 고용안정장려금</a> (2026.11.08 원문 열람) · 국가법령정보센터 서식 · 세액공제: <a href="https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A1%B0%EC%84%B8%ED%8A%B9%EB%A1%80%EC%A0%9C%ED%95%9C%EB%B2%95/%EC%A0%9C29%EC%A1%B0%EC%9D%988" target="_blank" rel="noopener">조세특례제한법 제29조의8</a>(2026.9.18. 시행) · 법제처 생활법령 <a href="https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=1380&amp;ccfNo=3&amp;cciNo=1&amp;cnpClsNo=2" target="_blank" rel="noopener">직장복귀 지원 › 세제혜택 등</a>(2026.11.08 열람). 실제 지급액은 고용센터 심사, 세액공제는 세무서가 정합니다.</p>
@@ -400,6 +412,18 @@
   let state = Object.assign({}, DEFAULTS);
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && typeof s === 'object') Object.assign(state, s); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+  // 섹션 펼치기/접기 (체크리스트 · 서식 · 계산 기준)
+  state.secFold = state.secFold || {};
+  const applySecFold = () => document.querySelectorAll('.sec-fold').forEach((b) => {
+    const closed = !!state.secFold[b.dataset.fold];
+    b.setAttribute('aria-expanded', String(!closed));
+    b.querySelector('.sec-cue').textContent = closed ? '▸' : '▾';
+    b.querySelector('.sec-txt').textContent = closed ? '펼치기' : '접기';
+    document.getElementById(b.getAttribute('aria-controls')).hidden = closed;
+  });
+  document.querySelectorAll('.sec-fold').forEach((b) => b.addEventListener('click', () => { state.secFold[b.dataset.fold] = !state.secFold[b.dataset.fold]; save(); applySecFold(); }));
+  applySecFold();
 
   /* ---------- dates ---------- */
   const DAY = 864e5;
