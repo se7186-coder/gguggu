@@ -357,6 +357,7 @@
       taxLeave6: LE >= addD(addM(LS, 6), -1),
       taxYearEnd: Date.UTC(new Date(RT).getUTCFullYear(), 11, 31),
       taxKeepEnd: addD(addM(RT, 24), -1),
+      taxFileDue: Date.UTC(new Date(RT).getUTCFullYear() + 1, 2, 31), // 12월 결산 법인: 다음 해 3월 말 법인세 신고
     };
   };
 
@@ -392,8 +393,11 @@
     document.getElementById('t-male').textContent = state.male ? '남성 인센티브 ' + man(c.aMale) + ' 포함 시 ' + man(leaveTotal + c.aMale) : '남성 인센티브 해당 시 +' + man(MONTHLY_MALE * (c.leaveOk ? c.mLeave : 0));
     document.getElementById('t-all').textContent = man(subTotal + leaveTotal + c.aMale);
     const taxOk = c.taxByDate && c.taxLeave6;
-    document.getElementById('t-tax').textContent = taxOk ? man(TAX_CREDIT) : '대상 아님';
-    document.getElementById('t-tax-note').textContent = taxOk ? '요건 충족 시 복직 과세연도 법인세·소득세에서 공제' : (!c.taxByDate ? '현행법은 2026.12.31까지 복직한 경우만' : '연속 6개월 이상 휴직 요건 미충족');
+    const taxIfAmended = !c.taxByDate && c.taxLeave6;
+    const taxYear = new Date(c.RT).getUTCFullYear();
+    const taxAmt = taxOk ? man(TAX_CREDIT) : taxIfAmended ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님';
+    document.getElementById('t-tax').textContent = taxAmt;
+    document.getElementById('t-tax-note').textContent = taxOk ? '요건 충족 시 복직 과세연도 법인세·소득세에서 공제' : (taxIfAmended ? '현행법 기한(2026.12.31) 연장 시 과세연도 ' + taxYear + ', ' + fmt(c.taxFileDue) + '까지 법인세 신고 때 공제' : '연속 6개월 이상 휴직 요건 미충족');
     const wn = document.getElementById('wage-note');
     wn.replaceChildren(document.createTextNode('지원 월액 '), mk('b', '', man(c.monthly)), document.createTextNode(' = 월 최대 140만원과 임금 ' + won(Number(state.wage) || 0) + '원 × 80% = ' + won((Number(state.wage) || 0) * SUB_RATE) + '원 중 작은 금액. 인수인계 기간에도 같게 적용됩니다.'));
     document.getElementById('in-summary').textContent = '육아휴직 ' + one(c.mLeave) + '개월 · 대체인력 ' + one(months(c.HS, c.HE)) + '개월 · 대체인력 지원 월 ' + man(c.monthly) + (c.monthly < MONTHLY_SUB ? ' (임금 80% 한도)' : '');
@@ -409,7 +413,7 @@
     if (c.mLeave > 18) w.push('육아휴직은 최대 1년 6개월입니다.');
     else if (c.mLeave > 12) w.push('1년을 넘는 육아휴직은 부모 모두 3개월 이상 사용한 경우 등에만 가능합니다.');
     if (c.HS < addM(c.LS, -PRE_MAX) && c.HS >= c.hireFrom) w.push('휴직 전 인수인계는 최대 2개월까지만 계산했습니다.');
-    if (!c.taxByDate) w.push('육아휴직 복귀자 세액공제: 현행 조세특례제한법 제29조의8제5항은 2026.12.31까지 복직시킨 경우만 공제합니다. 복직일(' + fmt(c.RT) + ')이 그 이후라 현재 법으로는 대상이 아닙니다. 기한이 연장되는지 확인하세요.');
+    if (!c.taxByDate) w.push('육아휴직 복귀자 세액공제: 현행 조세특례제한법 제29조의8제5항은 2026.12.31까지 복직시킨 경우만 공제합니다. 복직일(' + fmt(c.RT) + ')이 그 이후라 현재 법으로는 대상이 아닙니다. 법이 개정돼 기한이 복직일 이후로 늘어나면 과세연도 ' + new Date(c.RT).getUTCFullYear() + '에 해당하고, ' + fmt(c.taxFileDue) + '까지 법인세 신고 때 공제를 신청합니다(12월 결산 법인 기준).');
     else if (!c.taxLeave6) w.push('육아휴직 복귀자 세액공제는 육아휴직을 연속 6개월 이상 사용한 경우만 대상입니다.');
     if (c.monthly < MONTHLY_SUB) w.push('대체인력 임금의 80%(' + won(c.monthly) + '원)가 월 최대 140만원보다 적어 80% 금액으로 계산했습니다.');
     const ul = document.getElementById('warns');
@@ -447,12 +451,13 @@
         { id: 'keep', name: '복직 후 6개월 계속 고용', when: range(c.RT, addD(c.rest50, -1)), type: 'ctx', s: c.RT, e: addD(c.rest50, -1),
           info: { amount: '—', apply: '—', docs: [], prep: ['잔여 50%를 받으려면 복직 후 6개월 이상 피보험자로 계속 고용 (근로자 자기 사정으로 6개월을 못 채우면 그 근로자가 이직한 다음 날부터 신청)', '휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함 (위반 시 500만원 이하 벌금)'], src: SRC_LEAVE } },
       ] },
-      { name: '세액공제 (별도)', total: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : '대상 아님', color: 'var(--tax)', rows: [
-        { id: 'tax', name: '육아휴직 복귀자 세액공제', when: '복직 ' + fmt(c.RT) + ' · 과세연도 ' + new Date(c.RT).getUTCFullYear(), amt: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : '대상 아님', type: 'bar', s: c.RT, e: c.taxYearEnd, soft: !(c.taxByDate && c.taxLeave6),
-          calc: '1인 × 1,300만원', applyText: '복직한 과세연도 법인세(사업소득 소득세) 신고 때',
-          info: { amount: ((c.taxByDate && c.taxLeave6) ? '1,300만원' : '현행법상 대상 아님 (요건 충족 시 1,300만원)') + ' · 중소기업 1인당 1,300만원, 중견기업 900만원', apply: '복직한 날이 속하는 과세연도(' + new Date(c.RT).getUTCFullYear() + ')의 법인세 또는 사업소득 소득세 신고 때 세액공제 신청, 납세지 관할 세무서',
+      { name: '세액공제 (별도)', total: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : (c.taxLeave6 ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님'), color: 'var(--tax)', rows: [
+        { id: 'tax', name: '육아휴직 복귀자 세액공제', when: '복직 ' + fmt(c.RT) + ' · 과세연도 ' + new Date(c.RT).getUTCFullYear() + ' · 신고 ' + fmt(c.taxFileDue) + '까지', amt: (c.taxByDate && c.taxLeave6) ? man(TAX_CREDIT) : (c.taxLeave6 ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님'), type: 'bar', s: c.RT, e: c.taxYearEnd, soft: !(c.taxByDate && c.taxLeave6),
+          points: [[Date.UTC(new Date(c.RT).getUTCFullYear() + 1, 0, 1), '신고 시작', !(c.taxByDate && c.taxLeave6)]], due: [c.taxFileDue, '법인세 신고 ' + md(c.taxFileDue), !(c.taxByDate && c.taxLeave6)],
+          calc: '1인 × 1,300만원', applyText: '과세연도 ' + new Date(c.RT).getUTCFullYear() + ' 법인세 신고 때 (' + fmt(c.taxFileDue) + '까지, 12월 결산 법인)',
+          info: { amount: ((c.taxByDate && c.taxLeave6) ? '1,300만원' : '현행법상 대상 아님 (요건 충족 시 1,300만원)') + ' · 중소기업 1인당 1,300만원, 중견기업 900만원', apply: '복직한 날이 속하는 과세연도(' + new Date(c.RT).getUTCFullYear() + ')의 법인세 신고 때(12월 결산 법인은 ' + fmt(c.taxFileDue) + '까지) 세액공제 신청, 납세지 관할 세무서 · 개인사업자는 다음 해 종합소득세 신고 때',
             office: '납세지 관할 세무서', docs: ['세액공제신청서 (조세특례제한법 시행규칙 별지 제1호서식) · 생활법령 안내 기준', '통합고용세액공제 계산에 필요한 별도 서식은 확인하지 못함 · 세무대리인 확인'],
-            prep: ['현행법은 2026.12.31까지 복직시킨 경우만 공제 (복직일 ' + fmt(c.RT) + (c.taxByDate ? ', 충족)' : ', 미충족 · 기한 연장 여부 확인 필요)'), '육아휴직을 연속 6개월 이상 사용 (' + (c.taxLeave6 ? '충족' : '미충족') + ')', '해당 기업에서 1년 이상 근무 (근로소득세 원천징수 사실로 확인)', '최대주주·최대출자자(개인사업자는 대표자)나 그 특수관계인이 아닐 것', '복직 과세연도의 상시근로자 수가 직전 과세연도보다 줄면 공제 없음', '자녀 1명당 한 차례만 적용', '복직일부터 2년(' + fmt(c.taxKeepEnd) + ') 안에 근로관계가 끝나면 공제받은 세액을 납부'],
+            prep: ['현행법은 2026.12.31까지 복직시킨 경우만 공제 (복직일 ' + fmt(c.RT) + (c.taxByDate ? ', 충족)' : ', 미충족 · 법이 개정돼 기한이 늘어나면 과세연도 ' + new Date(c.RT).getUTCFullYear() + ' 대상)'), '기한 개정 이력: 2020.12.29 2년 연장, 2022.12.31 제29조의8로 교체, 2025.12.23 1년 연장 · 다음 결정은 2026년 12월 국회로 예상 (정부안은 종료, 국회 발의안은 2029.12.31까지 연장으로 보도됨, 기사 원문 미확인)', '육아휴직을 연속 6개월 이상 사용 (' + (c.taxLeave6 ? '충족' : '미충족') + ')', '해당 기업에서 1년 이상 근무 (근로소득세 원천징수 사실로 확인)', '최대주주·최대출자자(개인사업자는 대표자)나 그 특수관계인이 아닐 것', '복직 과세연도의 상시근로자 수가 직전 과세연도보다 줄면 공제 없음', '자녀 1명당 한 차례만 적용', '복직일부터 2년(' + fmt(c.taxKeepEnd) + ') 안에 근로관계가 끝나면 공제받은 세액을 납부'],
             src: '조세특례제한법 제29조의8제5항·제6항·제7항 (2026.9.18. 시행, 국가법령정보센터 2026.11.08 열람)' } },
       ] },
     ];
