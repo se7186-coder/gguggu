@@ -457,6 +457,108 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   .pl-sg.is-narrow .pl-sg-bar, .pl-sg.is-narrow .pl-sg-pt, .pl-sg.is-narrow .pl-sg-line { top: 50%; }
   .pl-sg.is-narrow .pl-sg-pl, .pl-sg.is-narrow .pl-sg-band span { display: none; }
   .pl-sg.is-narrow .pl-sg-today span { top: 4px !important; }
+  /* ---------- 라일락 톤 (보내 주신 팔레트: #9d82b2 · #b59dca · #c8aed9 · #e2c8e9 · #f8d8eb) ---------- */
+  .pl {
+    --pl-worker: #8c79b8;
+    --pl-spouse: #c98bbf;
+    --pl-accent: #9d82b2;
+    --pl-accent-ink: #7a6191;
+    --pl-soft: color-mix(in srgb, #c8aed9 28%, var(--color-panel));
+    --pl-softer: color-mix(in srgb, #e2c8e9 30%, var(--color-panel));
+    --pl-tight: color-mix(in srgb, #f8d8eb 70%, var(--color-panel));
+    --pl-tight-ink: #a3456f;
+    --pl-red: #d9534f;
+  }
+  .pl .pl-card { border-radius: 16px; border-color: color-mix(in srgb, #c8aed9 35%, var(--color-border-line)); box-shadow: 0 1px 2px color-mix(in srgb, #9d82b2 10%, transparent); }
+  .pl-hello { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--cds-gap-sm); }
+  .pl-hello small { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .pl-hello h1 { margin: 2px 0 0; font-family: var(--font-anthropic-sans); font-weight: 700; font-size: calc(var(--cds-font-size-title) * 1.05); }
+  .pl-hello h1 em { font-style: normal; color: var(--pl-accent); }
+  .pl-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pl-chip { font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid color-mix(in srgb, #c8aed9 45%, var(--color-border-line)); background: var(--color-panel); color: var(--color-fg-muted); border-radius: 999px; padding: 7px 14px; }
+  .pl-chip.is-pri { background: var(--pl-accent); border-color: var(--pl-accent); color: #fff; font-weight: 700; cursor: pointer; }
+  .pl-chip.is-pri:hover { background: var(--pl-accent-ink); }
+  .pl-vtabs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--color-panel); border: 1px solid color-mix(in srgb, #c8aed9 35%, var(--color-border-line)); width: max-content; max-width: 100%; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }
+  .pl-vtab { font: inherit; font-size: var(--cds-font-size-body); font-weight: 600; border: 0; background: transparent; color: var(--color-fg-muted); border-radius: 999px; padding: 7px 18px; cursor: pointer; min-height: 36px; }
+  .pl-vtab[aria-selected="true"] { background: var(--pl-accent); color: #fff; }
+  .pl-vtab:focus-visible, .pl-cb:focus-visible, .pl-fchip:focus-visible, .pl-chip:focus-visible { outline: 2px solid var(--pl-accent-ink); outline-offset: 2px; }
+  .pl-card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .pl-card-h h2 { margin: 0; }
+  .pl-card-h small { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  /* 가족 일정 한 줄 */
+  .pl-jr { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 10px 10px; align-items: center; }
+  .pl-jr-who { font-weight: 700; color: var(--c); }
+  .pl-jr-lane { position: relative; height: 30px; border-radius: 8px; background: var(--pl-softer); }
+  .pl-jr-seg { position: absolute; top: 0; bottom: 0; border-radius: 8px; background: var(--c); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; padding-left: 8px; white-space: nowrap; overflow: hidden; }
+  .pl-jr-seg.is-soft { background: color-mix(in srgb, var(--c) 40%, var(--color-panel)); color: color-mix(in srgb, var(--c) 60%, var(--color-fg)); }
+  .pl-jr-today { position: absolute; top: -5px; bottom: -5px; border-left: 2px dashed var(--pl-red); }
+  .pl-jr-ticks { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .pl-jr-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--cds-gap-sm); }
+  .pl-pill { border-radius: 999px; padding: 4px 12px; font-size: 12.5px; font-weight: 700; background: color-mix(in srgb, var(--c, #9d82b2) 14%, var(--color-panel)); color: color-mix(in srgb, var(--c, #9d82b2) 70%, var(--color-fg)); }
+  .pl-pill.is-today { --c: var(--pl-red); }
+  /* 할 일 + 돈 두 칸 */
+  .pl-duo { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--cds-gap-lg); align-items: start; }
+  .pl-duo:has(> [hidden]) { grid-template-columns: minmax(0, 1fr); }
+  .pl-fchips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pl-fchip { font: inherit; font-size: var(--cds-font-size-caption); font-weight: 600; border: 0; border-radius: 999px; padding: 5px 12px; background: var(--pl-softer); color: var(--color-fg-muted); cursor: pointer; min-height: 30px; }
+  .pl-fchip[aria-pressed="true"] { background: var(--pl-soft); color: var(--pl-accent-ink); }
+  .pl-todos { list-style: none; margin: 0; padding: 0; display: grid; }
+  .pl-todo { display: grid; grid-template-columns: 24px 32px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--color-border-line); }
+  .pl-todo:first-child { border-top: 0; }
+  .pl-todo-empty { padding: 12px 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+  .pl-cb { width: 22px; height: 22px; border-radius: 7px; border: 2px solid color-mix(in srgb, #c8aed9 80%, var(--color-fg-muted)); background: var(--color-panel); cursor: pointer; padding: 0; display: grid; place-items: center; }
+  .pl-cb[aria-checked="true"] { background: var(--pl-accent); border-color: var(--pl-accent); }
+  .pl-cb[aria-checked="true"]::after { content: ''; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg); }
+  .pl-av { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; background: var(--c); }
+  .pl-todo-body { display: grid; gap: 1px; min-width: 0; }
+  .pl-todo-body b { font-size: var(--cds-font-size-body); font-weight: 600; }
+  .pl-todo-body small { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pl-todo.is-done .pl-todo-body b { text-decoration: line-through; color: var(--color-fg-muted); }
+  .pl-dd { font-weight: 800; font-size: 12.5px; border-radius: 8px; padding: 3px 9px; background: color-mix(in srgb, var(--pl-red) 12%, var(--color-panel)); color: var(--pl-red); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .pl-dd.is-later { background: var(--pl-softer); color: var(--color-fg-muted); }
+  .pl-dd.is-over { background: var(--pl-red); color: #fff; }
+  .pl-todo-more { grid-column: 3 / -1; font-size: var(--cds-font-size-caption); }
+  .pl-todo-more summary { cursor: pointer; color: var(--pl-accent-ink); font-weight: 600; }
+  .pl-todo-docs { margin-top: 6px; background: var(--pl-softer); border-radius: 10px; padding: 8px 12px; display: grid; gap: 4px; }
+  .pl-todo-docs ul { margin: 0; padding-left: 1.2em; }
+  .pl-todo-docs small { color: var(--color-fg-muted); }
+  .pl-money-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .pl-money-month { width: 100%; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pl .pl-money-big { font-size: calc(var(--cds-font-size-title) * 1.3); font-weight: 800; color: var(--pl-accent); font-variant-numeric: tabular-nums; }
+  .pl-money-head small { color: var(--color-fg-muted); font-weight: 600; }
+  .pl-split { display: flex; gap: 4px; height: 10px; margin: 10px 0 6px; }
+  .pl-split i { display: block; border-radius: 6px; background: var(--c); min-width: 4px; }
+  .pl-money-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pl-money-legend .pl-dot { margin-right: 6px; }
+  .pl-budget { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pl-budget input { width: 6rem; font: inherit; font-size: var(--cds-font-size-body); padding: 5px 8px; border: 1px solid var(--color-border-line); border-radius: 8px; background: var(--color-bg); color: var(--color-fg); }
+  .pl-tight { margin: 0; border-radius: 12px; background: var(--pl-tight); color: var(--pl-tight-ink); padding: 10px 12px; font-size: var(--cds-font-size-caption); line-height: 1.55; }
+  .pl-tight.is-ok, .pl-tight.is-off { background: var(--pl-softer); color: var(--color-fg-muted); }
+  .pl-money-total { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pl-money-total b { color: var(--color-fg); }
+  /* 차트 */
+  .pl-chart-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pl-chart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--c); }
+  .pl-chart-legend .lg-line { width: 14px; height: 0; border-top: 2px dashed var(--pl-tight-ink); border-radius: 0; background: none; vertical-align: 3px; }
+  .pl-chart-legend .lg-tight { background: var(--pl-tight); }
+  .pl-bar-me { fill: var(--pl-worker); }
+  .pl-bar-sp { fill: var(--pl-spouse); }
+  .pl-tight-bg { fill: var(--pl-tight); opacity: .75; }
+  .pl-bar-g { cursor: pointer; outline: none; }
+  .pl-bar-g:hover .pl-bar-me, .pl-bar-g:hover .pl-bar-sp, .pl-bar-g:focus-visible .pl-bar-me, .pl-bar-g:focus-visible .pl-bar-sp { opacity: .8; }
+  .pl-bar-g.is-sel .pl-bar-me, .pl-bar-g.is-sel .pl-bar-sp { stroke: var(--color-fg); stroke-width: 1.5; }
+  .pl-bar-x { font-size: 11px; fill: var(--color-fg-muted); font-family: var(--font-anthropic-sans); }
+  .pl-budget-line { stroke: var(--pl-tight-ink); stroke-width: 2; stroke-dasharray: 6 5; }
+  .pl-chart-sel { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .pl-chart-sel b { color: var(--color-fg); }
+  @media (max-width: 760px) {
+    .pl-duo { grid-template-columns: minmax(0, 1fr); }
+    .pl-vtabs { width: 100%; justify-content: space-between; }
+    .pl-vtab { padding: 7px 10px; flex: 1; }
+    .pl-todo { grid-template-columns: 24px 32px minmax(0, 1fr); }
+    .pl-todo .pl-dd { grid-column: 3; justify-self: start; }
+    .pl-jr-seg { font-size: 11px; padding-left: 6px; }
+  }
 </style>
 <script src="d3.min.js"></script>
 <script>
@@ -495,7 +597,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     setParams: function (o) { Object.keys(o || {}).forEach(function (k) { params[k] = o[k]; }); save(); schedule(); },
     resetParams: function () { params = Object.assign({}, DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {} schedule(); },
     data: function (id) { var d = DATA[id]; return d ? { status: 'ok', data: d, columns: Object.keys(d[0] || {}), meta: [], refreshing: false } : { status: 'missing', data: [], meta: [] }; },
-    draw: function (name, fn) { draws.set(name, fn); schedule(); },
+    draw: function (name, fn) { if (fn) draws.set(name, fn); schedule(); },
     onData: function (fn) { ons.push(fn); schedule(); },
     setLink: function (name) { try { history.replaceState(null, '', '#' + name); } catch (e) {} },
     refresh: function () { schedule(); },
@@ -511,36 +613,103 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 <div id="dash-root">
 
 <div class="pl">
-  <header class="pl-head" id="top">
-    <span class="pl-eyebrow">출산전후휴가 · 육아휴직 · 육아휴직 급여 · 6+6 부모육아휴직</span>
-    <h1>육아휴직 통합 관리 대시보드</h1>
-    <p class="pl-take">만유 · 세은 부부가 받을 월별 수입과 일정을 보여 줍니다.</p>
+  <header class="pl-hello" id="top">
+    <div>
+      <small>안녕하세요, 만유 · 세은</small>
+      <h1>육아휴직 <em>통합 관리</em></h1>
+    </div>
+    <div class="pl-tools">
+      <span class="pl-chip" data-draw="today-chip">—</span>
+      <button type="button" class="pl-chip is-pri pl-open-settings">⚙ 날짜·금액 바꾸기</button>
+    </div>
   </header>
+  <div class="pl-vtabs" role="tablist" aria-label="보기 선택">
+    <button type="button" class="pl-vtab" role="tab" data-view="glance" aria-selected="true">한눈에</button>
+    <button type="button" class="pl-vtab" role="tab" data-view="todo" aria-selected="false">할 일</button>
+    <button type="button" class="pl-vtab" role="tab" data-view="pay" aria-selected="false">수입</button>
+    <button type="button" class="pl-vtab" role="tab" data-view="sched" aria-selected="false">일정</button>
+  </div>
 
   <!-- ===================== 근로자 ===================== -->
   <section class="pl-page" id="worker" data-page="worker">
-    <section class="pl-kpis" aria-label="근로자 핵심 요약">
-      <div class="pl-card pl-kpi pl-r-worker">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>만유 휴직</span>
-        <b class="pl-kpi-value"><span data-draw="months" data-of="leave">—</span><small>개월</small></b>
-        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="LS">—</span> ~ <span data-draw="anchor-date" data-anchor="LE">—</span></span>
-      </div>
-      <div class="pl-card pl-kpi pl-r-spouse">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>세은 휴직</span>
-        <b class="pl-kpi-value"><span data-draw="months" data-of="spouse">—</span><small>개월</small></b>
-        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="SLS">—</span> ~ <span data-draw="anchor-date" data-anchor="SLE">—</span></span>
-      </div>
-      <div class="pl-card pl-kpi pl-r-worker">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>부부 예상 수령 합계</span>
-        <b class="pl-kpi-value"><span data-draw="pay-total" data-who="both" data-source="pay_rules">—</span><small>원</small></b>
-        <span class="pl-kpi-sub">만유 <span data-draw="pay-total" data-who="me" data-source="pay_rules">—</span>원 + 세은 <span data-draw="pay-total" data-who="spouse" data-source="pay_rules">—</span>원<span data-draw="mat-note"></span></span>
-      </div>
-    </section>
     <ul class="pl-warns pl-warns-top" data-draw="warnings" data-scope="worker" aria-live="polite"></ul>
-    <section class="pl-next" aria-labelledby="pl-next-title">
-      <h2 class="pl-next-title" id="pl-next-title">다음 할 일</h2>
-      <ol class="pl-next-list" data-draw="next-tasks" data-source="tasks"></ol>
+
+    <section class="pl-card" id="journey" data-views="glance sched" aria-labelledby="pl-jr-title">
+      <div class="pl-card-h"><h2 id="pl-jr-title">우리 가족 일정 한 줄</h2><small>빨간 점선이 오늘</small></div>
+      <div data-draw="journey">—</div>
     </section>
+
+    <div class="pl-duo">
+      <section class="pl-card" id="todo" data-views="glance todo" aria-labelledby="pl-todo-title">
+        <div class="pl-card-h"><h2 id="pl-todo-title">할 일</h2><small>체크하면 완료로 남습니다</small></div>
+        <div class="pl-fchips" role="group" aria-label="할 일 보기">
+          <button type="button" class="pl-fchip" data-tf="near" aria-pressed="true">가까운 일 (90일 안) <span data-draw="todo-count" data-tf="near" data-source="tasks">—</span></button>
+          <button type="button" class="pl-fchip" data-tf="later" aria-pressed="false">나중 <span data-draw="todo-count" data-tf="later" data-source="tasks">—</span></button>
+          <button type="button" class="pl-fchip" data-tf="done" aria-pressed="false">완료 <span data-draw="todo-count" data-tf="done" data-source="tasks">—</span></button>
+        </div>
+        <ul class="pl-todos" data-draw="todo" data-source="tasks"></ul>
+      </section>
+
+      <section class="pl-card" id="money" data-views="glance pay" aria-labelledby="pl-money-title">
+        <div class="pl-card-h"><h2 id="pl-money-title">다음 달 들어올 돈</h2><small>세후 · 예상</small></div>
+        <div data-draw="money-next" data-source="pay_rules">—</div>
+        <label class="pl-budget" for="pl-w-budget">생활비 기준 <input id="pl-w-budget" class="pl-num-in" data-param="budget" data-unit="10000" type="number" min="0" max="10000" step="10" inputmode="numeric"> 만원/월</label>
+        <p class="pl-tight" data-draw="tight-note" data-source="pay_rules">—</p>
+        <p class="pl-money-total">전체 예상 수령 <b><span data-draw="pay-total" data-who="both" data-source="pay_rules">—</span>원</b> (육아휴직 + 출산전후휴가 급여) · 만유 <span data-draw="pay-total" data-who="me" data-source="pay_rules">—</span>원 · 세은 <span data-draw="pay-total" data-who="spouse" data-source="pay_rules">—</span>원</p>
+      </section>
+    </div>
+
+    <section class="pl-card" id="pay-chart" data-views="glance pay" aria-labelledby="pl-chart-title">
+      <div class="pl-card-h"><h2 id="pl-chart-title">월별 부부 수입</h2><small>막대를 누르면 그 달 내역</small></div>
+      <div class="pl-chart-legend"><span class="pl-r-worker"><i></i>만유</span><span class="pl-r-spouse"><i></i>세은</span><span><i class="lg-line"></i>생활비 기준</span><span><i class="lg-tight"></i>기준보다 적은 달</span></div>
+      <div data-draw="pay-chart" data-source="pay_rules">—</div>
+    </section>
+
+
+    <section class="pl-card" id="couple-timeline" data-views="glance sched">
+      <div class="pl-card-head">
+        <h2>부부 일정</h2>
+        <p class="pl-note">일정마다 신청 시작(◆)과 기한(◇)을 겹쳐 표시했습니다. 항목을 누르거나 마우스를 올리면 아래에 필요 서류와 준비사항이 보입니다.</p>
+      </div>
+      <div class="pl-legend" aria-label="범례">
+        <span class="pl-r-worker"><i class="pl-dot"></i>만유</span>
+        <span class="pl-r-spouse"><i class="pl-dot"></i>세은</span>
+        <span><i class="pl-lg-band"></i>휴직 기간 (배경)</span>
+        <span><i class="pl-lg-start"></i>신청 시작 · 시점</span>
+        <span><i class="pl-lg-due"></i>기한 · 마감</span>
+        <span><i class="pl-lg-bar"></i>진행 기간</span>
+        <span><i class="pl-lg-now"></i>오늘</span>
+      </div>
+      <div class="pl-gantt" id="couple-gantt" data-draw="gantt" data-roles="worker,spouse" data-group="role" data-bands="LS:LE:worker:만유 육아휴직,MS:ME:spouse:세은 출산휴가,SLS:SLE:spouse:세은 육아휴직" data-source="tasks"></div>
+    </section>
+
+    <details class="pl-card pl-fold" id="pay" data-views="pay">
+      <summary class="pl-fold-sum"><span class="pl-fold-title">부부 월별 수입 표</span><span class="pl-fold-meta" data-draw="pay-range">—</span><span class="pl-fold-cue" aria-hidden="true"></span></summary>
+      <p class="pl-note">휴직 중에는 육아휴직 급여, 세은 출산전후휴가 중에는 회사 지급분과 정부 출산전후휴가 급여, 일하는 기간에는 월 급여(세후 실수령), 여기에 추가 수입을 더한 금액입니다.</p>
+      <div class="pl-tablewrap">
+        <table class="pl-table pl-combined pl-stack">
+          <thead>
+            <tr>
+              <th>월</th>
+              <th class="pl-num pl-r-worker">만유(원)</th>
+              <th class="pl-num pl-r-spouse">세은(원)</th>
+              <th class="pl-num">부부 합계(원)</th>
+              <th class="pl-num">누적(원)</th>
+            </tr>
+          </thead>
+          <tbody data-draw="pay-combined" data-source="pay_rules"></tbody>
+        </table>
+      </div>
+      <details class="pl-more">
+        <summary>계산 방법과 주의사항</summary>
+        <div class="pl-more-body">
+          <p>육아휴직 급여는 각자 휴직 시작일부터 한 달 단위 회차로 계산합니다. 통상임금 × 지급률에 회차별 월 상한과 하한(70만원)을 적용하고, 한 달이 다 차지 않는 회차는 일수 비율로 나눴습니다. 휴직하지 않은 날은 설정한 월 급여를 그 달 일수 비율로 넣었습니다.</p>
+          <p>6+6(부모함께육아휴직제): 자녀 생후 18개월 이내에 부모 모두 휴직하면 첫 6개월 상한이 250 · 250 · 300 · 350 · 400 · 450만원(통상임금 100%), 7개월차부터는 일반 기준(80%, 상한 160만원)입니다. 5개월차 400만원은 요청에 따라 적용한 값이고, 고용노동부 일생활균형 안내 페이지에는 350만원으로 적혀 있으니 고용센터(1350)에서 확인하세요. 하한 70만원은 그 페이지에 없고 다른 자료를 따랐습니다.</p>
+          <p>세은 출산전후휴가(대규모기업): 최초 60일은 회사가 통상임금을 주므로 세후 월 급여를 일수 비율로 넣었고, 마지막 30일은 정부가 통상임금 100%를 30일 기준 220만원 한도로 지급합니다(고용노동부 일생활균형 「출산전후휴가 및 급여」, 2026.11.09 열람). 정부 급여는 휴가가 끝난 뒤 한꺼번에 신청할 수 있어 실제 입금 달은 표와 다를 수 있습니다.</p>
+          <p>휴직 중 회사에서 금품을 받으면 그 달 금품과 육아휴직 급여의 합이 통상임금을 넘는 만큼 급여가 줄어듭니다. 만유 추가 수입이 회사 지급분이라면 해당되며, 이 표는 감액을 반영하지 않았습니다.</p>
+        </div>
+      </details>
+    </details>
 
     <details class="pl-card pl-settings pl-fold" id="worker-settings">
       <summary class="pl-fold-sum"><span class="pl-fold-title">설정 · 날짜와 금액 바꾸기</span><span class="pl-fold-meta" data-draw="set-sum" data-scope="worker">—</span><span class="pl-fold-cue" aria-hidden="true"></span></summary>
@@ -621,51 +790,6 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       </div>
     </details>
 
-    <section class="pl-card" id="couple-timeline">
-      <div class="pl-card-head">
-        <h2>부부 일정</h2>
-        <p class="pl-note">일정마다 신청 시작(◆)과 기한(◇)을 겹쳐 표시했습니다. 항목을 누르거나 마우스를 올리면 아래에 필요 서류와 준비사항이 보입니다.</p>
-      </div>
-      <div class="pl-legend" aria-label="범례">
-        <span class="pl-r-worker"><i class="pl-dot"></i>만유</span>
-        <span class="pl-r-spouse"><i class="pl-dot"></i>세은</span>
-        <span><i class="pl-lg-band"></i>휴직 기간 (배경)</span>
-        <span><i class="pl-lg-start"></i>신청 시작 · 시점</span>
-        <span><i class="pl-lg-due"></i>기한 · 마감</span>
-        <span><i class="pl-lg-bar"></i>진행 기간</span>
-        <span><i class="pl-lg-now"></i>오늘</span>
-      </div>
-      <div class="pl-gantt" id="couple-gantt" data-draw="gantt" data-roles="worker,spouse" data-group="role" data-bands="LS:LE:worker:만유 육아휴직,MS:ME:spouse:세은 출산휴가,SLS:SLE:spouse:세은 육아휴직" data-source="tasks"></div>
-    </section>
-
-    <details class="pl-card pl-fold" id="pay">
-      <summary class="pl-fold-sum"><span class="pl-fold-title">부부 월별 수입</span><span class="pl-fold-meta" data-draw="pay-range">—</span><span class="pl-fold-cue" aria-hidden="true"></span></summary>
-      <p class="pl-note">휴직 중에는 육아휴직 급여, 세은 출산전후휴가 중에는 회사 지급분과 정부 출산전후휴가 급여, 일하는 기간에는 월 급여(세후 실수령), 여기에 추가 수입을 더한 금액입니다.</p>
-      <div class="pl-tablewrap">
-        <table class="pl-table pl-combined pl-stack">
-          <thead>
-            <tr>
-              <th>월</th>
-              <th class="pl-num pl-r-worker">만유(원)</th>
-              <th class="pl-num pl-r-spouse">세은(원)</th>
-              <th class="pl-num">부부 합계(원)</th>
-              <th class="pl-num">누적(원)</th>
-            </tr>
-          </thead>
-          <tbody data-draw="pay-combined" data-source="pay_rules"></tbody>
-        </table>
-      </div>
-      <details class="pl-more">
-        <summary>계산 방법과 주의사항</summary>
-        <div class="pl-more-body">
-          <p>육아휴직 급여는 각자 휴직 시작일부터 한 달 단위 회차로 계산합니다. 통상임금 × 지급률에 회차별 월 상한과 하한(70만원)을 적용하고, 한 달이 다 차지 않는 회차는 일수 비율로 나눴습니다. 휴직하지 않은 날은 설정한 월 급여를 그 달 일수 비율로 넣었습니다.</p>
-          <p>6+6(부모함께육아휴직제): 자녀 생후 18개월 이내에 부모 모두 휴직하면 첫 6개월 상한이 250 · 250 · 300 · 350 · 400 · 450만원(통상임금 100%), 7개월차부터는 일반 기준(80%, 상한 160만원)입니다. 5개월차 400만원은 요청에 따라 적용한 값이고, 고용노동부 일생활균형 안내 페이지에는 350만원으로 적혀 있으니 고용센터(1350)에서 확인하세요. 하한 70만원은 그 페이지에 없고 다른 자료를 따랐습니다.</p>
-          <p>세은 출산전후휴가(대규모기업): 최초 60일은 회사가 통상임금을 주므로 세후 월 급여를 일수 비율로 넣었고, 마지막 30일은 정부가 통상임금 100%를 30일 기준 220만원 한도로 지급합니다(고용노동부 일생활균형 「출산전후휴가 및 급여」, 2026.11.09 열람). 정부 급여는 휴가가 끝난 뒤 한꺼번에 신청할 수 있어 실제 입금 달은 표와 다를 수 있습니다.</p>
-          <p>휴직 중 회사에서 금품을 받으면 그 달 금품과 육아휴직 급여의 합이 통상임금을 넘는 만큼 급여가 줄어듭니다. 만유 추가 수입이 회사 지급분이라면 해당되며, 이 표는 감액을 반영하지 않았습니다.</p>
-        </div>
-      </details>
-    </details>
-
 
 
 
@@ -704,7 +828,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     special: { name: '육아휴직 지원금 특례', parts: '특례 첫 3개월 월 100만원 + 이후 월 30만원 (대체인력 지원금 전체 기간 중복 제한)' },
   };
   // 값이 비어 있을 때만 쓰는 예비값. 실제 기본값은 대시보드 설정(dash/params)에 있음.
-  const FALLBACK = { tab: 'worker', role: 'all', scn: 'sub', ph: false, male: false, sub_wage: 2500000, share_pay: 600000, ls: '2027-01-01', le: '2027-06-30', hs: '2026-12-01', rt: '2027-07-01', wage: 3000000, sls: '2027-03-01', sle: '2028-07-30', swage: 3400000, birth: '2026-12-12', p66: true, mat: true, salary: 3000000, ssalary: 2800000, x_me: 3000000, x_sp: 2500000, x_sp_months: '2026-12,2027-03,2027-06,2027-09,2027-12', ck: '' };
+  const FALLBACK = { tab: 'worker', role: 'all', scn: 'sub', ph: false, male: false, sub_wage: 2500000, share_pay: 600000, ls: '2027-01-01', le: '2027-06-30', hs: '2026-12-01', rt: '2027-07-01', wage: 3000000, sls: '2027-03-01', sle: '2028-07-30', swage: 3400000, birth: '2026-12-12', p66: true, mat: true, budget: 6000000, view: 'glance', tf: 'near', done: '', salary: 3000000, ssalary: 2800000, x_me: 3000000, x_sp: 2500000, x_sp_months: '2026-12,2027-03,2027-06,2027-09,2027-12', ck: '' };
   const HIRE_MONTHS_BEFORE = 2;
   const MAT_DAYS = 90;        // 출산전후휴가 90일 (고용노동부 일생활균형 안내)
   const MAT_EMP_DAYS = 60;    // 대규모기업: 최초 60일은 사업주가 통상임금 지급
@@ -855,6 +979,9 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   // 예전에 세은 복직일(srt)로 저장한 값은 종료일(sle)로 옮김
   { const p0 = dash.params(); if (!p0.sle && p0.srt) dash.setParams({ sle: iso(d3.utcDay.offset(day(p0.srt), -1)), srt: null }); }
   document.querySelectorAll('.pl-tab').forEach((b) => b.addEventListener('click', () => dash.setParams({ role: b.dataset.role })));
+  document.querySelectorAll('.pl-vtab').forEach((b) => b.addEventListener('click', () => dash.setParams({ view: b.dataset.view })));
+  document.querySelectorAll('.pl-fchip').forEach((b) => b.addEventListener('click', () => dash.setParams({ tf: b.dataset.tf })));
+  document.querySelectorAll('.pl-open-settings').forEach((b) => b.addEventListener('click', () => { document.querySelectorAll('#worker-settings').forEach((d) => { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); }));
   document.querySelectorAll('.pl-scn-btn').forEach((b) => b.addEventListener('click', () => dash.setParams({ scn: b.dataset.scn })));
   document.querySelectorAll('.pl-date').forEach((inp) => {
     inp.addEventListener('change', () => {
@@ -888,7 +1015,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     });
     inp.addEventListener('blur', () => { inp.value = String(prm(inp.dataset.param) || '').split(',').join(', '); });
   });
-  document.querySelectorAll('.pl-reset').forEach((b) => b.addEventListener('click', () => { const tab = prm('tab'); const ck = prm('ck'); dash.resetParams(); dash.setParams({ tab, ck }); }));
+  document.querySelectorAll('.pl-reset').forEach((b) => b.addEventListener('click', () => { const tab = prm('tab'); const ck = prm('ck'); const done = prm('done'); const view = prm('view'); dash.resetParams(); dash.setParams({ tab, ck, done, view }); }));
   const ckSet = () => new Set(String(prm('ck') || '').split(',').filter(Boolean));
   document.querySelectorAll('.pl-ck-in').forEach((inp) => inp.addEventListener('change', () => {
     const set = ckSet();
@@ -898,6 +1025,10 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 
   dash.onData(() => {
     const tab = 'worker';
+    const view = ['glance', 'todo', 'pay', 'sched'].includes(prm('view')) ? prm('view') : 'glance';
+    document.querySelectorAll('[data-views]').forEach((n) => { n.hidden = !n.dataset.views.split(' ').includes(view); });
+    document.querySelectorAll('.pl-vtab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.view === view)));
+    document.querySelectorAll('.pl-fchip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tf === (prm('tf') || 'near'))));
     const role = prm('role') || 'all';
     const sc = scn();
     document.querySelectorAll('.pl-page').forEach((p) => { p.hidden = p.dataset.page !== tab; });
@@ -1156,55 +1287,16 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     el.replaceChildren(...rows, sum);
   });
   dash.draw('won', (el) => { el.textContent = comma(num(el.dataset.param)); });
-  // 다음 할 일: 오늘 이후 가장 가까운 만유·세은 일정 2개
-  dash.draw('next-tasks', (el) => {
-    const g = dash.data('tasks');
-    if (g.status !== 'ok') { el.replaceChildren(); return; }
-    const t0 = today();
-    const items = tasksNow(g.data).filter((r) => r.role === 'worker' || r.role === 'spouse').map((r) => {
-      let at = null;
-      if (r.kind === 'recurring') {
-        const every = Number(r.every_months) || 1;
-        for (let d = r.start, i = 0; d <= r.end && i < 60; d = d3.utcMonth.offset(r.start, every * ++i)) { if (d >= t0) { at = d; break; } }
-      } else if (r.start >= t0) at = r.label_style === 'until' ? r.end : r.start;
-      else if (r.end >= t0) at = r.end;
-      return at ? { r, at } : null;
-    }).filter(Boolean).sort((a, b) => a.at - b.at).slice(0, 2);
-    el.replaceChildren(...items.map(({ r, at }) => {
-      const li = document.createElement('li');
-      const b = mk('button', 'pl-next-item pl-r-' + r.role);
-      b.type = 'button';
-      const dd = Math.round((at - t0) / 864e5);
-      const task = mk('span', 'pl-next-task', r.task);
-      task.append(mk('small', '', r.date_label + (r.note ? ' · ' + r.note : '')));
-      const d = mk('span', 'pl-next-d');
-      d.append(mk('b', '', dd === 0 ? 'D-day' : 'D-' + dd), document.createTextNode(fmtD(at) + (r.label_style === 'until' || r.kind === 'deadline' ? '까지' : '')));
-      b.append(mk('span', 'pl-next-who', ROLES[r.role] ? ROLES[r.role].label : r.role), task, d);
-      b.addEventListener('click', () => {
-        const nodes = document.querySelectorAll('#couple-gantt [data-tid="' + r.id + '"]');
-        nodes.forEach((n, i) => {
-          if (i === 0) { n.scrollIntoView({ behavior: 'smooth', block: 'center' }); n.click(); }
-          n.classList.add('is-flash');
-          setTimeout(() => n.classList.remove('is-flash'), 1600);
-        });
-      });
-      li.append(b);
-      return li;
-    }));
-  });
-  dash.draw('pay-range', (el) => {
-    const r = combinedRange();
-    el.textContent = r ? iso(r[0]).slice(0, 7).replace('-', '.') + ' ~ ' + iso(r[1]).slice(0, 7).replace('-', '.') : '—';
-  });
-  dash.draw('pay-combined', (tb) => {
+  /* ---------- 라일락 개편: 한눈에 · 할 일 · 수입 ---------- */
+  // 월별 부부 수입 계산 (표·차트·이번 달 카드가 함께 씀)
+  const monthlyData = () => {
     const me = payRows('me');
     const sp = payRows('spouse');
     const range = combinedRange();
-    if (!me || !sp || !range) { tb.replaceChildren(); return; }
+    if (!me || !sp || !range) return null;
     const A = anchors();
     const M1 = toMonths(me);
     const M2 = toMonths(sp);
-    // 휴직하지 않은 날은 각자 월 통상임금을 일수 비율로 반영
     const xMonths = new Set(spExtraMonths());
     const cell = (map, key, m, ls, le, wage, who) => {
       const next = d3.utcMonth.offset(m, 1);
@@ -1235,6 +1327,229 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       const lv = leave ? leave.amt : 0;
       return { leave: lv, pay: pay + matEmp, work: pay, matEmp, mat, extra, amt: lv + pay + matEmp + mat + extra, notes };
     };
+    const out = [];
+    for (let m = range[0]; m <= range[1]; m = d3.utcMonth.offset(m, 1)) {
+      const key = iso(m).slice(0, 7);
+      out.push({ key, m, a: cell(M1, key, m, A.LS, A.LE, num('salary'), 'me'), b: cell(M2, key, m, A.SLS, A.SLE, num('ssalary'), 'spouse') });
+    }
+    return out;
+  };
+  const tagOf = (x, who) => {
+    const leaveNote = x.notes.find((n) => /개월차/.test(n));
+    if (x.mat || x.matEmp) return { cls: 'is-leave pl-r-spouse', tag: '출산휴가 · ' + (x.mat && x.matEmp ? '회사 + 정부' : x.mat ? '정부 급여' : '회사 지급') + (x.work ? ' + 근무' : '') };
+    if (leaveNote) {
+      const m = leaveNote.match(/^(\d+)개월차 · (\S+)/);
+      return { cls: 'is-leave pl-r-' + (who === 'me' ? 'worker' : 'spouse'), tag: '휴직 ' + (m ? m[1] + '개월차' + (m[2] === '부모함께' ? ' · 6+6' : '') : '') + (x.pay ? ' + 근무' : '') };
+    }
+    return { cls: 'is-work', tag: '근무' };
+  };
+  const manw = (x) => comma(Math.round(x / 10000)) + '만';
+  const nextMonthKey = () => iso(d3.utcMonth.offset(d3.utcMonth.floor(today()), 1)).slice(0, 7);
+  const tightMonths = (md) => { const b = num('budget'); return b > 0 ? md.filter((r) => r.a.amt + r.b.amt < b) : []; };
+  const monthRanges = (keys) => {
+    // 연속된 달은 "2028.01 ~ 07"처럼 묶음
+    const out = [];
+    keys.forEach((k) => {
+      const last = out[out.length - 1];
+      const prev = last && iso(d3.utcMonth.offset(day(last[1] + '-01'), 1)).slice(0, 7);
+      if (last && prev === k) last[1] = k; else out.push([k, k]);
+    });
+    return out.map(([a, b]) => (a === b ? a.replace('-', '.') : a.replace('-', '.') + ' ~ ' + (a.slice(0, 4) === b.slice(0, 4) ? b.slice(5) : b.replace('-', '.')))).join(', ');
+  };
+
+  dash.draw('today-chip', (el) => { el.textContent = '오늘 ' + fmtD(today()); });
+
+  // 우리 가족 일정 한 줄
+  dash.draw('journey', (el) => {
+    const A = anchors();
+    const M = monthsOf(A);
+    const t0 = today();
+    const lanes = [
+      ['worker', '만유', [[A.LS, A.LE, '육아휴직 ' + one(M.leave) + '개월', '']]],
+      ['spouse', '세은', (flag('mat') ? [[A.MS, A.ME, '출산휴가', 'is-soft']] : []).concat([[A.SLS, A.SLE, '육아휴직 ' + one(M.spouse) + '개월' + (M.spouse > 12 ? ' (1년 뒤 연장)' : ''), '']])],
+    ];
+    const all = lanes.flatMap((l) => l[2]).filter((s) => valid(s[0]) && valid(s[1]));
+    if (!all.length) { el.textContent = '—'; return; }
+    const D0 = d3.utcMonth.floor(d3.min(all.map((s) => s[0]).concat([t0])));
+    const D1 = d3.utcMonth.ceil(d3.utcDay.offset(d3.max(all.map((s) => s[1])), 1));
+    const pct = (d) => Math.max(0, Math.min(100, ((d - D0) / (D1 - D0)) * 100));
+    const grid = mk('div', 'pl-jr');
+    lanes.forEach(([role, name, segs]) => {
+      grid.append(mk('span', 'pl-jr-who pl-r-' + role, name));
+      const lane = mk('div', 'pl-jr-lane pl-r-' + role);
+      segs.forEach(([s, e, label, cls]) => {
+        if (!valid(s) || !valid(e) || e < s) return;
+        const seg = mk('span', 'pl-jr-seg ' + cls, label);
+        seg.style.left = pct(s) + '%';
+        seg.style.width = (pct(d3.utcDay.offset(e, 1)) - pct(s)) + '%';
+        seg.title = label + ' ' + fmtD(s) + ' ~ ' + fmtD(e);
+        lane.append(seg);
+      });
+      if (t0 >= D0 && t0 < D1) { const tl = mk('span', 'pl-jr-today'); tl.style.left = pct(t0) + '%'; lane.append(tl); }
+      grid.append(lane);
+    });
+    const ticks = mk('div', 'pl-jr-ticks');
+    const months = d3.utcMonth.range(D0, D1);
+    const n = 5;
+    for (let i = 0; i <= n; i++) {
+      const d = months[Math.min(months.length - 1, Math.round((i * (months.length - 1)) / n))];
+      ticks.append(mk('span', '', String(d.getUTCFullYear()).slice(2) + '.' + String(d.getUTCMonth() + 1).padStart(2, '0')));
+    }
+    grid.append(mk('span', ''), ticks);
+    const pills = mk('div', 'pl-jr-pills');
+    const events = [];
+    if (flag('mat')) events.push([A.MS, '세은 출산휴가', 'spouse']);
+    events.push([A.LS, '만유 육아휴직', 'worker'], [A.SLS, '세은 육아휴직', 'spouse'], [A.RT, '만유 복직', 'worker'], [A.SRT, '세은 복직', 'spouse']);
+    const now = [];
+    if (flag('mat') && t0 >= A.MS && t0 <= A.ME) now.push('세은 출산휴가 중');
+    if (t0 >= A.LS && t0 <= A.LE) now.push('만유 육아휴직 중');
+    if (t0 >= A.SLS && t0 <= A.SLE) now.push('세은 육아휴직 중');
+    const first = d3.min(events.slice(0, 3), (x) => x[0]);
+    pills.append(mk('span', 'pl-pill is-today', '오늘 ' + md(t0) + ' · ' + (now.length ? now.join(' · ') : t0 < first ? '준비 단계' : '복직 후')));
+    events.filter((x) => valid(x[0]) && x[0] > t0).sort((a, b) => a[0] - b[0]).slice(0, 2).forEach(([d, label, role]) => {
+      pills.append(mk('span', 'pl-pill pl-r-' + role, label + (/복직/.test(label) ? '까지' : '까지') + ' D-' + Math.round((d - t0) / 864e5)));
+    });
+    el.replaceChildren(grid, pills);
+  });
+
+  // 할 일 체크리스트
+  const doneSet = () => new Set(String(prm('done') || '').split(',').filter(Boolean));
+  const todoItems = () => {
+    const g = dash.data('tasks');
+    if (g.status !== 'ok') return null;
+    const t0 = today();
+    const done = doneSet();
+    return tasksNow(g.data).filter((r) => r.role === 'worker' || r.role === 'spouse').map((r) => {
+      let at = null;
+      if (r.kind === 'recurring') {
+        const every = Number(r.every_months) || 1;
+        for (let d = r.start, i = 0; d <= r.end && i < 60; d = d3.utcMonth.offset(r.start, every * ++i)) { if (d >= t0) { at = d; break; } }
+        if (!at) at = r.end;
+      } else if (r.start >= t0) at = r.label_style === 'until' || r.kind === 'deadline' ? r.end : r.start;
+      else at = r.end;
+      const isDone = done.has(r.id);
+      const dd = Math.round((at - t0) / 864e5);
+      const group = isDone ? 'done' : dd <= 90 ? 'near' : 'later';
+      return { r, at, dd, isDone, group };
+    }).sort((a, b) => a.at - b.at);
+  };
+  dash.draw('todo-count', (el) => { const it = todoItems(); el.textContent = it ? String(it.filter((x) => x.group === el.dataset.tf).length) : '—'; });
+  dash.draw('todo', (el) => {
+    const it = todoItems();
+    if (!it) { el.replaceChildren(); return; }
+    const tf = prm('tf') || 'near';
+    const list = it.filter((x) => x.group === tf);
+    if (!list.length) { const li = mk('li', 'pl-todo-empty', tf === 'done' ? '아직 완료한 일이 없습니다.' : '해당하는 할 일이 없습니다.'); el.replaceChildren(li); return; }
+    el.replaceChildren(...list.map(({ r, at, dd, isDone }) => {
+      const li = mk('li', 'pl-todo pl-r-' + r.role + (isDone ? ' is-done' : ''));
+      li.dataset.tid = r.id;
+      const cb = mk('button', 'pl-cb');
+      cb.type = 'button';
+      cb.setAttribute('role', 'checkbox');
+      cb.setAttribute('aria-checked', String(isDone));
+      cb.setAttribute('aria-label', r.task + ' 완료');
+      cb.addEventListener('click', () => { const s = doneSet(); if (s.has(r.id)) s.delete(r.id); else s.add(r.id); dash.setParams({ done: Array.from(s).join(',') }); });
+      const av = mk('span', 'pl-av', ROLES[r.role] ? ROLES[r.role].label.slice(0, 1) : '');
+      const body = mk('div', 'pl-todo-body');
+      body.append(mk('b', '', r.task), mk('small', '', r.date_label + (r.note ? ' · ' + r.note : '')));
+      const badge = mk('span', 'pl-dd' + (dd < 0 ? ' is-over' : dd > 30 ? ' is-later' : ''), (dd < 0 ? '지남' : dd === 0 ? 'D-day' : 'D-' + dd) + ' · ' + md(at));
+      li.append(cb, av, body, badge);
+      if (r.docs.length || r.prep.length) {
+        const det = mk('details', 'pl-todo-more');
+        det.append(mk('summary', '', r.docs.length ? '필요 서류 ' + r.docs.length + '개 · 준비사항' : '준비사항'));
+        const box = mk('div', 'pl-todo-docs');
+        const sec = (title, items) => { if (!items.length) return; box.append(mk('b', '', title)); const ul = mk('ul', ''); items.forEach((x) => ul.append(mk('li', '', x))); box.append(ul); };
+        sec('필요 서류', r.docs);
+        sec('준비사항', r.prep);
+        if (r.prep_src) box.append(mk('small', '', '근거: ' + r.prep_src));
+        det.append(box);
+        li.append(det);
+      }
+      return li;
+    }));
+  });
+
+  // 이번에 들어올 돈
+  dash.draw('money-next', (el) => {
+    const md0 = monthlyData();
+    if (!md0) { el.textContent = '—'; return; }
+    const key = nextMonthKey();
+    const r = md0.find((x) => x.key === key) || md0[0];
+    const tot = r.a.amt + r.b.amt;
+    const head = mk('div', 'pl-money-head');
+    head.append(mk('span', 'pl-money-month', r.key.replace('-', '.')), mk('b', 'pl-money-big', manw(tot) + '원'), mk('small', '', '부부'));
+    const split = mk('div', 'pl-split');
+    [['worker', r.a.amt], ['spouse', r.b.amt]].forEach(([role, v]) => { const i = mk('i', 'pl-r-' + role); i.style.flexGrow = String(Math.max(v, 0.0001)); split.append(i); });
+    const legend = mk('ul', 'pl-money-legend');
+    [['worker', '만유', r.a, 'me'], ['spouse', '세은', r.b, 'spouse']].forEach(([role, name, x, who]) => {
+      const li = mk('li', 'pl-r-' + role);
+      li.append(mk('i', 'pl-dot'), document.createTextNode(name + ' ' + manw(x.amt) + ' (' + tagOf(x, who).tag + (x.extra ? ' + 추가' : '') + ')'));
+      legend.append(li);
+    });
+    el.replaceChildren(head, split, legend);
+  });
+  dash.draw('tight-note', (el) => {
+    const md0 = monthlyData();
+    if (!md0) { el.textContent = '—'; return; }
+    const b = num('budget');
+    if (!(b > 0)) { el.className = 'pl-tight is-off'; el.textContent = '생활비 기준을 넣으면 그보다 적게 들어오는 달을 알려 드립니다.'; return; }
+    const t = tightMonths(md0);
+    el.className = 'pl-tight' + (t.length ? '' : ' is-ok');
+    if (!t.length) { el.textContent = '모든 달이 생활비 기준(' + manw(b) + '원) 이상입니다.'; return; }
+    const lo = d3.min(t, (x) => x.a.amt + x.b.amt);
+    el.replaceChildren(mk('b', '', '빠듯한 달 ' + t.length + '개월'), document.createTextNode(' · ' + monthRanges(t.map((x) => x.key)) + '이 생활비 기준(' + manw(b) + '원)보다 적습니다. 가장 적은 달 ' + manw(lo) + '원. 아래 그래프에서 분홍 배경.'));
+  });
+
+  // 월별 부부 수입 막대 차트
+  dash.draw('pay-chart', (el) => {
+    const md0 = monthlyData();
+    if (!md0) { el.textContent = '—'; return; }
+    const b = num('budget');
+    const W = Math.max(320, el.clientWidth || 800);
+    const H = 200;
+    const max = Math.max(b, d3.max(md0, (r) => r.a.amt + r.b.amt)) * 1.08;
+    const bw = W / md0.length;
+    const y = (v) => H - (v / max) * H;
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (H + 24));
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', '월별 부부 수입 막대 차트');
+    const el2 = (tag, attrs) => { const n = document.createElementNS(NS, tag); Object.keys(attrs).forEach((k) => n.setAttribute(k, attrs[k])); return n; };
+    const step = Math.max(1, Math.ceil(56 / bw));
+    const sel = el._sel && md0.some((r) => r.key === el._sel) ? el._sel : nextMonthKey();
+    md0.forEach((r, i) => {
+      const x = i * bw;
+      const t = r.a.amt + r.b.amt;
+      const g = el2('g', { class: 'pl-bar-g' + (r.key === sel ? ' is-sel' : ''), tabindex: '0', 'data-key': r.key });
+      if (b > 0 && t < b) g.append(el2('rect', { x, y: 0, width: bw, height: H, class: 'pl-tight-bg' }));
+      const pad = Math.min(6, bw * 0.18);
+      g.append(el2('rect', { x: x + pad, y: y(t), width: bw - pad * 2, height: H - y(t) - (H - y(r.a.amt)), rx: 3, class: 'pl-bar-sp' }));
+      g.append(el2('rect', { x: x + pad, y: y(r.a.amt), width: bw - pad * 2, height: H - y(r.a.amt), rx: 3, class: 'pl-bar-me' }));
+      g.append(el2('rect', { x, y: 0, width: bw, height: H, fill: 'transparent' }));
+      const tt = el2('title', {});
+      tt.textContent = r.key.replace('-', '.') + ' 부부 ' + comma(t) + '원 (만유 ' + comma(r.a.amt) + ' · 세은 ' + comma(r.b.amt) + ')';
+      g.append(tt);
+      svg.append(g);
+      if (i % step === 0) { const tx = el2('text', { x: x + bw / 2, y: H + 17, 'text-anchor': 'middle', class: 'pl-bar-x' }); tx.textContent = r.key.slice(2).replace('-', '.'); svg.append(tx); }
+    });
+    if (b > 0) svg.append(el2('line', { x1: 0, x2: W, y1: y(b), y2: y(b), class: 'pl-budget-line' }));
+    const r = md0.find((x) => x.key === sel) || md0[0];
+    const info = mk('p', 'pl-chart-sel');
+    info.append(mk('b', '', r.key.replace('-', '.') + ' · 부부 ' + comma(r.a.amt + r.b.amt) + '원'), document.createTextNode(' — 만유 ' + comma(r.a.amt) + '원 (' + tagOf(r.a, 'me').tag + (r.a.extra ? ' + 추가 ' + manw(r.a.extra) : '') + ') · 세은 ' + comma(r.b.amt) + '원 (' + tagOf(r.b, 'spouse').tag + (r.b.extra ? ' + 추가 ' + manw(r.b.extra) : '') + ')'));
+    el.replaceChildren(svg, info);
+    const pick = (ev) => { const g = ev.target.closest && ev.target.closest('[data-key]'); if (g) { el._sel = g.dataset.key; dash.draw('pay-chart'); } };
+    svg.onclick = pick;
+    svg.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pick(ev); } };
+  });
+  dash.draw('pay-range', (el) => {
+    const r = combinedRange();
+    el.textContent = r ? iso(r[0]).slice(0, 7).replace('-', '.') + ' ~ ' + iso(r[1]).slice(0, 7).replace('-', '.') : '—';
+  });
+  dash.draw('pay-combined', (tb) => {
+    const md0 = monthlyData();
+    if (!md0) { tb.replaceChildren(); return; }
     const rows = [];
     let cum = 0;
     let t1 = 0;
@@ -1245,10 +1560,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     let x2 = 0;
     let mg2 = 0;
     let me2 = 0;
-    for (let m = range[0]; m <= range[1]; m = d3.utcMonth.offset(m, 1)) {
-      const key = iso(m).slice(0, 7);
-      const a = cell(M1, key, m, A.LS, A.LE, num('salary'), 'me');
-      const b = cell(M2, key, m, A.SLS, A.SLE, num('ssalary'), 'spouse');
+    md0.forEach(({ key, a, b }) => {
       const sum = a.amt + b.amt;
       t1 += a.amt;
       t2 += b.amt;
@@ -1263,19 +1575,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       const money = (x, who) => {
         const td = mk('td', 'pl-num');
         td.append(mk('span', 'pl-amt', comma(x.amt)));
-        const leaveNote = x.notes.find((n) => /개월차/.test(n));
-        let tag = '근무';
-        let cls = 'is-work';
-        if (x.mat || x.matEmp) {
-          tag = '출산휴가 · ' + (x.mat && x.matEmp ? '회사 + 정부' : x.mat ? '정부 급여' : '회사 지급');
-          cls = 'is-leave pl-r-spouse';
-          if (x.work) tag += ' + 근무';
-        } else if (leaveNote) {
-          const m = leaveNote.match(/^(\d+)개월차 · (\S+)/);
-          tag = '휴직 ' + (m ? m[1] + '개월차' + (m[2] === '부모함께' ? ' · 6+6' : '') : '');
-          cls = 'is-leave pl-r-' + (who === 'me' ? 'worker' : 'spouse');
-          if (x.pay) tag += ' + 근무';
-        }
+        const { tag, cls } = tagOf(x, who);
         const line = mk('span', 'pl-tagline');
         line.append(mk('span', 'pl-tag ' + cls, tag));
         if (x.extra) line.append(mk('span', 'pl-tag is-extra', '추가 ' + comma(Math.round(x.extra / 10000)) + '만'));
@@ -1286,7 +1586,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       const cumTd = mk('td', 'pl-num pl-muted', comma(cum));
       tr.append(mk('td', 'pl-month', key.replace('-', '.')), money(a, 'me'), money(b, 'spouse'), sumTd, cumTd);
       rows.push(tr);
-    }
+    });
     const foot = mk('tr', 'is-band-start pl-total');
     foot.append(mk('td', '', '총 합계'), mk('td', 'pl-num', comma(t1)), mk('td', 'pl-num', comma(t2)), mk('td', 'pl-num', comma(t1 + t2)), mk('td', '', ''));
     const sub = (label, x, y) => {
