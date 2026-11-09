@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="대체인력 지원금, 육아휴직 지원금, 4대보험 휴직·복직 신고, 육아휴직 복귀자 세액공제의 기간, 신청 일자, 마감, 제출 서류와 신청 전 체크리스트 (30인 미만 사업장)">
+<meta name="description" content="대체인력 지원금, 육아휴직 지원금, 4대보험 휴직·복직 신고, 육아휴직 복귀자 세액공제의 기간, 신청 일자, 마감, 근로자·사업장 할 일, 제출 서류와 신청 전 체크리스트 (30인 미만 사업장)">
 <title>사업장 지원금 일정표</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
@@ -256,6 +256,34 @@
   .lg-win { width: 18px; height: 11px; border: 1.5px dashed var(--muted); border-radius: 3px; }
   .g-label .cap { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .gantt.narrow .g-label .cap { flex-basis: 100%; }
+  /* 근로자·사업장 할 일 */
+  #steps { --wk: var(--tax); --er: var(--apply); }
+  .s-due-t { color: var(--due); }
+  .steps-head, .step { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) minmax(0, 1fr); gap: 0 14px; }
+  .steps-head { margin-top: 12px; padding: 0 0 6px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; color: var(--muted); }
+  .steps-head span:nth-child(2) { color: var(--wk); } .steps-head span:nth-child(3) { color: var(--er); }
+  .steps { list-style: none; margin: 0; padding: 0; }
+  .step { padding: 7px 0; border-bottom: 1px solid var(--grid); align-items: start; }
+  .s-date { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 6px; display: grid; gap: 2px; }
+  .s-date small { font-size: 11.5px; font-weight: 600; }
+  .s-date .t-due { color: var(--due); } .s-date .t-from { color: var(--muted); } .s-date .t-past { color: var(--muted); font-weight: 400; }
+  .s-box { grid-column: 2; border-left: 3px solid var(--w); border-radius: 6px; padding: 6px 10px; background: color-mix(in srgb, var(--w) 7%, transparent); display: grid; gap: 2px; min-width: 0; }
+  .step.er .s-box { grid-column: 3; }
+  .step.wk { --w: var(--wk); } .step.er { --w: var(--er); }
+  .step.is-due .s-box { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--due) 35%, transparent); }
+  .s-box b { font-size: 13.5px; font-weight: 600; }
+  .s-box span { font-size: 12.5px; color: var(--fg); }
+  .s-box small { font-size: 12px; color: var(--muted); }
+  .s-who { display: none; font-size: 12px; font-weight: 700; color: var(--w); }
+  .step.past { opacity: .55; }
+  .step.today-row { display: block; padding: 4px 0; border-bottom: 2px dashed var(--due); color: var(--due); font-size: 12px; font-weight: 600; }
+  @media (max-width: 640px) {
+    .steps-head { display: none; }
+    .step { grid-template-columns: 5.4rem minmax(0, 1fr); gap: 0 10px; }
+    .s-box, .step.er .s-box { grid-column: 2; }
+    .s-who { display: block; }
+    .s-date small { font-size: 12px; }
+  }
   /* 섹션 바로가기 */
   .jump { position: sticky; top: 0; z-index: 20; margin: 0 -4px; padding: 8px 4px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
   .jump::-webkit-scrollbar { display: none; }
@@ -349,7 +377,7 @@
   <p class="tax-note" id="tax-note" role="note" hidden></p>
 
   <nav class="jump" aria-label="섹션 바로가기">
-    <a href="#checklist">체크리스트</a><a href="#amounts">금액·신청일</a><a href="#chart">간트차트</a><a href="#insurance">4대보험</a><a href="#forms">서식</a><a href="#calc">계산 기준</a><a href="#refs">참조</a>
+    <a href="#checklist">체크리스트</a><a href="#amounts">금액·신청일</a><a href="#chart">간트차트</a><a href="#steps">할 일</a><a href="#insurance">4대보험</a><a href="#forms">서식</a><a href="#calc">계산 기준</a><a href="#refs">참조</a>
   </nav>
 
   <section class="card" id="checklist" aria-labelledby="ck-title">
@@ -395,6 +423,13 @@
   </section>
 
   <section class="card detail" id="detail" aria-live="polite"></section>
+
+  <section class="card" id="steps" aria-labelledby="s-title">
+    <h2 id="s-title">근로자 · 사업장 할 일 (날짜순)</h2>
+    <p class="note">입력한 휴직·대체인력 날짜로 계산합니다. <b class="s-due-t">기한</b>은 그날까지 해야 하는 일, 나머지는 그날부터 할 수 있는 일입니다. 근거 조문은 각 항목 아래에 적었습니다.</p>
+    <div class="steps-head" aria-hidden="true"><span>날짜</span><span>근로자</span><span>사업장</span></div>
+    <ol class="steps" id="steps-list"></ol>
+  </section>
 
   <section class="card" id="insurance" aria-labelledby="ins-title">
     <h2 id="ins-title">4대보험 휴직·복직 처리</h2>
@@ -847,6 +882,48 @@
     rowsT.push(sum);
     tb.replaceChildren(...rowsT);
 
+
+    // 근로자·사업장 할 일 (날짜순)
+    const lastOfNextMonth = (t) => { const d = new Date(t); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 2, 0); };
+    const askBy = addD(c.LS, -30), notifyBy = addD(askBy, 14), payFrom = addM(c.LS, 1);
+    const st = [];
+    const add = (t, who, kind, what, note, basis) => st.push({ t, who, kind, what, note, basis });
+    add(c.HS, 'er', 'on', '대체인력 채용 (고용 시작)', '휴직 시작 2개월 전이 되는 날(' + fmt(c.hireFrom) + ') 이후 새로 채용 · 30일 이상 계속 고용', '고용노동부 일생활균형 대체인력 지원금 안내');
+    add(askBy, 'wk', 'due', '육아휴직 신청서 제출 (사업주에게)', '휴직 시작 예정일(' + fmt(c.LS) + ')의 30일 전까지 · 자녀 인적사항, 휴직 시작·종료 예정일, 신청일 기재', '남녀고용평등법 시행령 제11조제1항');
+    add(notifyBy, 'er', 'due', '육아휴직 허용 사실을 서면(전자) 통지', '근로자 신청일부터 14일 이내 (날짜는 신청 기한 마지막 날 신청한 경우) · 기간 안에 알리지 않으면 신청대로 허용한 것으로 봄', '남녀고용평등법 시행령 제11조제5항·제6항');
+    add(c.LS, 'wk', 'on', '육아휴직 시작', '대체인력 휴직 전 인수인계 기간은 전날(' + fmt(addD(c.LS, -1)) + ')까지', '');
+    add(payFrom, 'er', 'by', '육아휴직 확인서 발급 (근로자 요청 시)', '근로자가 첫 급여 신청에 첨부 · 별지 제102호서식 · 발급 기한 날짜는 법령에 없어 첫 신청일 전에 준비', '고용보험법 시행규칙 제118조제1항 · 제116조제1항');
+    add(payFrom, 'wk', 'from', '육아휴직 급여 신청 시작 (매월)', '매월 신청 · 그달 분은 다음 달 말일까지 (첫 달 분 → ' + fmt(lastOfNextMonth(c.LS)) + '까지) · 첫 신청에 육아휴직 확인서 첨부', '고용보험법 제70조제2항 · 시행규칙 제116조');
+    cyc.forEach((t, i) => add(t, 'er', 'from', '육아휴직 지원금' + (state.male ? ' · 남성 인센티브' : '') + ' ' + (i + 1) + '회 신청', '3개월마다 신청 · 지원금의 50%', '고용노동부 일생활균형 육아휴직 지원금 안내'));
+    add(c.firstApply, 'er', 'from', '대체인력 지원금 (육아휴직 기간분) 신청', '3개월마다 신청', '고용노동부 일생활균형 대체인력 지원금 안내');
+    add(c.preApply, 'er', 'from', '대체인력 지원금 (휴직 전 인수인계분) 신청', '휴직 시작 후 30일이 지난 날부터', '고용보험법 시행규칙 제51조제2항제2호');
+    add(nm15(c.LS), 'er', 'due', '4대보험 휴직 신고', '국민연금 납부예외 · 건강보험 납입고지 유예 · 고용·산재 휴직 신고 (기한은 업계 안내 기준, 공단 확인)', '국민연금법 제91조 · 국민건강보험법 제79조');
+    add(c.LE, 'wk', 'on', '육아휴직 종료', '', '');
+    add(c.RT, 'er', 'on', '복직: 휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀', '육아휴직 기간은 근속기간에 포함', '남녀고용평등법 제19조제4항');
+    add(c.postApply, 'er', 'from', '대체인력 지원금 (복직 후 인수인계분) 신청', '복직 후 1개월이 지난 날부터', '고용보험법 시행규칙 제51조제2항제2호');
+    add(nm15(c.RT), 'er', 'due', '4대보험 복직 신고', '국민연금 납부재개 · 건강보험 유예 해지 · 고용·산재 복직 신고 (기한은 업계 안내 기준, 공단 확인)', '');
+    add(c.rest50, 'er', 'from', '육아휴직 지원금' + (state.male ? ' · 남성 인센티브' : '') + ' 잔여 50% 신청', '복직 후 6개월 이상 계속 고용한 뒤', '고용노동부 일생활균형 육아휴직 지원금 안내');
+    if (c.taxLeave6) add(c.taxFileDue, 'er', 'due', '육아휴직 복귀자 세액공제 신청' + (c.taxByDate ? '' : ' (법 개정 시)'), '복직 과세연도 ' + new Date(c.RT).getUTCFullYear() + ' 법인세 신고 때 (12월 결산 법인 기준)', '조세특례제한법 제29조의8');
+    add(addM(c.LE, 12), 'wk', 'due', '육아휴직 급여 신청 최종 기한', '육아휴직이 끝난 날 이후 12개월 이내', '고용보험법 제70조제2항');
+    add(c.due, 'er', 'due', '육아휴직 지원금 · 대체인력 지원금 신청 마감', '육아휴직 종료 후 12개월 이내', '고용노동부 일생활균형 안내');
+    st.sort((a, b) => a.t - b.t || (a.who === 'wk' ? -1 : 1));
+    const nowD = new Date(); const todayT = Date.UTC(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
+    const kindTxt = { due: ['t-due', '까지 (기한)'], from: ['t-from', '부터'], by: ['t-from', ' 전까지 준비'], on: ['t-from', ''] };
+    const items = []; let todayPut = false;
+    st.forEach((x) => {
+      if (!todayPut && x.t >= todayT) { const tr = mk('li', 'step today-row', '오늘 ' + fmt(todayT)); items.push(tr); todayPut = true; }
+      const li = mk('li', 'step ' + x.who + (x.kind === 'due' ? ' is-due' : '') + (x.t < todayT ? ' past' : ''));
+      const dd = mk('div', 's-date'); dd.append(document.createTextNode(fmt(x.t)));
+      const [kc, kt] = kindTxt[x.kind]; if (kt) dd.append(mk('small', kc, kt.trim()));
+      if (x.t < todayT) dd.append(mk('small', 't-past', '지남'));
+      const box = mk('div', 's-box');
+      box.append(mk('span', 's-who', x.who === 'wk' ? '근로자' : '사업장'), mk('b', '', x.what));
+      if (x.note) box.append(mk('span', '', x.note));
+      if (x.basis) box.append(mk('small', '', '근거: ' + x.basis));
+      li.append(dd, box); items.push(li);
+    });
+    if (!todayPut) items.push(mk('li', 'step today-row', '오늘 ' + fmt(todayT)));
+    document.getElementById('steps-list').replaceChildren(...items);
     show(current);
   };
 
