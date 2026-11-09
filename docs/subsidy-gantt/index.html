@@ -251,6 +251,11 @@
   .refs .r-org { font-size: 12px; color: var(--muted); }
   .refs a { color: var(--apply); font-weight: 600; overflow-wrap: anywhere; }
   .refs small { font-size: 12.5px; color: var(--muted); }
+  .win { position: absolute; top: 62%; height: 22px; margin-top: -11px; border: 1.5px dashed color-mix(in srgb, var(--c) 65%, transparent); border-radius: 5px; background: color-mix(in srgb, var(--c) 7%, transparent); z-index: 1; box-sizing: border-box; }
+  .gantt.narrow .win { top: 50%; }
+  .lg-win { width: 18px; height: 11px; border: 1.5px dashed var(--muted); border-radius: 3px; }
+  .g-label .cap { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .gantt.narrow .g-label .cap { flex-basis: 100%; }
   /* 섹션 바로가기 */
   .jump { position: sticky; top: 0; z-index: 20; margin: 0 -4px; padding: 8px 4px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
   .jump::-webkit-scrollbar { display: none; }
@@ -280,7 +285,7 @@
     .tablewrap tr, .tablewrap td { box-sizing: border-box; }
     .docs-d { text-align: left; }
     /* 작은 글씨 최소 12px */
-    .tick, .g-label .when, .g-label .amt, .pt-label, .today span, .leaveband span, .gantt.narrow .dates, .sec-txt, .g-fold-txt, .ck-scope, .none, .detail li a, .docs-d a { font-size: 12px; }
+    .tick, .g-label .when, .g-label .amt, .g-label .cap, .pt-label, .today span, .leaveband span, .gantt.narrow .dates, .sec-txt, .g-fold-txt, .ck-scope, .none, .detail li a, .docs-d a { font-size: 12px; }
   }
   @media (max-width: 640px), (pointer: coarse) {
     /* 손가락으로 누르기 쉬운 크기 (44px) */
@@ -323,6 +328,7 @@
         <label for="in-he">고용 종료일<input id="in-he" type="date" data-key="he" min="2020-01-01" max="2035-12-31"></label>
         <label for="in-wage">월 임금액 · 사업주가 지급하는 금액 (원)<input id="in-wage" type="number" data-key="wage" min="0" max="100000000" step="10000" inputmode="numeric"></label>
         <small class="in-help" id="wage-note"></small>
+        <small class="in-help" id="handover-note"></small>
       </fieldset>
     </div>
     <div class="in-foot">
@@ -380,6 +386,7 @@
       <span><i class="lg-pt"></i>신청 시작</span>
       <span><i class="lg-due"></i>신청 마감</span>
       <span><i class="lg-band"></i>육아휴직 기간</span>
+      <span><i class="lg-win"></i>인정 한도 범위</span>
       <span><i class="lg-today"></i>오늘</span>
     </div>
     <div class="scroller">
@@ -533,6 +540,9 @@
     const preS = Math.max(HS, addM(LS, -PRE_MAX)), preE = Math.min(HE, addD(LS, -1));
     const midS = Math.max(HS, LS), midE = Math.min(HE, LE);
     const postS = RT, postE = Math.min(HE, addD(addM(RT, POST_MAX), -1));
+    // 인수인계 인정 한도 창: 휴직 전 최대 2개월, 복직 후 최대 1개월
+    const preWinS = addM(LS, -PRE_MAX), preWinE = addD(LS, -1);
+    const postWinS = RT, postWinE = addD(addM(RT, POST_MAX), -1);
     const eligibleHire = HS >= hireFrom && months(HS, HE) > 0 && Math.round((HE - HS) / DAY) + 1 >= 30;
     const mPre = eligibleHire ? months(preS, preE) : 0;
     const mMid = eligibleHire ? months(midS, midE) : 0;
@@ -549,7 +559,7 @@
     const layoffE = Math.min(addD(addM(HS, 12), -1), HE);
     return {
       LS, LE, HS, HE, RT, hireFrom, monthly, preS, preE, midS, midE, postS, postE, eligibleHire, leaveOk,
-      mPre, mMid, mPost, mLeave, firstApply, cycle, due, postApply, postDue, rest50, layoffE, preApply,
+      mPre, mMid, mPost, mLeave, preWinS, preWinE, postWinS, postWinE, firstApply, cycle, due, postApply, postDue, rest50, layoffE, preApply,
       aPre: monthly * mPre, aMid: monthly * mMid, aPost: monthly * mPost,
       aLeave: leaveOk ? MONTHLY_LEAVE * mLeave : 0, aMale: leaveOk && state.male ? MONTHLY_MALE * mLeave : 0,
       // 육아휴직 복귀자 세액공제 (조세특례제한법 제29조의8제5항, 2026.9.18. 시행본)
@@ -604,6 +614,8 @@
     const taxAmt = taxOk ? man(TAX_CREDIT) : taxIfAmended ? '법 개정 시 ' + man(TAX_CREDIT) : '대상 아님';
     document.getElementById('t-tax').textContent = taxAmt;
     document.getElementById('t-tax-note').textContent = taxOk ? '요건 충족 시 복직 과세연도 법인세·소득세에서 공제' : (taxIfAmended ? '현행법 기한(2026.12.31) 연장 시 과세연도 ' + taxYear + ', ' + fmt(c.taxFileDue) + '까지 법인세 신고 때 공제' : '연속 6개월 이상 휴직 요건 미충족');
+    const hn = document.getElementById('handover-note');
+    hn.replaceChildren(document.createTextNode('인수인계 인정 한도: 휴직 전 '), mk('b', '', '최대 2개월'), document.createTextNode(' (' + fmt(c.preWinS) + ' ~ ' + fmt(c.preWinE) + ') 중 ' + one(c.mPre) + '개월 사용 · 복직 후 '), mk('b', '', '최대 1개월'), document.createTextNode(' (' + fmt(c.postWinS) + ' ~ ' + fmt(c.postWinE) + ') 중 ' + one(c.mPost) + '개월 사용. 간트차트의 점선 상자가 한도 범위입니다.'));
     const wn = document.getElementById('wage-note');
     wn.replaceChildren(document.createTextNode('지원 월액 '), mk('b', '', man(c.monthly)), document.createTextNode(' = 월 최대 ' + man(subCap()) + '과 임금 ' + won(Number(state.wage) || 0) + '원 × 80% = ' + won((Number(state.wage) || 0) * SUB_RATE) + '원 중 작은 금액. 인수인계 기간에도 같게 적용됩니다.'));
     document.getElementById('in-summary').textContent = '육아휴직 ' + one(c.mLeave) + '개월 · 대체인력 ' + one(months(c.HS, c.HE)) + '개월 · 대체인력 지원 월 ' + man(c.monthly) + (c.monthly < subCap() ? ' (임금 80% 한도)' : '') + (subCap() < MONTHLY_SUB ? ' · 30인 이상 기준' : '');
@@ -656,21 +668,37 @@
     tn.hidden = !taxMsgs.length;
     if (taxMsgs.length) document.getElementById('t-tax-note').textContent = '자세한 내용은 아래 안내';
 
+    function capText(used, max) { const left = Math.max(0, max - used); return '한도 ' + max + '개월 중 ' + one(used) + '개월 사용' + (left > 0.005 ? ' · ' + one(left) + '개월 남음' : ' (전부 사용)'); }
+    function capInfo(k) {
+      if (k === 'pre') {
+        const left = Math.max(0, PRE_MAX - c.mPre);
+        return ['인정 범위: 휴직 시작 전 최대 2개월 (' + fmt(c.preWinS) + ' ~ ' + fmt(c.preWinE) + ')',
+          '사용: ' + (c.mPre > 0 ? range(c.preS, c.preE) + ' = ' + one(c.mPre) + '개월' : '없음') + ' · 남은 한도 ' + one(left) + '개월',
+          left > 0.005 ? '한도를 다 쓰려면 대체인력을 ' + fmt(c.preWinS) + '에 채용해야 합니다. 이 날은 "휴직 시작일 전 2개월이 되는 날"과 같은 경계일이라 인정 여부를 고용센터(1350)에 확인하세요. 그 다음 날 채용하면 ' + one(months(addD(c.preWinS, 1), c.preWinE)) + '개월입니다.' : '한도를 모두 사용합니다.'];
+      }
+      if (k === 'post') {
+        const left = Math.max(0, POST_MAX - c.mPost);
+        return ['인정 범위: 복직 후 최대 1개월 (' + fmt(c.postWinS) + ' ~ ' + fmt(c.postWinE) + ', 육아휴직에 한함)',
+          '사용: ' + (c.mPost > 0 ? range(c.postS, c.postE) + ' = ' + one(c.mPost) + '개월' : '없음') + ' · 남은 한도 ' + one(left) + '개월',
+          left > 0.005 ? '한도를 다 쓰려면 대체인력 고용 종료일을 ' + fmt(c.postWinE) + ' 이후로 정하세요.' : '한도를 모두 사용합니다. 고용을 ' + fmt(c.postWinE) + '보다 길게 유지해도 복직 후 인수인계 지원은 늘지 않습니다.'];
+      }
+      return ['인정 범위: 육아휴직 기간 전체 (' + range(c.LS, c.LE) + ', ' + one(c.mLeave) + '개월)', '대체인력이 일한 휴직 기간: ' + (c.mMid > 0 ? range(c.midS, c.midE) + ' = ' + one(c.mMid) + '개월' : '없음')];
+    }
     const GROUPS = [
       { name: '대체인력 지원금', total: man(subTotal), color: 'var(--sub)', rows: [
         { id: 'hire', name: '대체인력 고용', when: range(c.HS, c.HE), type: 'ctx', s: c.HS, e: c.HE,
           info: { amount: '—', apply: '—', docs: [], prep: ['휴직 시작일 전 2개월이 되는 날(' + fmt(c.hireFrom) + ') 이후 새로 고용(또는 파견 사용)', '30일 이상 계속 고용', '고용보험 가입, 신고 월평균 보수 124만원 이상', '사업주(대표이사)의 배우자·직계 존비속이 아닐 것'], src: SRC_SUB } },
-        { id: 'pre', name: '휴직 전 인수인계', when: range(c.preS, c.preE), amt: man(c.aPre), type: 'bar', s: c.preS, e: c.preE, show: c.mPre > 0,
+        { id: 'pre', name: '휴직 전 인수인계', when: range(c.preS, c.preE), amt: man(c.aPre), type: 'bar', s: c.preS, e: c.preE, show: c.mPre > 0, win: [c.preWinS, c.preWinE], cap: capText(c.mPre, PRE_MAX), capInfo: capInfo('pre'),
           points: [[c.preApply, '신청 ' + md(c.preApply)]], due: [c.due, '마감 ' + md(c.due)],
-          calc: man(c.monthly) + ' × ' + one(c.mPre) + '개월', applyText: fmt(c.preApply) + '부터 (휴직 시작 후 30일이 지난 날)',
+          calc: man(c.monthly) + ' × ' + one(c.mPre) + '개월 (한도 2개월)', applyText: fmt(c.preApply) + '부터 (휴직 시작 후 30일이 지난 날)',
           info: { amount: man(c.aPre) + ' (' + man(c.monthly) + ' × ' + one(c.mPre) + '개월, 최대 2개월)', apply: fmt(c.preApply) + '부터 (휴직 시작 후 30일이 지난 날, 고용보험법 시행규칙 제51조제2항제2호), 마감 ' + fmt(c.due), docs: DOCS_SUB, prep: ['월 지원액은 대체인력 임금의 80% 한도'], src: SRC_SUB } },
-        { id: 'mid', name: '육아휴직 기간', when: range(c.midS, c.midE), amt: man(c.aMid), type: 'bar', s: c.midS, e: c.midE, show: c.mMid > 0,
+        { id: 'mid', name: '육아휴직 기간', when: range(c.midS, c.midE), amt: man(c.aMid), type: 'bar', s: c.midS, e: c.midE, show: c.mMid > 0, win: [c.LS, c.LE], cap: '휴직 ' + one(c.mLeave) + '개월 중 ' + one(c.mMid) + '개월 대체', capInfo: capInfo('mid'),
           points: [[c.firstApply, '신청 ' + md(c.firstApply)]], due: [c.due, '마감 ' + md(c.due)],
           calc: man(c.monthly) + ' × ' + one(c.mMid) + '개월', applyText: fmt(c.firstApply) + '부터 3개월마다',
           info: { amount: man(c.aMid) + ' (' + man(c.monthly) + ' × ' + one(c.mMid) + '개월)', apply: fmt(c.firstApply) + '부터 3개월마다 (휴직 시작 달의 다음 달부터), 마감 ' + fmt(c.due), docs: DOCS_SUB, prep: ['2026.1.1 이후 새로 고용한 대체인력은 사후지급 없이 전액 지급', '첫 신청 이후 3개월마다 신청 · 회차 구분은 공식 안내에 없음'], src: SRC_SUB } },
-        { id: 'post', name: '복직 후 인수인계', when: range(c.postS, c.postE), amt: man(c.aPost), type: 'bar', s: c.postS, e: c.postE, show: c.mPost > 0,
+        { id: 'post', name: '복직 후 인수인계', when: range(c.postS, c.postE), amt: man(c.aPost), type: 'bar', s: c.postS, e: c.postE, show: c.mPost > 0, win: [c.postWinS, c.postWinE], cap: capText(c.mPost, POST_MAX), capInfo: capInfo('post'),
           points: [[c.postApply, '신청 ' + md(c.postApply)]], due: [c.postDue, '마감 ' + md(c.postDue) + '경', true],
-          calc: man(c.monthly) + ' × ' + one(c.mPost) + '개월', applyText: fmt(c.postApply) + '부터 (복직 후 1개월이 지난 날)',
+          calc: man(c.monthly) + ' × ' + one(c.mPost) + '개월 (한도 1개월)', applyText: fmt(c.postApply) + '부터 (복직 후 1개월이 지난 날)',
           info: { amount: man(c.aPost) + ' (' + man(c.monthly) + ' × ' + one(c.mPost) + '개월, 최대 1개월, 육아휴직에 한함)', apply: fmt(c.postApply) + '부터 (복직 후 1개월이 지난 날, 고용보험법 시행규칙 제51조제2항제2호), 12개월 이내', docs: DOCS_SUB, prep: ['대체인력이 복직 후 1개월 안에 그만두면 그 다음 날부터 신청'], src: SRC_SUB } },
         { id: 'noLayoff', name: '감원방지 기간', when: range(addM(c.HS, -3), c.layoffE), type: 'ctx', s: addM(c.HS, -3), e: c.layoffE,
           info: { amount: '—', apply: '—', docs: [], prep: ['대체인력 고용 3개월 전부터 고용 후 1년까지 (계약이 그 전에 끝나면 종료일까지) 다른 근로자를 고용조정으로 이직시키지 않음', '위반 아님: 대체인력보다 나중에 고용된 근로자 조정, 근로자 귀책 징계해고, 정년, 계약기간 만료, 자발적 퇴직'], src: SRC_SUB } },
@@ -759,11 +787,13 @@
         const lab = mk('div', 'g-label'); lab.style.setProperty('--c', grp.color); lab.tabIndex = 0; lab.setAttribute('role', 'listitem'); lab.dataset.id = r.id;
         lab.append(mk('span', '', r.name), mk('span', 'when', r.when));
         if (r.amt) lab.append(mk('span', 'amt', r.amt));
+        if (r.cap) lab.append(mk('span', 'cap', r.cap));
         if (r.points) {
           const ds = r.points.filter((p) => p[1]).map((p) => p[1]).concat(r.due && r.due[1] ? [r.due[1]] : []);
           if (ds.length) lab.append(mk('span', 'dates', ds.join(' · ')));
         }
         const tr = mk('div', 'g-track'); tr.style.setProperty('--c', grp.color); tr.dataset.id = r.id;
+        if (r.win) { const w = mk('div', 'win'); const wl = pct(r.win[0]); w.style.left = wl + '%'; w.style.width = Math.max(0.4, endPct(r.win[1]) - wl) + '%'; w.title = '인정 한도 ' + range(r.win[0], r.win[1]); tr.append(w); }
         if (r.show !== false && r.e >= r.s) {
           const left = pct(r.s), right = endPct(r.e);
           const bar = mk('div', 'bar' + (r.type === 'ctx' ? ' ctx' : ''));
@@ -840,6 +870,7 @@
       Object.keys(FORM_LINKS).forEach((k) => { if (x.includes(k)) FORM_LINKS[k].forEach(([t, href]) => { const a = mk('a', '', t + ' 받기'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; li.append(a); }); });
       ul.append(li);
     }); kids.push(ul); };
+    if (r.capInfo) list('인정 한도와 사용 기간', r.capInfo);
     if (r.info.todo) list('사업장이 할 일', r.info.todo);
     if (r.info.ch) { kids.push(mk('h4', '', '제출처')); const ul = mk('ul', ''); r.info.ch.forEach(([n, href, how]) => { const li = mk('li', ''); if (href) { const a = mk('a', '', n + ' (' + href.replace('https://', '') + ')'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; li.append(a); } else li.append(document.createTextNode(n)); li.append(document.createTextNode(' — ' + how)); ul.append(li); }); kids.push(ul); }
     list('제출 서류 (' + (r.info.office || '소재지 관할 고용센터') + ')', r.info.docs);
