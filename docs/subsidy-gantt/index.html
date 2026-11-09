@@ -425,10 +425,12 @@
   <section class="card detail" id="detail" aria-live="polite"></section>
 
   <section class="card" id="steps" aria-labelledby="s-title">
-    <h2 id="s-title">근로자 · 사업장 할 일 (날짜순)</h2>
+    <h2 id="s-title" class="sec-h"><button type="button" class="sec-fold" data-fold="steps" aria-expanded="false" aria-controls="steps-body"><span class="sec-cue" aria-hidden="true">▸</span><span>근로자 · 사업장 할 일 (날짜순)</span><span class="sec-txt">펼치기</span></button></h2>
+    <div class="sec-body" id="steps-body" hidden>
     <p class="note">입력한 휴직·대체인력 날짜로 계산합니다. <b class="s-due-t">기한</b>은 그날까지 해야 하는 일, 나머지는 그날부터 할 수 있는 일입니다. 근거 조문은 각 항목 아래에 적었습니다.</p>
     <div class="steps-head" aria-hidden="true"><span>날짜</span><span>근로자</span><span>사업장</span></div>
     <ol class="steps" id="steps-list"></ol>
+    </div>
   </section>
 
   <section class="card" id="insurance" aria-labelledby="ins-title">
