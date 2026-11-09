@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>육아휴직 통합 관리 대시보드</title>
-<meta name="description" content="육아휴직 일정, 사업장 지원금, 6+6 부모육아휴직 급여를 한눈에 보는 대시보드 (금액은 예시값)">
+<meta name="description" content="만유·세은 부부의 출산전후휴가·육아휴직 일정, 다음 할 일, 월별 수입(6+6 부모육아휴직 포함)을 한눈에 보는 대시보드 (금액은 예시값)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
 <style>/* Layout: 한 열 대시보드, 카드 단위. 아래 토큰은 Claude 대시보드 테마를 대신합니다. */
@@ -70,7 +70,8 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   .pl-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
 
   /* KPI */
-  .pl-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--cds-gap-md); }
+  .pl-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--cds-gap-md); }
+  .pl-kpis > .pl-kpi { min-height: 8.5rem; justify-content: center; }
   .pl-kpi { gap: var(--cds-gap-sm); }
   .pl-kpi-label { display: flex; align-items: center; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
   .pl-dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--c, var(--color-fg-muted)); flex: none; }
@@ -345,6 +346,8 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     .pl-stack tr.pl-subtotal { border: 0; padding-block: 0; margin-bottom: 0; background: transparent; }
     /* 휴대폰: 요약 카드 2열, 월별 표는 한 달을 두 줄 카드로 */
     .pl-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pl-kpis > .pl-kpi { min-height: 0; }
+    .pl-kpis > .pl-kpi:last-child { grid-column: 1 / -1; }
     .pl-kpi { padding: var(--cds-pad-sm) var(--cds-pad-md); }
     .pl .pl-kpi-value { font-size: 20px; }
     .pl-combined tr:not(.pl-total):not(.pl-subtotal) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 12px; row-gap: 2px; padding: 8px 12px; margin-bottom: 6px; }
@@ -360,16 +363,110 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     .pl-combined tr:not(.pl-total):not(.pl-subtotal) .pl-amt { margin: 0; }
     .pl-combined tr:not(.pl-total):not(.pl-subtotal) .pl-tagline { justify-content: flex-start; }
   }
+  .pl-field-wide { grid-column: 1 / -1; }
+  .pl-field-label { font-size: var(--cds-font-size-caption); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .pl-months { display: grid; gap: 6px; }
+  .pl-months-year { display: grid; grid-template-columns: 3.2rem repeat(12, minmax(0, 1fr)); gap: 4px; align-items: center; }
+  .pl-months-year > span { font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .pl-mbtn { font: inherit; font-size: var(--cds-font-size-caption); min-height: 34px; padding: 0; border-radius: 6px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); cursor: pointer; font-variant-numeric: tabular-nums; }
+  .pl-mbtn:hover { border-color: var(--color-fg-muted); }
+  .pl-mbtn[aria-pressed="true"] { background: var(--c, var(--color-fg)); border-color: var(--c, var(--color-fg)); color: var(--color-bg); font-weight: 600; }
+  .pl-mbtn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 1px; }
+  .pl-mbtn.is-leave:not([aria-pressed="true"]) { background: color-mix(in srgb, var(--c, var(--color-fg)) 8%, var(--color-panel)); }
+  .pl-months-sum { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  @media (max-width: 640px) {
+    .pl-months-year { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .pl-months-year > span { grid-column: 1 / -1; }
+    .pl-mbtn { min-height: 40px; }
+  }
+  /* 다음 할 일 */
+  .pl-next { display: grid; gap: var(--cds-gap-xs); }
+  .pl-next-title { margin: 0; font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--color-fg-muted); }
+  .pl-next-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--cds-gap-sm); }
+  .pl-next-item { font: inherit; text-align: left; width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 14px; border: 1px solid var(--color-border-line); border-left: 4px solid var(--c); border-radius: var(--cds-radius); background: var(--color-panel); color: var(--color-fg); cursor: pointer; }
+  .pl-next-item:hover { border-color: var(--color-fg-muted); border-left-color: var(--c); }
+  .pl-next-item:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .pl-next-who { font-size: var(--cds-font-size-caption); font-weight: 700; color: var(--c); }
+  .pl-next-task { font-weight: 600; min-width: 0; }
+  .pl-next-task small { display: block; font-weight: 400; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pl-next-d { text-align: right; font-variant-numeric: tabular-nums; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); white-space: nowrap; }
+  .pl-next-d b { display: block; font-size: var(--cds-font-size-body); color: var(--color-bad); }
+  .pl-g-label.is-flash, .pl-g-track.is-flash { background: color-mix(in srgb, var(--color-warn) 18%, transparent); transition: background .4s; }
+  .pl-won { color: var(--color-fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) { .pl-next-item { grid-template-columns: minmax(0, 1fr) auto; } .pl-next-who { grid-column: 1 / -1; } }
+  /* 부부 일정: 사업장 지원금 일정표 간트 디자인 */
+  .pl-gantt:has(> .pl-sg-scroll), #couple-gantt { display: block; min-height: 0; }
+  .pl-sg-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-top: 1px solid var(--color-border-line); }
+  .pl-sg { --lw: 13.5rem; position: relative; display: grid; grid-template-columns: var(--lw) minmax(560px, 1fr); min-width: calc(var(--lw) + 560px); }
+  .pl-sg > * { min-width: 0; }
+  .pl-sg-axis-l, .pl-sg-label, .pl-sg-group-l { position: sticky; left: 0; z-index: 3; background: var(--color-panel); border-right: 1px solid var(--color-border-line); }
+  .pl-sg-axis-l { border-bottom: 1px solid var(--color-border-line); }
+  .pl-sg-axis { position: relative; height: 30px; border-bottom: 1px solid var(--color-border-line); }
+  .pl-sg-tick { position: absolute; bottom: 6px; transform: translateX(-50%); font-size: 11.5px; color: var(--color-fg-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pl-sg-tick.is-year { color: var(--color-fg); font-weight: 600; }
+  .pl-sg-space { grid-column: 1 / -1; }
+  .pl-sg-group-l { padding: 14px 10px 4px 2px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-weight: 600; font-size: 14px; }
+  .pl-sg-group-l small { font-weight: 400; color: var(--color-fg-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .pl-sg-label { padding: 6px 10px 6px 2px; font-size: 13px; line-height: 1.35; cursor: pointer; display: grid; gap: 1px; }
+  .pl-sg-name { font-weight: 500; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+  .pl-sg-when { font-size: 11.5px; color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .pl-sg-dates { display: none; }
+  .pl-sg-track { position: relative; min-height: 46px; cursor: pointer; }
+  .pl-sg-label.is-hot { background: color-mix(in srgb, var(--color-fg) 5%, var(--color-panel)); }
+  .pl-sg-track.is-hot { background: color-mix(in srgb, var(--color-fg) 5%, transparent); }
+  .pl-sg-label:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  .pl-sg-overlay { position: absolute; top: 0; bottom: 0; left: var(--lw); right: 0; pointer-events: none; z-index: 1; }
+  .pl-sg-mline { position: absolute; top: 30px; bottom: 0; border-left: 1px solid color-mix(in srgb, var(--color-border-line) 70%, transparent); }
+  .pl-sg-mline.is-year { border-left-color: color-mix(in srgb, var(--color-fg-muted) 45%, transparent); }
+  .pl-sg-band { position: absolute; top: 30px; bottom: 0; background: color-mix(in srgb, var(--c) 8%, transparent); border-inline: 1px dashed color-mix(in srgb, var(--c) 45%, transparent); }
+  .pl-sg-band span { position: absolute; left: 6px; font-size: 11px; font-weight: 600; color: var(--c); white-space: nowrap; }
+  .pl-sg-today { position: absolute; top: 30px; bottom: 0; border-left: 2px dashed var(--color-bad); }
+  .pl-sg-today span { position: absolute; left: 4px; font-size: 11px; font-weight: 600; color: var(--color-bad); white-space: nowrap; background: var(--color-panel); padding: 0 3px; border-radius: 3px; }
+  .pl-sg-bar { position: absolute; top: 62%; height: 14px; margin-top: -7px; border-radius: 4px; background: var(--c); z-index: 2; }
+  .pl-sg-line { position: absolute; top: 62%; height: 2px; margin-top: -1px; background: color-mix(in srgb, var(--c) 45%, transparent); z-index: 1; }
+  .pl-sg-pt { position: absolute; top: 62%; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; transform: rotate(45deg); background: var(--c); border: 2px solid var(--color-panel); border-radius: 2px; z-index: 3; box-sizing: border-box; }
+  .pl-sg-pt.is-small { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-width: 1.5px; }
+  .pl-sg-pt.is-due { background: var(--color-panel); border: 2.5px solid var(--color-bad); width: 14px; height: 14px; margin: -7px 0 0 -7px; }
+  .pl-sg-pl { position: absolute; top: 3px; transform: translateX(-50%); font-size: 11px; font-weight: 600; white-space: nowrap; color: var(--c); z-index: 3; font-variant-numeric: tabular-nums; }
+  .pl-sg-pl.is-due { color: var(--color-bad); }
+  .pl-sg-group-t { position: relative; }
+  .pl-sg-blabel { position: absolute; bottom: 4px; padding-left: 6px; font-size: 11px; font-weight: 600; color: var(--c); white-space: nowrap; border-left: 1px dashed color-mix(in srgb, var(--c) 55%, transparent); }
+  .pl-sg-tband { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c) 9%, transparent); border-inline: 1px dashed color-mix(in srgb, var(--c) 40%, transparent); z-index: 0; pointer-events: none; }
+  .pl-sg-detail { margin-top: var(--cds-gap-md); display: grid; gap: 6px; padding: 14px 16px; border: 1px solid var(--color-border-line); border-left: 4px solid var(--c, var(--color-fg)); border-radius: var(--cds-radius); background: var(--color-panel); }
+  .pl-sg-detail h3 { margin: 0; font-size: var(--cds-font-size-heading); }
+  .pl-sg-detail h4 { margin: 4px 0 0; font-size: var(--cds-font-size-body); }
+  .pl-sg-detail ul { margin: 0; padding-left: 1.2em; display: grid; gap: 3px; font-size: var(--cds-font-size-body); }
+  .pl-sg-d-who { font-size: var(--cds-font-size-caption); font-weight: 700; color: var(--c); }
+  .pl-sg-d-meta, .pl-sg-d-note { margin: 0; font-size: var(--cds-font-size-body); font-variant-numeric: tabular-nums; }
+  .pl-sg-d-src { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pl-lg-band { display: inline-block; width: 18px; height: 11px; vertical-align: -1px; border: 1px dashed var(--color-fg-muted); background: color-mix(in srgb, var(--color-fg-muted) 10%, transparent); border-radius: 2px; }
+  .pl-lg-start { display: inline-block; width: 9px; height: 9px; transform: rotate(45deg); background: var(--color-fg-muted); margin: 0 2px; }
+  .pl-lg-due { display: inline-block; width: 9px; height: 9px; transform: rotate(45deg); border: 2px solid var(--color-bad); margin: 0 2px; }
+  .pl-lg-bar { display: inline-block; width: 18px; height: 8px; border-radius: 2px; background: var(--color-fg-muted); }
+  .pl-lg-now { display: inline-block; width: 0; height: 12px; border-left: 2px dashed var(--color-bad); vertical-align: -2px; }
+  /* 좁은 화면: 이름 위, 막대 아래 */
+  .pl-sg.is-narrow { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+  .pl-sg.is-narrow .pl-sg-overlay { left: 0; }
+  .pl-sg.is-narrow .pl-sg-label, .pl-sg.is-narrow .pl-sg-group-l { position: relative; border-right: 0; z-index: 3; background: var(--color-panel); }
+  .pl-sg.is-narrow .pl-sg-label { padding: 10px 0 2px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+  .pl-sg.is-narrow .pl-sg-group-l { padding-top: 18px; }
+  .pl-sg.is-narrow .pl-sg-group-l small { flex-basis: 100%; padding-left: 16px; }
+  .pl-sg.is-narrow .pl-sg-dates { display: block; flex-basis: 100%; font-size: 12px; font-weight: 600; color: var(--c); font-variant-numeric: tabular-nums; }
+  .pl-sg.is-narrow .pl-sg-when { display: none; }
+  .pl-sg.is-narrow .pl-sg-track { min-height: 26px; }
+  .pl-sg.is-narrow .pl-sg-bar, .pl-sg.is-narrow .pl-sg-pt, .pl-sg.is-narrow .pl-sg-line { top: 50%; }
+  .pl-sg.is-narrow .pl-sg-pl, .pl-sg.is-narrow .pl-sg-band span { display: none; }
+  .pl-sg.is-narrow .pl-sg-today span { top: 4px !important; }
 </style>
 <script src="d3.min.js"></script>
 <script>
 /* 대시보드 실행 도구: Claude 대시보드의 dash API를 이 페이지 안에서 대신합니다.
    입력한 값은 이 기기 브라우저(localStorage)에만 저장됩니다. */
 (function () {
-  var DATA = {"tasks": [{"id": "t01b", "phase": 1, "phase_name": "준비 및 인수인계", "role": "employer", "task": "업무분담자 지정 및 분담수당 지급 준비", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "LS", "d": -31}, "e": {"a": "LS", "d": -1}, "note": "업무분담자에게 금전적 지원(분담수당 등)을 해야 지원. 증빙서류 제출 의무 폐지", "flag": "", "in_period": true, "clip_ok": false, "scenario": "share", "only_if": "", "docs": ["업무분담에 따른 금전 지원 입증서류 (임금명세서) · 지원금 신청 때 제출"], "prep": ["업무분담자를 지정하고 분담수당 등 금전 지원 계획을 세움", "지원금은 실제 지급한 금액까지만 (30인 미만 월 최대 60만원)", "신규채용 · 대체인력 등으로 이미 지원금을 받는 근로자는 업무분담자로 지정하지 않음 (공제 · 제한 가능)"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t02", "phase": 1, "phase_name": "준비 및 인수인계", "role": "worker", "task": "육아휴직 신청서 제출", "kind": "deadline", "label_style": "until", "every_months": null, "s": {"a": "LS", "d": -31}, "e": {"a": "LS", "d": -31}, "note": "휴직개시 예정일 30일 전까지, 가족관계증명서 첨부", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 신청서 (영유아 성명 · 생년월일, 휴직개시 예정일, 종료 예정일, 신청 연월일, 신청인)", "가족관계증명서 (회사 요청 시 · 처음 주신 명세 기준)"], "prep": ["휴직개시 예정일 30일 전까지 회사에 제출", "유산 · 사산 · 조산 위험, 출산예정일 전 출생, 배우자의 사망 · 부상 · 질병 등은 7일 전까지 신청 가능", "신청 철회는 휴직개시 예정일 7일 전까지", "휴직 시작 전날까지 그 회사 근속 6개월 미만이면 회사가 거부할 수 있음"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내 · 가족관계증명서는 처음 주신 명세 기준"}, {"id": "t03", "phase": 1, "phase_name": "준비 및 인수인계", "role": "employer", "task": "육아휴직 승인 통보", "kind": "point", "label_style": "point", "every_months": null, "s": {"a": "LS", "d": -31}, "e": {"a": "LS", "d": -31}, "note": "신청서 수령 즉시 서면/메일 알림", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["근로자의 육아휴직 신청서 (영유아 성명 · 생년월일, 휴직개시 예정일, 종료 예정일, 신청 연월일, 신청인)", "인사발령 문서 등 육아휴직 실시 증명 · 나중에 지원금 신청 때 사용"], "prep": ["휴직개시 예정일 30일 전까지 신청받음 (유산 · 조산 위험 등은 7일 전까지 가능)", "휴직 시작 전날까지 계속 근로 6개월 미만이면 거부 가능, 그 밖에는 허용해야 함 (위반 시 500만원 이하 벌금)", "신청 철회는 휴직개시 예정일 7일 전까지 가능"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t04", "phase": 1, "phase_name": "준비 및 인수인계", "role": "substitute", "task": "입사 및 인수인계 진행", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "HS"}, "e": {"a": "LS", "d": -1}, "note": "휴직 전 인수인계 최대 2개월까지 대체인력 지원금 대상", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": ["대체인력 근로계약서 · 월별 임금대장 (파견이면 근로자파견계약서 · 파견 대가 지급내역) · 지원금 신청 때 사본 제출"], "prep": ["휴직 개시 2개월 전 이후 새로 고용(또는 파견 사용)하고 30일 이상 계속 고용", "대체인력의 고용보험 가입, 신고 월평균 보수 124만원 이상 확인", "사업주(대표이사)의 배우자 · 직계 존비속은 지원 대상 아님", "월 지원액은 대체인력 임금의 80%를 넘지 못함"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t05", "phase": 2, "phase_name": "휴직 개시 & 4대보험/고용24 신고", "role": "worker", "task": "육아휴직 개시", "kind": "point", "label_style": "point", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LS"}, "note": "휴직 상태 전환", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["육아휴직을 30일 이상 써야 급여 대상 (출산전후휴가와 겹치는 기간 제외)", "휴직 시작 전 고용보험 피보험 단위기간 통산 180일 이상이어야 급여 대상", "휴직 중 주 15시간 이상 일하거나 근로 · 자영 소득이 150만원 이상이면 그 기간 급여 없음", "회사에서 금품을 받으면 그 달 금품 + 급여가 통상임금을 넘는 만큼 급여 감액", "연장은 종료 예정일 30일 전까지 통지하면 1회 가능, 분할은 최대 4번"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}, {"id": "t06", "phase": 2, "phase_name": "휴직 개시 & 4대보험/고용24 신고", "role": "employer", "task": "4대보험 납부유예/중지 신청", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LS", "m": 1, "dom": 15}, "note": "4대사회보험 EDI (익월 15일 전까지)", "flag": "", "in_period": false, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["4대사회보험 EDI로 신청 (익월 15일 전까지)", "구체적인 서식과 절차는 이번에 읽은 공식 안내에 없어 확인하지 못함 · 4대사회보험 정보연계센터 또는 각 공단에 확인"], "prep_src": "사용자 명세 기준 · 공식 안내에서 확인하지 못함"}, {"id": "t07", "phase": 2, "phase_name": "휴직 개시 & 4대보험/고용24 신고", "role": "employer", "task": "고용24 육아휴직 확인서 제출", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LS", "d": 14}, "note": "확인서+임금대장 첨부", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 확인서 (고용보험법 시행규칙 별지 제102호서식, 최초 1회)", "통상임금 확인 자료 사본 (임금대장, 근로계약서 등)", "휴직 중 금품을 지급했다면 그 내역 자료"], "prep": ["근로자가 요구하면 육아휴직 확인서를 발급해야 함", "근로자는 이 자료로 고용24에서 매월 육아휴직 급여를 신청"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t08", "phase": 2, "phase_name": "휴직 개시 & 4대보험/고용24 신고", "role": "substitute", "task": "휴직자 업무 독자 수행", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LS", "d": 14}, "note": "휴직 공백 전담 근무", "flag": "", "in_period": false, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": [], "prep": [], "prep_src": ""}, {"id": "t09", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "worker", "task": "육아휴직 급여 신청 (매월)", "kind": "recurring", "label_style": "every", "every_months": 1, "s": {"a": "LS", "m": 1}, "e": {"a": "LE"}, "note": "휴직 시작 1개월 후부터. 해당 월 휴직분은 다음 달 말일까지 신청", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 급여 신청서 (고용보험법 시행규칙 별지 제100호서식)", "육아휴직 확인서 1부 (별지 제102호서식, 최초 1회만 · 회사가 발급)", "통상임금 확인 자료 사본 (임금대장, 근로계약서 등)", "휴직 중 회사에서 금품을 받았다면 그 확인 자료"], "prep": ["매월 신청: 그 달 휴직분은 다음 달 말일까지", "휴직 시작 1개월 후부터 휴직 종료 후 12개월 안에 신청", "거주지 또는 사업장 관할 고용센터에 제출 (서식은 고용24 서식자료실)"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}, {"id": "t10", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "employer", "task": "대체인력 지원금 신청 (3개월마다, 전액)", "kind": "recurring", "label_style": "every", "every_months": 3, "s": {"a": "LS", "m": 1, "dom": 1}, "e": {"a": "LE"}, "note": "휴직 시작 달의 다음 달부터 3개월마다. 휴직 전 인수인계분은 휴직 시작 1개월 후부터. 2026.1.1 이후 채용분은 사후지급 없음", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": ["출산육아기 고용안정장려금 지급신청서 (대체인력 지원금, 별지 제26호)", "육아휴직 실시 증명서류 사본 (인사발령 문서 등)", "사업주 가족관계등록부 또는 주민등록등본", "대체인력 근로계약서 사본 · 월별 임금대장 사본 (파견이면 파견계약서 · 대가 지급내역)"], "prep": ["휴직 시작 달의 다음 달부터 3개월마다 신청", "휴직 전 인수인계분은 휴직 시작 1개월 후부터 신청", "소재지 관할 고용센터에 제출, 휴직 종료일부터 12개월 안에 접수"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t10b", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "employer", "task": "업무분담 지원금 신청 (3개월 단위)", "kind": "recurring", "label_style": "every", "every_months": 3, "s": {"a": "LS", "dom": 1}, "e": {"a": "LE"}, "note": "업무분담자 지정일이 속한 달의 다음 달부터 3개월 단위 (지정을 휴직 전 달로 가정)", "flag": "", "in_period": true, "clip_ok": false, "scenario": "share", "only_if": "", "docs": ["출산육아기 고용안정장려금 지급신청서 (업무분담 지원금, 별지 제26의2호)", "육아휴직 실시 증명서류 사본 (인사발령 문서 등)", "업무분담에 따른 금전 지원 입증서류 (임금명세서)"], "prep": ["업무분담자 지정일이 속한 달의 다음 달부터 3개월 단위로 신청", "소재지 관할 고용센터에 제출, 휴직 종료일부터 12개월 안에 접수"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t10g", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "employer", "task": "육아휴직 지원금 50% 신청 (3개월마다)", "kind": "recurring", "label_style": "every", "every_months": 3, "s": {"a": "LS", "m": 1, "dom": 1}, "e": {"a": "LE"}, "note": "휴직 시작 달의 다음 달부터 3개월마다 50%. 나머지 50%는 복직 후 6개월 계속 고용 후", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["출산육아기 고용안정장려금 지급신청서 (육아휴직 지원금, 별지 제25호)", "육아휴직 실시 증명서류 사본 (인사발령 문서 등)", "사업주 가족관계등록부 또는 주민등록등본"], "prep": ["휴직 시작 달의 다음 달부터 3개월마다 50% 신청", "남성 육아휴직 1~3번째 사례면 월 10만원 추가", "소재지 관할 고용센터에 제출, 휴직 종료일부터 12개월 안에 접수"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t11", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "employer", "task": "감원방지 의무 준수", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "HS", "m": -3}, "e": {"a": "HY"}, "note": "대체인력 고용 3개월 전부터 고용 후 1년(그 전에 계약 종료 시 종료일)까지 고용조정 금지", "flag": "", "in_period": false, "clip_ok": true, "scenario": "sub", "only_if": "", "docs": [], "prep": ["대체인력 고용 3개월 전부터 고용 후 1년(그 전에 계약이 끝나면 종료일)까지 고용조정으로 다른 근로자를 이직시키지 않음", "위반 아님: 대체인력보다 나중에 고용된 근로자 조정, 근로자 귀책 징계해고, 정년, 계약기간 만료, 자발적 퇴직"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t12", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "substitute", "task": "정상 근무 및 급여 수령", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LE"}, "note": "월평균 보수 124만원 이상이어야 지원 대상", "flag": "", "in_period": false, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": [], "prep": [], "prep_src": ""}, {"id": "t13", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "substitute", "task": "근로계약 종료", "kind": "point", "label_style": "point", "every_months": null, "s": {"a": "SE"}, "e": {"a": "SE"}, "note": "계약 만료 퇴사 또는 직무 전환", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": [], "prep": [], "prep_src": ""}, {"id": "t13b", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "substitute", "task": "복직자와 인수인계 (복직 후)", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "RT"}, "e": {"a": "SE"}, "note": "복직 후 최대 1개월, 육아휴직에 한함", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "ph", "docs": [], "prep": [], "prep_src": ""}, {"id": "t14", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "worker", "task": "사업장 복직", "kind": "point", "label_style": "point", "every_months": null, "s": {"a": "RT"}, "e": {"a": "RT"}, "note": "휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["회사는 휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함", "육아휴직을 이유로 한 해고나 불리한 처우는 금지", "남은 급여는 휴직 종료 후 12개월 안에 신청"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}, {"id": "t15", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "4대보험 재개 및 건강보험 정산 신청", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "RT"}, "e": {"a": "RT", "d": 14}, "note": "EDI 정산 (필요시 분할납부 신청)", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["4대보험 재개와 건강보험 정산은 EDI로 신청 (필요하면 분할납부 신청)", "구체적인 서식과 절차는 이번에 읽은 공식 안내에 없어 확인하지 못함 · 각 공단에 확인"], "prep_src": "사용자 명세 기준 · 공식 안내에서 확인하지 못함"}, {"id": "t16", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "복직자 6개월 이상 계속 고용", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "RT"}, "e": {"a": "RT", "m": 6, "d": -1}, "note": "육아휴직 지원금 잔여 50% 지급 요건", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["복직자를 6개월 이상 계속 고용해야 육아휴직 지원금 잔여 50% 신청 가능", "휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함 (위반 시 500만원 이하 벌금)", "육아휴직을 이유로 한 해고나 불리한 처우 금지"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t17b", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "대체인력 지원금 · 복직 후 인수인계분 신청", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "LE", "m": 1}, "e": {"a": "LE", "m": 1, "d": 14}, "note": "육아휴직 종료 1개월 후부터 12개월 이내", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "ph", "docs": ["출산육아기 고용안정장려금 지급신청서 (대체인력 지원금, 별지 제26호)", "대체인력 근로계약서 사본 · 월별 임금대장 사본"], "prep": ["육아휴직 종료 1개월 후부터 12개월 안에 신청", "대체인력이 복직 후 1개월 안에 그만두면 그 다음 날부터 신청"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t17", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "육아휴직 지원금 잔여 50% 일괄 신청", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "RT", "m": 6}, "e": {"a": "RT", "m": 6, "d": 14}, "note": "복직 후 6개월 이상 계속 고용 확인 후", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["출산육아기 고용안정장려금 지급신청서 (육아휴직 지원금, 별지 제25호)"], "prep": ["복직 후 6개월 이상 계속 고용한 뒤 나머지 50%를 한꺼번에 신청", "계속 고용을 어떻게 증빙하는지는 공식 안내에 없어 확인하지 못함"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t18", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "지원금 신청 마감 (휴직 종료 후 12개월)", "kind": "deadline", "label_style": "until", "every_months": null, "s": {"a": "LE", "m": 12}, "e": {"a": "LE", "m": 12}, "note": "육아휴직 종료일로부터 12개월 이내 접수분만 지원", "flag": "", "in_period": false, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["모든 지원금은 육아휴직 종료일(분할 사용 시 각 종료일)부터 12개월 안에 접수된 것만 지원"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "s01", "phase": 5, "phase_name": "세은 육아휴직", "role": "spouse", "task": "세은 육아휴직 신청서 제출 (세은 회사)", "kind": "deadline", "label_style": "until", "every_months": null, "s": {"a": "SLS", "d": -30}, "e": {"a": "SLS", "d": -30}, "note": "휴직개시 예정일 30일 전까지", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 신청서 (세은 회사 제출)", "1년을 넘겨 쓰려면 만유가 3개월 이상 육아휴직을 쓴 증빙 자료"], "prep": ["휴직개시 예정일 30일 전까지 세은 회사에 제출", "1년을 넘는 휴직(최대 1년 6개월)은 부모 모두 3개월 이상 사용해야 가능하고, 추가 6개월은 신청하는 시점에 요건을 갖춰야 함", "만유가 3개월을 채우기 전이면 먼저 1년 이내로 신청하고, 요건을 갖춘 뒤 연장(종료 예정일 30일 전까지 통지, 1회)하거나 새로 신청", "휴직 시작 전날까지 근속 6개월 미만이면 회사가 거부할 수 있음"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}, {"id": "s02", "phase": 5, "phase_name": "세은 육아휴직", "role": "spouse", "task": "세은 육아휴직 개시", "kind": "point", "label_style": "point", "every_months": null, "s": {"a": "SLS"}, "e": {"a": "SLS"}, "note": "자녀 생후 18개월 이내면 부모함께육아휴직(6+6) 적용", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["자녀 생후 18개월 이내에 부모 모두(동시 또는 순차) 육아휴직을 쓰면 첫 6개월 급여 상한이 오름 (부모함께육아휴직제)", "육아휴직 30일 이상, 휴직 전 피보험 단위기간 180일 이상이어야 급여 대상", "휴직 중 주 15시간 이상 취업 또는 소득 150만원 이상이면 그 기간 급여 없음"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}, {"id": "s03", "phase": 5, "phase_name": "세은 육아휴직", "role": "spouse", "task": "세은 육아휴직 급여 신청 (매월)", "kind": "recurring", "label_style": "every", "every_months": 1, "s": {"a": "SLS", "m": 1}, "e": {"a": "SLE"}, "note": "해당 월 휴직분은 다음 달 말일까지 신청", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 급여 신청서 (고용보험법 시행규칙 별지 제100호서식)", "육아휴직 확인서 1부 (별지 제102호서식, 최초 1회만 · 회사가 발급)", "통상임금 확인 자료 사본 (임금대장, 근로계약서 등)", "휴직 중 회사에서 금품을 받았다면 그 확인 자료"], "prep": ["매월 신청: 그 달 휴직분은 다음 달 말일까지", "휴직 시작 1개월 후부터 휴직 종료 후 12개월 안에 신청", "육아휴직 확인서는 세은 회사가 발급"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}, {"id": "s04", "phase": 5, "phase_name": "세은 육아휴직", "role": "spouse", "task": "세은 복직", "kind": "point", "label_style": "point", "every_months": null, "s": {"a": "SRT"}, "e": {"a": "SRT"}, "note": "세은 업무 복귀", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["세은 회사도 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함", "남은 급여는 휴직 종료 후 12개월 안에 신청"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}], "milestones": [{"key": "handover_start", "label": "대체인력 입사 · 인수인계 시작", "anchor": "HS", "note": "인수인계 {HS} ~ {HE}", "role": "substitute", "tab": "employer", "scenario": "sub"}, {"key": "leave_start", "label": "육아휴직 개시", "anchor": "LS", "note": "휴직 기간 {LS} ~ {LE}", "role": "worker", "tab": "both", "scenario": "all"}, {"key": "return", "label": "복직 예정", "anchor": "RT", "note": "이후 6개월 계속 고용 시 육아휴직 지원금 잔여 50%", "role": "worker", "tab": "both", "scenario": "all"}, {"key": "sub_end", "label": "대체인력 계약 종료", "anchor": "SE", "note": "지원 대상 기간 종료", "role": "substitute", "tab": "employer", "scenario": "sub"}, {"key": "spouse_start", "label": "세은 육아휴직 개시", "anchor": "SLS", "note": "세은 휴직 {SLS} ~ {SLE}", "role": "spouse", "tab": "worker", "scenario": "all"}, {"key": "spouse_return", "label": "세은 복직 예정", "anchor": "SRT", "note": "세은 휴직 {SM}개월 후 복귀", "role": "spouse", "tab": "worker", "scenario": "all"}], "benefits": [{"key": "sub_pre", "scenario": "sub", "item": "대체인력 지원금 · 휴직 전 인수인계", "monthly_manwon": 140, "months_basis": "pre_handover", "cap_by": "sub80", "requires": "", "paid": "휴직 시작 1개월 후 신청", "basis": "30인 미만 월 최대 140만원, 대체인력 임금의 80% 한도, 휴직 전 최대 2개월 (고용노동부 일생활균형 · 대체인력 지원금)"}, {"key": "sub_leave", "scenario": "sub", "item": "대체인력 지원금 · 휴직 기간", "monthly_manwon": 140, "months_basis": "leave", "cap_by": "sub80", "requires": "", "paid": "3개월마다 전액", "basis": "30인 미만 월 최대 140만원, 대체인력 임금의 80% 한도 (고용노동부 일생활균형 · 대체인력 지원금)"}, {"key": "sub_post", "scenario": "sub", "item": "대체인력 지원금 · 복직 후 인수인계", "monthly_manwon": 140, "months_basis": "post_handover", "cap_by": "sub80", "requires": "", "paid": "휴직 종료 1개월 후 신청", "basis": "육아휴직 복직 후 최대 1개월 (고용노동부 일생활균형 · 대체인력 지원금)"}, {"key": "sub_general", "scenario": "sub", "item": "육아휴직 지원금", "monthly_manwon": 30, "months_basis": "leave", "cap_by": "", "requires": "", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "자녀 만 12개월 초과 또는 특례 미적용 시 월 30만원 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "sub_male", "scenario": "sub", "item": "남성 육아휴직 인센티브", "monthly_manwon": 10, "months_basis": "leave", "cap_by": "", "requires": "male", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "사업장 남성 육아휴직 1~3번째 사례 월 10만원 추가 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "share_main", "scenario": "share", "item": "업무분담 지원금", "monthly_manwon": 60, "months_basis": "leave", "cap_by": "share", "requires": "", "paid": "3개월 단위", "basis": "30인 미만 월 최대 60만원, 업무분담자에게 지급한 금액 한도 (고용노동부 일생활균형 · 업무분담 지원금)"}, {"key": "share_general", "scenario": "share", "item": "육아휴직 지원금", "monthly_manwon": 30, "months_basis": "leave", "cap_by": "", "requires": "", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "월 30만원 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "share_male", "scenario": "share", "item": "남성 육아휴직 인센티브", "monthly_manwon": 10, "months_basis": "leave", "cap_by": "", "requires": "male", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "사업장 남성 육아휴직 1~3번째 사례 월 10만원 추가 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "special_first", "scenario": "special", "item": "육아휴직 지원금 · 특례 (첫 3개월)", "monthly_manwon": 100, "months_basis": "leave_first3", "cap_by": "", "requires": "", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "만 12개월 이내 자녀(임신 중 포함), 3개월 이상 연속 부여 시 첫 3개월 월 100만원 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "special_after", "scenario": "special", "item": "육아휴직 지원금 · 특례 이후", "monthly_manwon": 30, "months_basis": "leave_after3", "cap_by": "", "requires": "", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "이후 월 30만원 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "special_male", "scenario": "special", "item": "남성 육아휴직 인센티브", "monthly_manwon": 10, "months_basis": "leave", "cap_by": "", "requires": "male", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "사업장 남성 육아휴직 1~3번째 사례 월 10만원 추가 (고용노동부 일생활균형 · 육아휴직 지원금)"}], "pay_rules": [{"plan": "general", "band": "일반 1~3개월차", "from_month": 1, "to_month": 3, "rate": 1.0, "cap_won": 2500000, "floor_won": 700000}, {"plan": "general", "band": "일반 4~6개월차", "from_month": 4, "to_month": 6, "rate": 1.0, "cap_won": 2000000, "floor_won": 700000}, {"plan": "general", "band": "일반 7개월차 이후", "from_month": 7, "to_month": 18, "rate": 0.8, "cap_won": 1600000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 1개월차", "from_month": 1, "to_month": 1, "rate": 1.0, "cap_won": 2500000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 2개월차", "from_month": 2, "to_month": 2, "rate": 1.0, "cap_won": 2500000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 3개월차", "from_month": 3, "to_month": 3, "rate": 1.0, "cap_won": 3000000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 4개월차", "from_month": 4, "to_month": 4, "rate": 1.0, "cap_won": 3500000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 5개월차", "from_month": 5, "to_month": 5, "rate": 1.0, "cap_won": 4000000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 6개월차", "from_month": 6, "to_month": 6, "rate": 1.0, "cap_won": 4500000, "floor_won": 700000}, {"plan": "66", "band": "일반 7개월차 이후", "from_month": 7, "to_month": 18, "rate": 0.8, "cap_won": 1600000, "floor_won": 700000}]};
-  var DEFAULTS = {"tab": "worker", "role": "all", "scn": "sub", "ph": false, "male": false, "sub_wage": 2500000, "share_pay": 600000, "ls": "2027-01-01", "le": "2027-06-30", "hs": "2026-12-01", "rt": "2027-07-01", "wage": 3000000, "sls": "2027-03-01", "srt": "2028-07-31", "swage": 3000000, "birth": null, "p66": true, "salary": 3000000, "ssalary": 3000000, "x_me": 0, "x_sp": 0, "x_sp_months": "", "ck": ""};
+  var DATA = {"tasks": [{"id": "t01b", "phase": 1, "phase_name": "준비 및 인수인계", "role": "employer", "task": "업무분담자 지정 및 분담수당 지급 준비", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "LS", "d": -31}, "e": {"a": "LS", "d": -1}, "note": "업무분담자에게 금전적 지원(분담수당 등)을 해야 지원. 증빙서류 제출 의무 폐지", "flag": "", "in_period": true, "clip_ok": false, "scenario": "share", "only_if": "", "docs": ["업무분담에 따른 금전 지원 입증서류 (임금명세서) · 지원금 신청 때 제출"], "prep": ["업무분담자를 지정하고 분담수당 등 금전 지원 계획을 세움", "지원금은 실제 지급한 금액까지만 (30인 미만 월 최대 60만원)", "신규채용 · 대체인력 등으로 이미 지원금을 받는 근로자는 업무분담자로 지정하지 않음 (공제 · 제한 가능)"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t02", "phase": 1, "phase_name": "준비 및 인수인계", "role": "worker", "task": "육아휴직 신청서 제출", "kind": "deadline", "label_style": "until", "every_months": null, "s": {"a": "LS", "d": -31}, "e": {"a": "LS", "d": -31}, "note": "휴직개시 예정일 30일 전까지, 가족관계증명서 첨부", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 신청서 (영유아 성명 · 생년월일, 휴직개시 예정일, 종료 예정일, 신청 연월일, 신청인)", "가족관계증명서 (회사 요청 시 · 처음 주신 명세 기준)"], "prep": ["휴직개시 예정일 30일 전까지 회사에 제출", "유산 · 사산 · 조산 위험, 출산예정일 전 출생, 배우자의 사망 · 부상 · 질병 등은 7일 전까지 신청 가능", "신청 철회는 휴직개시 예정일 7일 전까지", "휴직 시작 전날까지 그 회사 근속 6개월 미만이면 회사가 거부할 수 있음"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내 · 가족관계증명서는 처음 주신 명세 기준"}, {"id": "t03", "phase": 1, "phase_name": "준비 및 인수인계", "role": "employer", "task": "육아휴직 승인 통보", "kind": "point", "label_style": "point", "every_months": null, "s": {"a": "LS", "d": -31}, "e": {"a": "LS", "d": -31}, "note": "신청서 수령 즉시 서면/메일 알림", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["근로자의 육아휴직 신청서 (영유아 성명 · 생년월일, 휴직개시 예정일, 종료 예정일, 신청 연월일, 신청인)", "인사발령 문서 등 육아휴직 실시 증명 · 나중에 지원금 신청 때 사용"], "prep": ["휴직개시 예정일 30일 전까지 신청받음 (유산 · 조산 위험 등은 7일 전까지 가능)", "휴직 시작 전날까지 계속 근로 6개월 미만이면 거부 가능, 그 밖에는 허용해야 함 (위반 시 500만원 이하 벌금)", "신청 철회는 휴직개시 예정일 7일 전까지 가능"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t04", "phase": 1, "phase_name": "준비 및 인수인계", "role": "substitute", "task": "입사 및 인수인계 진행", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "HS"}, "e": {"a": "LS", "d": -1}, "note": "휴직 전 인수인계 최대 2개월까지 대체인력 지원금 대상", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": ["대체인력 근로계약서 · 월별 임금대장 (파견이면 근로자파견계약서 · 파견 대가 지급내역) · 지원금 신청 때 사본 제출"], "prep": ["휴직 개시 2개월 전 이후 새로 고용(또는 파견 사용)하고 30일 이상 계속 고용", "대체인력의 고용보험 가입, 신고 월평균 보수 124만원 이상 확인", "사업주(대표이사)의 배우자 · 직계 존비속은 지원 대상 아님", "월 지원액은 대체인력 임금의 80%를 넘지 못함"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t06", "phase": 2, "phase_name": "휴직 개시 & 4대보험/고용24 신고", "role": "employer", "task": "4대보험 납부유예/중지 신청", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LS", "m": 1, "dom": 15}, "note": "4대사회보험 EDI (익월 15일 전까지)", "flag": "", "in_period": false, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["4대사회보험 EDI로 신청 (익월 15일 전까지)", "구체적인 서식과 절차는 이번에 읽은 공식 안내에 없어 확인하지 못함 · 4대사회보험 정보연계센터 또는 각 공단에 확인"], "prep_src": "사용자 명세 기준 · 공식 안내에서 확인하지 못함"}, {"id": "t07", "phase": 2, "phase_name": "휴직 개시 & 4대보험/고용24 신고", "role": "employer", "task": "고용24 육아휴직 확인서 제출", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LS", "d": 14}, "note": "확인서+임금대장 첨부", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 확인서 (고용보험법 시행규칙 별지 제102호서식, 최초 1회)", "통상임금 확인 자료 사본 (임금대장, 근로계약서 등)", "휴직 중 금품을 지급했다면 그 내역 자료"], "prep": ["근로자가 요구하면 육아휴직 확인서를 발급해야 함", "근로자는 이 자료로 고용24에서 매월 육아휴직 급여를 신청"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t08", "phase": 2, "phase_name": "휴직 개시 & 4대보험/고용24 신고", "role": "substitute", "task": "휴직자 업무 독자 수행", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LS", "d": 14}, "note": "휴직 공백 전담 근무", "flag": "", "in_period": false, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": [], "prep": [], "prep_src": ""}, {"id": "t09", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "worker", "task": "육아휴직 급여 신청 (매월)", "kind": "recurring", "label_style": "every", "every_months": 1, "s": {"a": "LS", "m": 1}, "e": {"a": "LE"}, "note": "휴직 시작 1개월 후부터. 해당 월 휴직분은 다음 달 말일까지 신청", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 급여 신청서 (고용보험법 시행규칙 별지 제100호서식)", "육아휴직 확인서 1부 (별지 제102호서식, 최초 1회만 · 회사가 발급)", "통상임금 확인 자료 사본 (임금대장, 근로계약서 등)", "휴직 중 회사에서 금품을 받았다면 그 확인 자료"], "prep": ["매월 신청: 그 달 휴직분은 다음 달 말일까지", "휴직 시작 1개월 후부터 휴직 종료 후 12개월 안에 신청", "거주지 또는 사업장 관할 고용센터에 제출 (서식은 고용24 서식자료실)", "육아휴직을 30일 이상 써야 급여 대상 (출산전후휴가와 겹치는 기간 제외)", "휴직 시작 전 고용보험 피보험 단위기간 통산 180일 이상이어야 급여 대상", "휴직 중 주 15시간 이상 일하거나 근로 · 자영 소득이 150만원 이상이면 그 기간 급여 없음", "회사에서 금품을 받으면 그 달 금품 + 급여가 통상임금을 넘는 만큼 급여 감액", "연장은 종료 예정일 30일 전까지 통지하면 1회 가능, 분할은 최대 4번", "회사는 휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함", "육아휴직을 이유로 한 해고나 불리한 처우는 금지", "남은 급여는 휴직 종료 후 12개월 안에 신청"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}, {"id": "t10", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "employer", "task": "대체인력 지원금 신청 (3개월마다, 전액)", "kind": "recurring", "label_style": "every", "every_months": 3, "s": {"a": "LS", "m": 1, "dom": 1}, "e": {"a": "LE"}, "note": "휴직 시작 달의 다음 달부터 3개월마다. 휴직 전 인수인계분은 휴직 시작 1개월 후부터. 2026.1.1 이후 채용분은 사후지급 없음", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": ["출산육아기 고용안정장려금 지급신청서 (대체인력 지원금, 별지 제26호)", "육아휴직 실시 증명서류 사본 (인사발령 문서 등)", "사업주 가족관계등록부 또는 주민등록등본", "대체인력 근로계약서 사본 · 월별 임금대장 사본 (파견이면 파견계약서 · 대가 지급내역)"], "prep": ["휴직 시작 달의 다음 달부터 3개월마다 신청", "휴직 전 인수인계분은 휴직 시작 1개월 후부터 신청", "소재지 관할 고용센터에 제출, 휴직 종료일부터 12개월 안에 접수"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t10b", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "employer", "task": "업무분담 지원금 신청 (3개월 단위)", "kind": "recurring", "label_style": "every", "every_months": 3, "s": {"a": "LS", "dom": 1}, "e": {"a": "LE"}, "note": "업무분담자 지정일이 속한 달의 다음 달부터 3개월 단위 (지정을 휴직 전 달로 가정)", "flag": "", "in_period": true, "clip_ok": false, "scenario": "share", "only_if": "", "docs": ["출산육아기 고용안정장려금 지급신청서 (업무분담 지원금, 별지 제26의2호)", "육아휴직 실시 증명서류 사본 (인사발령 문서 등)", "업무분담에 따른 금전 지원 입증서류 (임금명세서)"], "prep": ["업무분담자 지정일이 속한 달의 다음 달부터 3개월 단위로 신청", "소재지 관할 고용센터에 제출, 휴직 종료일부터 12개월 안에 접수"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t10g", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "employer", "task": "육아휴직 지원금 50% 신청 (3개월마다)", "kind": "recurring", "label_style": "every", "every_months": 3, "s": {"a": "LS", "m": 1, "dom": 1}, "e": {"a": "LE"}, "note": "휴직 시작 달의 다음 달부터 3개월마다 50%. 나머지 50%는 복직 후 6개월 계속 고용 후", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["출산육아기 고용안정장려금 지급신청서 (육아휴직 지원금, 별지 제25호)", "육아휴직 실시 증명서류 사본 (인사발령 문서 등)", "사업주 가족관계등록부 또는 주민등록등본"], "prep": ["휴직 시작 달의 다음 달부터 3개월마다 50% 신청", "남성 육아휴직 1~3번째 사례면 월 10만원 추가", "소재지 관할 고용센터에 제출, 휴직 종료일부터 12개월 안에 접수"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t11", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "employer", "task": "감원방지 의무 준수", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "HS", "m": -3}, "e": {"a": "HY"}, "note": "대체인력 고용 3개월 전부터 고용 후 1년(그 전에 계약 종료 시 종료일)까지 고용조정 금지", "flag": "", "in_period": false, "clip_ok": true, "scenario": "sub", "only_if": "", "docs": [], "prep": ["대체인력 고용 3개월 전부터 고용 후 1년(그 전에 계약이 끝나면 종료일)까지 고용조정으로 다른 근로자를 이직시키지 않음", "위반 아님: 대체인력보다 나중에 고용된 근로자 조정, 근로자 귀책 징계해고, 정년, 계약기간 만료, 자발적 퇴직"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t12", "phase": 3, "phase_name": "휴직 운영 & 지원금 신청", "role": "substitute", "task": "정상 근무 및 급여 수령", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "LS"}, "e": {"a": "LE"}, "note": "월평균 보수 124만원 이상이어야 지원 대상", "flag": "", "in_period": false, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": [], "prep": [], "prep_src": ""}, {"id": "t13", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "substitute", "task": "근로계약 종료", "kind": "point", "label_style": "point", "every_months": null, "s": {"a": "SE"}, "e": {"a": "SE"}, "note": "계약 만료 퇴사 또는 직무 전환", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "", "docs": [], "prep": [], "prep_src": ""}, {"id": "t13b", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "substitute", "task": "복직자와 인수인계 (복직 후)", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "RT"}, "e": {"a": "SE"}, "note": "복직 후 최대 1개월, 육아휴직에 한함", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "ph", "docs": [], "prep": [], "prep_src": ""}, {"id": "t15", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "4대보험 재개 및 건강보험 정산 신청", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "RT"}, "e": {"a": "RT", "d": 14}, "note": "EDI 정산 (필요시 분할납부 신청)", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["4대보험 재개와 건강보험 정산은 EDI로 신청 (필요하면 분할납부 신청)", "구체적인 서식과 절차는 이번에 읽은 공식 안내에 없어 확인하지 못함 · 각 공단에 확인"], "prep_src": "사용자 명세 기준 · 공식 안내에서 확인하지 못함"}, {"id": "t16", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "복직자 6개월 이상 계속 고용", "kind": "range", "label_style": "range", "every_months": null, "s": {"a": "RT"}, "e": {"a": "RT", "m": 6, "d": -1}, "note": "육아휴직 지원금 잔여 50% 지급 요건", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["복직자를 6개월 이상 계속 고용해야 육아휴직 지원금 잔여 50% 신청 가능", "휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함 (위반 시 500만원 이하 벌금)", "육아휴직을 이유로 한 해고나 불리한 처우 금지"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t17b", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "대체인력 지원금 · 복직 후 인수인계분 신청", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "LE", "m": 1}, "e": {"a": "LE", "m": 1, "d": 14}, "note": "육아휴직 종료 1개월 후부터 12개월 이내", "flag": "", "in_period": true, "clip_ok": false, "scenario": "sub", "only_if": "ph", "docs": ["출산육아기 고용안정장려금 지급신청서 (대체인력 지원금, 별지 제26호)", "대체인력 근로계약서 사본 · 월별 임금대장 사본"], "prep": ["육아휴직 종료 1개월 후부터 12개월 안에 신청", "대체인력이 복직 후 1개월 안에 그만두면 그 다음 날부터 신청"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t17", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "육아휴직 지원금 잔여 50% 일괄 신청", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "RT", "m": 6}, "e": {"a": "RT", "m": 6, "d": 14}, "note": "복직 후 6개월 이상 계속 고용 확인 후", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["출산육아기 고용안정장려금 지급신청서 (육아휴직 지원금, 별지 제25호)"], "prep": ["복직 후 6개월 이상 계속 고용한 뒤 나머지 50%를 한꺼번에 신청", "계속 고용을 어떻게 증빙하는지는 공식 안내에 없어 확인하지 못함"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "t18", "phase": 4, "phase_name": "복직 & 사후 신청", "role": "employer", "task": "지원금 신청 마감 (휴직 종료 후 12개월)", "kind": "deadline", "label_style": "until", "every_months": null, "s": {"a": "LE", "m": 12}, "e": {"a": "LE", "m": 12}, "note": "육아휴직 종료일로부터 12개월 이내 접수분만 지원", "flag": "", "in_period": false, "clip_ok": false, "scenario": "all", "only_if": "", "docs": [], "prep": ["모든 지원금은 육아휴직 종료일(분할 사용 시 각 종료일)부터 12개월 안에 접수된 것만 지원"], "prep_src": "고용노동부 일생활균형 안내"}, {"id": "s00", "phase": 5, "phase_name": "세은 육아휴직", "role": "spouse", "task": "세은 출산전후휴가 급여 신청 (고용센터)", "kind": "open", "label_style": "from", "every_months": null, "s": {"a": "ME", "d": 1}, "e": {"a": "ME", "m": 12}, "note": "휴가가 끝난 뒤 한꺼번에 신청 가능 · 휴가 끝난 날 이후 12개월 이내", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["출산전후휴가 급여등 신청서 (고용보험법 시행규칙 별지 제105호서식)", "출산전후휴가 확인서 1부 (별지 제107호서식, 최초 1회 · 세은 회사가 발급)", "통상임금 확인 자료 사본 (임금대장, 근로계약서 등)", "휴가 중 회사에서 금품을 받았다면 그 확인 자료"], "prep": ["대규모기업: 최초 60일은 회사가 통상임금 지급, 마지막 30일은 정부가 통상임금 100% 지급 (30일 기준 상한 220만원)", "대규모기업은 휴가 시작 후 60일이 지난 날 이후 1개월부터, 휴가가 끝난 날 이후 12개월 안에 신청", "30일 단위로 신청하거나, 휴가가 끝난 뒤 한꺼번에 신청", "휴가 끝난 날 이전에 고용보험 피보험 단위기간 합산 180일 이상", "거주지 또는 사업장 관할 고용센터에 제출 (서식은 고용24 서식자료실)"], "prep_src": "고용노동부 일생활균형 「출산전후휴가 및 급여」 안내 (2026.11.09 열람)"}, {"id": "s01", "phase": 5, "phase_name": "세은 육아휴직", "role": "spouse", "task": "세은 육아휴직 신청서 제출 (세은 회사)", "kind": "deadline", "label_style": "until", "every_months": null, "s": {"a": "SLS", "d": -30}, "e": {"a": "SLS", "d": -30}, "note": "휴직개시 예정일 30일 전까지", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 신청서 (세은 회사 제출) · 처음에는 1년 이내로 신청"], "prep": ["휴직개시 예정일 30일 전까지 세은 회사에 제출", "세은 회사 처리 방식: 처음에는 1년으로 신청하고, 회사가 고용노동부에 내는 육아휴직 확인서도 1년분으로 올림 · 1년을 넘는 기간은 만유 육아휴직 이력 서류를 낸 뒤 연장", "휴직 시작 전날까지 근속 6개월 미만이면 회사가 거부할 수 있음"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내 · 1년 신청 후 연장 방식은 세은 회사 확인 내용"}, {"id": "s03", "phase": 5, "phase_name": "세은 육아휴직", "role": "spouse", "task": "세은 육아휴직 급여 신청 (매월)", "kind": "recurring", "label_style": "every", "every_months": 1, "s": {"a": "SLS", "m": 1}, "e": {"a": "SLE"}, "note": "해당 월 휴직분은 다음 달 말일까지 신청", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "", "docs": ["육아휴직 급여 신청서 (고용보험법 시행규칙 별지 제100호서식)", "육아휴직 확인서 1부 (별지 제102호서식, 최초 1회만 · 회사가 발급)", "통상임금 확인 자료 사본 (임금대장, 근로계약서 등)", "휴직 중 회사에서 금품을 받았다면 그 확인 자료"], "prep": ["매월 신청: 그 달 휴직분은 다음 달 말일까지", "휴직 시작 1개월 후부터 휴직 종료 후 12개월 안에 신청", "육아휴직 확인서는 세은 회사가 발급", "자녀 생후 18개월 이내에 부모 모두(동시 또는 순차) 육아휴직을 쓰면 첫 6개월 급여 상한이 오름 (부모함께육아휴직제)", "육아휴직 30일 이상, 휴직 전 피보험 단위기간 180일 이상이어야 급여 대상", "휴직 중 주 15시간 이상 취업 또는 소득 150만원 이상이면 그 기간 급여 없음", "세은 회사도 같은 업무 또는 같은 수준 임금의 직무로 복귀시켜야 함", "남은 급여는 휴직 종료 후 12개월 안에 신청"], "prep_src": "고용노동부 일생활균형 「육아휴직 및 급여」 안내"}, {"id": "s05", "phase": 5, "phase_name": "세은 육아휴직", "role": "spouse", "task": "세은 육아휴직 연장 · 만유 이력 서류 제출 가능", "kind": "point", "label_style": "from", "every_months": null, "s": {"a": "LS", "m": 3}, "e": {"a": "LS", "m": 3}, "note": "만유 육아휴직 3개월이 지난 시점 · 이때부터 만유 이력 서류를 세은 회사에 내면 회사가 고용노동부에 육아휴직 확인서 연장분 제출", "flag": "", "in_period": true, "clip_ok": false, "scenario": "all", "only_if": "sp12", "docs": ["만유 육아휴직 이력 서류 (만유가 3개월 이상 사용했음을 보여 주는 자료 · 어떤 서류인지는 세은 회사에 확인)", "육아휴직 연장 신청 (세은 회사 양식)"], "prep": ["만유 휴직 시작일부터 3개월이 지난 날부터 제출 가능 (만유가 3개월을 채운 뒤)", "세은 처음 1년이 끝나기 전에 연장 (연장은 종료 예정일 30일 전까지 통지, 1회)", "세은 회사가 고용노동부에 육아휴직 확인서 연장분을 내면, 1년을 넘는 달도 매월 육아휴직 급여 신청을 이어서 함", "1년을 넘는 휴직(최대 1년 6개월)은 부모 모두 3개월 이상 사용한 경우에 가능"], "prep_src": "세은 회사 확인 내용 · 연장 통지 기한과 1년 초과 요건은 고용노동부 일생활균형 「육아휴직 및 급여」 안내"}], "milestones": [{"key": "handover_start", "label": "대체인력 입사 · 인수인계 시작", "anchor": "HS", "note": "인수인계 {HS} ~ {HE}", "role": "substitute", "tab": "employer", "scenario": "sub"}, {"key": "leave_start", "label": "육아휴직 개시", "anchor": "LS", "note": "휴직 기간 {LS} ~ {LE}", "role": "worker", "tab": "both", "scenario": "all"}, {"key": "return", "label": "복직 예정", "anchor": "RT", "note": "이후 6개월 계속 고용 시 육아휴직 지원금 잔여 50%", "role": "worker", "tab": "both", "scenario": "all"}, {"key": "sub_end", "label": "대체인력 계약 종료", "anchor": "SE", "note": "지원 대상 기간 종료", "role": "substitute", "tab": "employer", "scenario": "sub"}, {"key": "spouse_start", "label": "세은 육아휴직 개시", "anchor": "SLS", "note": "세은 휴직 {SLS} ~ {SLE}", "role": "spouse", "tab": "worker", "scenario": "all"}, {"key": "spouse_return", "label": "세은 복직 예정", "anchor": "SRT", "note": "세은 휴직 {SM}개월 후 복귀", "role": "spouse", "tab": "worker", "scenario": "all"}], "pay_rules": [{"plan": "general", "band": "일반 1~3개월차", "from_month": 1, "to_month": 3, "rate": 1.0, "cap_won": 2500000, "floor_won": 700000}, {"plan": "general", "band": "일반 4~6개월차", "from_month": 4, "to_month": 6, "rate": 1.0, "cap_won": 2000000, "floor_won": 700000}, {"plan": "general", "band": "일반 7개월차 이후", "from_month": 7, "to_month": 18, "rate": 0.8, "cap_won": 1600000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 1개월차", "from_month": 1, "to_month": 1, "rate": 1.0, "cap_won": 2500000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 2개월차", "from_month": 2, "to_month": 2, "rate": 1.0, "cap_won": 2500000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 3개월차", "from_month": 3, "to_month": 3, "rate": 1.0, "cap_won": 3000000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 4개월차", "from_month": 4, "to_month": 4, "rate": 1.0, "cap_won": 3500000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 5개월차", "from_month": 5, "to_month": 5, "rate": 1.0, "cap_won": 4000000, "floor_won": 700000}, {"plan": "66", "band": "부모함께 6개월차", "from_month": 6, "to_month": 6, "rate": 1.0, "cap_won": 4500000, "floor_won": 700000}, {"plan": "66", "band": "일반 7개월차 이후", "from_month": 7, "to_month": 18, "rate": 0.8, "cap_won": 1600000, "floor_won": 700000}], "benefits": [{"key": "sub_pre", "scenario": "sub", "item": "대체인력 지원금 · 휴직 전 인수인계", "monthly_manwon": 140, "months_basis": "pre_handover", "cap_by": "sub80", "requires": "", "paid": "휴직 시작 1개월 후 신청", "basis": "30인 미만 월 최대 140만원, 대체인력 임금의 80% 한도, 휴직 전 최대 2개월 (고용노동부 일생활균형 · 대체인력 지원금)"}, {"key": "sub_leave", "scenario": "sub", "item": "대체인력 지원금 · 휴직 기간", "monthly_manwon": 140, "months_basis": "leave", "cap_by": "sub80", "requires": "", "paid": "3개월마다 전액", "basis": "30인 미만 월 최대 140만원, 대체인력 임금의 80% 한도 (고용노동부 일생활균형 · 대체인력 지원금)"}, {"key": "sub_post", "scenario": "sub", "item": "대체인력 지원금 · 복직 후 인수인계", "monthly_manwon": 140, "months_basis": "post_handover", "cap_by": "sub80", "requires": "", "paid": "휴직 종료 1개월 후 신청", "basis": "육아휴직 복직 후 최대 1개월 (고용노동부 일생활균형 · 대체인력 지원금)"}, {"key": "sub_general", "scenario": "sub", "item": "육아휴직 지원금", "monthly_manwon": 30, "months_basis": "leave", "cap_by": "", "requires": "", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "자녀 만 12개월 초과 또는 특례 미적용 시 월 30만원 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "sub_male", "scenario": "sub", "item": "남성 육아휴직 인센티브", "monthly_manwon": 10, "months_basis": "leave", "cap_by": "", "requires": "male", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "사업장 남성 육아휴직 1~3번째 사례 월 10만원 추가 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "share_main", "scenario": "share", "item": "업무분담 지원금", "monthly_manwon": 60, "months_basis": "leave", "cap_by": "share", "requires": "", "paid": "3개월 단위", "basis": "30인 미만 월 최대 60만원, 업무분담자에게 지급한 금액 한도 (고용노동부 일생활균형 · 업무분담 지원금)"}, {"key": "share_general", "scenario": "share", "item": "육아휴직 지원금", "monthly_manwon": 30, "months_basis": "leave", "cap_by": "", "requires": "", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "월 30만원 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "share_male", "scenario": "share", "item": "남성 육아휴직 인센티브", "monthly_manwon": 10, "months_basis": "leave", "cap_by": "", "requires": "male", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "사업장 남성 육아휴직 1~3번째 사례 월 10만원 추가 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "special_first", "scenario": "special", "item": "육아휴직 지원금 · 특례 (첫 3개월)", "monthly_manwon": 100, "months_basis": "leave_first3", "cap_by": "", "requires": "", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "만 12개월 이내 자녀(임신 중 포함), 3개월 이상 연속 부여 시 첫 3개월 월 100만원 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "special_after", "scenario": "special", "item": "육아휴직 지원금 · 특례 이후", "monthly_manwon": 30, "months_basis": "leave_after3", "cap_by": "", "requires": "", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "이후 월 30만원 (고용노동부 일생활균형 · 육아휴직 지원금)"}, {"key": "special_male", "scenario": "special", "item": "남성 육아휴직 인센티브", "monthly_manwon": 10, "months_basis": "leave", "cap_by": "", "requires": "male", "paid": "50% 3개월마다 + 50% 복직 6개월 후", "basis": "사업장 남성 육아휴직 1~3번째 사례 월 10만원 추가 (고용노동부 일생활균형 · 육아휴직 지원금)"}]};
+  var DEFAULTS = {"birth": "2026-12-12", "ck": "", "hs": "2026-12-01", "le": "2027-06-30", "ls": "2027-01-01", "male": false, "mat": true, "p66": true, "ph": false, "role": "all", "rt": "2027-07-01", "salary": 3000000, "scn": "sub", "share_pay": 600000, "sle": "2028-07-30", "sls": "2027-03-01", "ssalary": 2800000, "sub_wage": 2500000, "swage": 3400000, "tab": "worker", "wage": 3000000, "x_me": 3000000, "x_sp": 2500000, "x_sp_months": "2026-12,2027-03,2027-06,2027-09,2027-12"};
   window.PL_DEFAULTS = DEFAULTS;
-  var KEY = 'parental-leave-dashboard:v1';
+  var KEY = 'parental-leave-dashboard:v2';
   var params = Object.assign({}, DEFAULTS);
   try { var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && typeof saved === 'object') Object.assign(params, saved); } catch (e) {}
   var draws = new Map();
@@ -415,226 +512,10 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 
 <div class="pl">
   <header class="pl-head" id="top">
-    <span class="pl-eyebrow">육아휴직 · 대체인력 · 지원금 · 6+6 부모육아휴직</span>
+    <span class="pl-eyebrow">출산전후휴가 · 육아휴직 · 육아휴직 급여 · 6+6 부모육아휴직</span>
     <h1>육아휴직 통합 관리 대시보드</h1>
-    <p class="pl-take">만유 · 세은 탭은 부부가 받을 월별 수입을, 사업장 탭은 회사가 챙길 일정과 지원금을 보여 줍니다.</p>
+    <p class="pl-take">만유 · 세은 부부가 받을 월별 수입과 일정을 보여 줍니다.</p>
   </header>
-
-  <div class="pl-pagetabs" role="tablist" aria-label="보기 선택">
-    <button type="button" class="pl-pagetab pl-r-worker" role="tab" data-tab="worker" aria-selected="true"><i class="pl-dot"></i>만유 · 세은</button>
-    <button type="button" class="pl-pagetab pl-r-employer" role="tab" data-tab="employer" aria-selected="false"><i class="pl-dot"></i>사업장</button>
-  </div>
-
-  <!-- ===================== 사업장 ===================== -->
-  <section class="pl-page" id="employer" data-page="employer" hidden>
-    <section class="pl-kpis" aria-label="사업장 핵심 요약">
-      <div class="pl-card pl-kpi pl-r-worker">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>육아휴직 시작일</span>
-        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="LS">—</b>
-        <span class="pl-kpi-sub"><span data-draw="anchor-date" data-anchor="LE">—</span>까지 · <span data-draw="months" data-of="leave">—</span>개월</span>
-      </div>
-      <div class="pl-card pl-kpi pl-r-substitute pl-only-sub">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>인수인계 시작일 (대체인력 입사)</span>
-        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="HS">—</b>
-        <span class="pl-kpi-sub">휴직 전 인수인계 <span data-draw="anchor-date" data-anchor="HE">—</span>까지</span>
-      </div>
-      <div class="pl-card pl-kpi pl-kpi-benefit pl-r-employer">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>예상 지원 혜택 · <span data-draw="scn-name">—</span></span>
-        <b class="pl-kpi-value"><span data-draw="benefit-total" data-source="benefits">—</span><small>만원</small></b>
-        <span class="pl-kpi-sub">우선지원대상기업 · 30인 미만 기준 추정. 아래 시나리오 비교를 함께 보세요.</span>
-      </div>
-      <div class="pl-card pl-kpi pl-r-worker">
-        <span class="pl-kpi-label"><i class="pl-dot"></i>복직 예정일</span>
-        <b class="pl-kpi-value" data-draw="anchor-date" data-anchor="RT">—</b>
-        <span class="pl-kpi-sub">복직 후 6개월 계속 고용해야 육아휴직 지원금 잔여 50% 신청 가능</span>
-      </div>
-    </section>
-    <ul class="pl-warns pl-warns-top" data-draw="warnings" data-scope="employer" aria-live="polite"></ul>
-
-    <details class="pl-card pl-settings pl-fold" id="employer-settings">
-      <summary class="pl-fold-sum"><span class="pl-fold-title">설정 · 날짜와 지원 방식 바꾸기</span><span class="pl-fold-meta" data-draw="set-sum" data-scope="employer">—</span><span class="pl-fold-cue" aria-hidden="true"></span></summary>
-      <p class="pl-note">휴직 개시일을 바꾸면 나머지 날짜도 같은 간격만큼 함께 움직이고, 휴직 종료일을 바꾸면 복직 예정일이 그다음 날로 맞춰집니다. 지원금은 30인 미만 사업장 기준으로만 계산합니다.</p>
-      <div class="pl-fields">
-        <div class="pl-field pl-r-worker">
-          <label for="pl-e-ls"><i class="pl-dot"></i>육아휴직 개시일</label>
-          <input id="pl-e-ls" class="pl-date" data-param="ls" type="date" min="2020-01-01" max="2035-12-31">
-        </div>
-        <div class="pl-field pl-r-worker">
-          <label for="pl-e-le"><i class="pl-dot"></i>육아휴직 종료일</label>
-          <input id="pl-e-le" class="pl-date" data-param="le" type="date" min="2020-01-01" max="2035-12-31">
-        </div>
-        <div class="pl-field pl-r-substitute pl-only-sub">
-          <label for="pl-e-hs"><i class="pl-dot"></i>인수인계 시작일 (대체인력 입사)</label>
-          <input id="pl-e-hs" class="pl-date" data-param="hs" type="date" min="2020-01-01" max="2035-12-31">
-        </div>
-        <div class="pl-field pl-r-worker">
-          <label for="pl-e-rt"><i class="pl-dot"></i>복직 예정일</label>
-          <input id="pl-e-rt" class="pl-date" data-param="rt" type="date" min="2020-01-01" max="2035-12-31">
-        </div>
-        <div class="pl-field pl-r-substitute pl-only-sub">
-          <label for="pl-e-subwage"><i class="pl-dot"></i>대체인력 월 임금 (원)</label>
-          <input id="pl-e-subwage" class="pl-num-in" data-param="sub_wage" type="number" min="0" max="100000000" step="10000" inputmode="numeric">
-          <small>지원금은 이 금액의 80%를 넘지 못합니다. 처음 값 2,500,000원은 예시입니다.</small>
-        </div>
-        <div class="pl-field pl-r-employer pl-only-share" hidden>
-          <label for="pl-e-sharepay"><i class="pl-dot"></i>업무분담 수당 월 지급액 (원)</label>
-          <input id="pl-e-sharepay" class="pl-num-in" data-param="share_pay" type="number" min="0" max="100000000" step="10000" inputmode="numeric">
-          <small>지원금은 실제 지급한 금액까지만 나옵니다. 처음 값 600,000원은 예시입니다.</small>
-        </div>
-      </div>
-      <div class="pl-field">
-        <span class="pl-kpi-label">지원 방식</span>
-        <div class="pl-scn" role="group" aria-label="지원 방식">
-          <button type="button" class="pl-seg pl-scn-btn" data-scn="sub" aria-pressed="true">대체인력 채용</button>
-          <button type="button" class="pl-seg pl-scn-btn" data-scn="share" aria-pressed="false">업무분담</button>
-          <button type="button" class="pl-seg pl-scn-btn" data-scn="special" aria-pressed="false">육아휴직 지원금 특례 (만 12개월 이내 자녀)</button>
-        </div>
-      </div>
-      <label class="pl-check" for="pl-e-male"><input id="pl-e-male" class="pl-bool" data-param="male" type="checkbox">휴직자가 남성이고, 사업장의 1~3번째 남성 육아휴직 사례 (월 10만원 추가)</label>
-      <label class="pl-check pl-only-sub" for="pl-e-ph"><input id="pl-e-ph" class="pl-bool" data-param="ph" type="checkbox">복직 후 1개월 인수인계 운영 (대체인력 계약을 복직 후 1개월까지 연장)</label>
-      <div class="pl-settings-foot">
-        <p class="pl-note">여기서 바꾼 값은 이 기기 브라우저에만 저장되고, 다른 사람에게는 보이지 않습니다.</p>
-        <button type="button" class="pl-btn pl-reset">기본값으로 되돌리기</button>
-      </div>
-    </details>
-
-    <section class="pl-card" id="benefits">
-      <div class="pl-card-head">
-        <h2>예상 지원금 · 방식별 비교</h2>
-        <p class="pl-note">우선지원대상기업 · 30인 미만 기준 추정치입니다. 행을 누르면 그 방식으로 바뀝니다.</p>
-      </div>
-      <div class="pl-tablewrap">
-        <table class="pl-table pl-stack">
-          <thead>
-            <tr>
-              <th>지원 방식</th>
-              <th>구성</th>
-              <th class="pl-num">예상 합계(만원)</th>
-            </tr>
-          </thead>
-          <tbody data-draw="scn-compare" data-source="benefits"></tbody>
-        </table>
-      </div>
-      <details class="pl-more">
-        <summary>세부 산정 보기 · <span data-draw="scn-name">—</span></summary>
-        <div class="pl-more-body">
-      <div class="pl-tablewrap">
-        <table class="pl-table pl-stack">
-          <thead>
-            <tr>
-              <th>항목</th>
-              <th class="pl-num">월 최대(만원)</th>
-              <th class="pl-num">적용 월액(만원)</th>
-              <th class="pl-num">개월</th>
-              <th class="pl-num">소계(만원)</th>
-              <th>지급 방식</th>
-              <th>근거</th>
-            </tr>
-          </thead>
-          <tbody data-draw="benefits-body" data-source="benefits"></tbody>
-        </table>
-      </div>
-        </div>
-      </details>
-      <details class="pl-more">
-        <summary>고용노동부 일생활균형 안내 기준</summary>
-        <div class="pl-more-body">        <p>세 지원금 모두 우선지원대상기업 사업주만 받을 수 있습니다. 대체인력 지원금은 휴직 개시 2개월 전 이후 새로 채용해 30일 이상 계속 고용한 경우에 월 최대 140만원(대체인력 임금의 80% 한도)이며, 2026.1.1 이후 채용분은 3개월마다 전액 신청합니다. 휴직 전 최대 2개월, 복직 후 최대 1개월 인수인계 기간도 포함됩니다.</p>
-        <p><b>육아휴직 지원금은 지금도 50%를 3개월마다, 나머지 50%를 복직 후 6개월 이상 계속 고용한 뒤 한꺼번에 신청합니다.</b> 특례를 받으면 대체인력 지원금은 전체 기간 중복 지원이 제한됩니다. 모든 지원금은 휴직 종료일부터 12개월 안에 신청해야 합니다.</p>
-        <p>30인 기준은 "30인 미만"이라, 피보험자가 정확히 30명이면 30인 이상 기준(대체인력 130만원, 업무분담 40만원)이 적용됩니다. 업무분담 지원금과 대체인력 지원금을 같은 휴직에 함께 받을 수 있는지는 안내 페이지에 나와 있지 않아 택일 시나리오로 비교했습니다.</p></div>
-      </details>
-    </section>
-
-    <section class="pl-card" id="timeline">
-      <div class="pl-card-head">
-        <h2>업무 일정</h2>
-        <p class="pl-note">업무를 누르거나 마우스를 올리면 필요 서류와 준비사항이 보입니다.</p>
-      </div>
-      <div class="pl-toolbar">
-        <div class="pl-tabs" role="group" aria-label="주체별 보기">
-          <button type="button" class="pl-tab" data-role="all" aria-pressed="true">전체 보기 <span class="pl-count" data-draw="role-count" data-role="all" data-source="tasks">—</span></button>
-          <button type="button" class="pl-tab pl-r-employer" data-role="employer" aria-pressed="false"><i class="pl-dot"></i>사업장만 <span class="pl-count" data-draw="role-count" data-role="employer" data-source="tasks">—</span></button>
-          <button type="button" class="pl-tab pl-r-worker" data-role="worker" aria-pressed="false"><i class="pl-dot"></i>만유만 <span class="pl-count" data-draw="role-count" data-role="worker" data-source="tasks">—</span></button>
-          <button type="button" class="pl-tab pl-r-substitute pl-only-sub" data-role="substitute" aria-pressed="false"><i class="pl-dot"></i>대체인력만 <span class="pl-count" data-draw="role-count" data-role="substitute" data-source="tasks">—</span></button>
-        </div>
-        <div class="pl-legend" aria-label="범례">
-          <span><i class="pl-lg-bar"></i>기간</span>
-          <span><i class="pl-lg-open"></i>시작 후 지속</span>
-          <span><i class="pl-lg-rec"></i>주기 신청</span>
-          <span><i class="pl-lg-pt"></i>시점·기한</span>
-          <span><i class="pl-lg-band"></i>휴직 기간</span>
-          <span><i class="pl-lg-today"></i>오늘</span>
-        </div>
-      </div>
-      <div class="pl-gantt" id="gantt" data-draw="gantt" data-roles="employer,worker,substitute" data-filter="role" data-group="phase" data-bands="LS:LE:worker:육아휴직 기간" data-source="tasks"></div>
-    </section>
-
-    <section class="pl-card" id="checklist">
-      <div class="pl-card-head">
-        <h2>신청 전 체크리스트</h2>
-        <p class="pl-note">고용노동부 일생활균형 안내(2026.11.06 열람) 기준입니다. 선택한 지원 방식에 맞는 항목만 보입니다. 체크 표시는 이 화면을 보는 사람에게만 저장됩니다.</p>
-        <p class="pl-ck-progress"><span data-draw="ck-progress">—</span></p>
-      </div>
-      <div class="pl-ck-groups">
-        <div class="pl-ck-group">
-          <h3 class="pl-sec-title">지급 제한 확인 · 사업장</h3>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c01"><span>우선지원대상기업이다<small>세 지원금 모두 우선지원대상기업 사업주만 지원</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c02"><span>휴직 시작 전 고용보험 피보험자 수가 30명 미만이다<small>정확히 30명이면 30인 이상 기준(대체인력 월 130만원, 업무분담 월 40만원)</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c03"><span>국가 · 지자체 · 공공기관 · 지방공기업이 아니다</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c04"><span>유흥주점 등 중소기업인력지원 특별법 시행령이 정한 제외 업종이 아니다</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c05"><span>임금체불 명단 공개 중이거나 상습체불 사업주가 아니다</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c06"><span>중대 산업재해로 명단 공표 중인 사업주가 아니다</span></label>
-        </div>
-        <div class="pl-ck-group">
-          <h3 class="pl-sec-title">지급 제한 확인 · 휴직자와 대체인력 · 업무분담자</h3>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c11"><span>육아휴직을 30일 이상 부여한다<small>출산전후휴가와 겹치는 기간은 빼고 셈</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c12"><span>대상자가 사업주(법인은 대표이사)의 배우자 · 직계 존비속이 아니다</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c13"><span>대상자가 고용보험에 가입되어 있다</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c14"><span>사업주가 신고한 대상자의 월평균 보수가 124만원 이상이다</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="c15"><span>외국인이면 F-2 · F-5 · F-6 체류자격이거나, 고용보험에 가입한 대체인력 · 업무분담자다</span></label>
-          <label class="pl-ck pl-only-sub"><input type="checkbox" class="pl-ck-in" data-ck="c16"><span>대체인력을 휴직 개시 2개월 전 이후 새로 고용(또는 파견 사용)해 30일 이상 계속 고용한다</span></label>
-          <label class="pl-ck pl-only-sub"><input type="checkbox" class="pl-ck-in" data-ck="c17"><span>대체인력 고용 3개월 전부터 고용 후 1년까지 다른 근로자를 고용조정으로 이직시키지 않는다<small>대체인력보다 나중에 고용된 근로자 조정, 근로자 귀책 징계해고, 정년, 계약기간 만료, 자발적 퇴직은 위반이 아님</small></span></label>
-          <label class="pl-ck pl-only-share" hidden><input type="checkbox" class="pl-ck-in" data-ck="c18"><span>업무분담자에게 분담에 따른 금전 지원(분담수당 등)을 한다<small>지원금은 실제 지급한 금액까지만</small></span></label>
-          <label class="pl-ck pl-only-share" hidden><input type="checkbox" class="pl-ck-in" data-ck="c19"><span>신규채용 · 대체인력 등으로 이미 지원금을 받는 근로자를 업무분담자로 지정하지 않았다<small>지정하면 지원금이 공제되거나 제한될 수 있음</small></span></label>
-          <label class="pl-ck pl-only-special" hidden><input type="checkbox" class="pl-ck-in" data-ck="c20"><span>자녀가 만 12개월 이내(임신 중 포함)이고, 육아휴직을 3개월 이상 연속 부여한다<small>특례를 받으면 대체인력 지원금은 전체 기간 중복 지원 제한</small></span></label>
-        </div>
-        <div class="pl-ck-group">
-          <h3 class="pl-sec-title">제출 서류 · 소재지 관할 고용센터</h3>
-          <label class="pl-ck pl-only-sub"><input type="checkbox" class="pl-ck-in" data-ck="d01"><span>출산육아기 고용안정장려금 지급신청서 (대체인력 지원금, 별지 제26호)</span></label>
-          <label class="pl-ck pl-only-sub"><input type="checkbox" class="pl-ck-in" data-ck="d02"><span>대체인력 근로계약서 사본과 월별 임금대장 사본<small>파견이면 근로자파견계약서 사본과 파견 대가 지급내역 사본</small></span></label>
-          <label class="pl-ck pl-only-share" hidden><input type="checkbox" class="pl-ck-in" data-ck="d03"><span>출산육아기 고용안정장려금 지급신청서 (업무분담 지원금, 별지 제26의2호)</span></label>
-          <label class="pl-ck pl-only-share" hidden><input type="checkbox" class="pl-ck-in" data-ck="d04"><span>업무분담에 따른 금전 지원 입증서류 (임금명세서)</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="d05"><span>출산육아기 고용안정장려금 지급신청서 (육아휴직 지원금, 별지 제25호)</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="d06"><span>육아휴직 실시 증명서류 사본 (인사발령 문서 등)</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="d07"><span>사업주의 가족관계등록부 또는 주민등록등본<small>대상자가 직계 존비속인지 확인용 (육아휴직 · 대체인력 지원금)</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="d08"><span>휴직 종료일부터 12개월 안에 접수한다<small>분할 사용은 각 분할 종료일 기준</small></span></label>
-        </div>
-        <div class="pl-ck-group">
-          <h3 class="pl-sec-title">사업주 의무</h3>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="o01"><span>육아휴직 신청을 허용한다<small>휴직 시작 전날까지 계속 근로 6개월 미만이면 거부 가능 · 위반 시 500만원 이하 벌금</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="o02"><span>육아휴직을 이유로 해고나 불리한 처우를 하지 않고, 휴직 기간 중 해고하지 않는다<small>사업을 계속할 수 없는 경우 제외 · 위반 시 3년 이하 징역 또는 3천만원 이하 벌금</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="o03"><span>복귀 시 휴직 전과 같은 업무 또는 같은 수준 임금의 직무로 복귀시킨다<small>위반 시 500만원 이하 벌금</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="o04"><span>근로자가 요구하면 육아휴직 확인서를 발급한다</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="o05"><span>휴직 중 금품을 지급하면 근로자의 육아휴직 급여가 줄 수 있음을 안내한다<small>그 달 금품과 급여의 합이 통상임금을 넘는 만큼 감액</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="o06"><span>휴직 연장 요청을 처리한다<small>종료 예정일 30일 전까지 통지하면 1회 연장 가능 · 신청 철회는 개시 예정일 7일 전까지 · 분할은 최대 4번</small></span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="o07"><span>1년을 넘는 휴직이면 배우자의 3개월 이상 사용 증빙을 받는다</span></label>
-        </div>
-        <div class="pl-ck-group">
-          <h3 class="pl-sec-title">공식 안내에 없어 따로 확인할 것</h3>
-          <p class="pl-note">아래는 이번에 읽은 고용노동부 안내 페이지에 없는 내용이라 확인하지 못했습니다. 노무사나 관할 기관에 확인하세요.</p>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="u01"><span>육아휴직 기간의 연차휴가 산정</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="u02"><span>근속기간 · 퇴직금 산정 처리</span></label>
-          <label class="pl-ck"><input type="checkbox" class="pl-ck-in" data-ck="u03"><span>4대보험별 세부 절차 (건강보험료, 국민연금 등)</span></label>
-          <label class="pl-ck pl-only-sub"><input type="checkbox" class="pl-ck-in" data-ck="u04"><span>대체인력 채용지원서비스 이용 여부</span></label>
-        </div>
-      </div>
-    </section>
-
-
-
-
-
-
-  </section>
 
   <!-- ===================== 근로자 ===================== -->
   <section class="pl-page" id="worker" data-page="worker">
@@ -654,19 +535,18 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
         <b class="pl-kpi-value"><span data-draw="pay-total" data-who="both" data-source="pay_rules">—</span><small>원</small></b>
         <span class="pl-kpi-sub">만유 <span data-draw="pay-total" data-who="me" data-source="pay_rules">—</span>원 + 세은 <span data-draw="pay-total" data-who="spouse" data-source="pay_rules">—</span>원</span>
       </div>
-      <div class="pl-card pl-kpi">
-        <span class="pl-kpi-label">6+6 부모육아휴직제</span>
-        <b class="pl-kpi-value" data-draw="six-label">—</b>
-        <span class="pl-kpi-sub" data-draw="six-detail">—</span>
-      </div>
     </section>
     <ul class="pl-warns pl-warns-top" data-draw="warnings" data-scope="worker" aria-live="polite"></ul>
+    <section class="pl-next" aria-labelledby="pl-next-title">
+      <h2 class="pl-next-title" id="pl-next-title">다음 할 일</h2>
+      <ol class="pl-next-list" data-draw="next-tasks" data-source="tasks"></ol>
+    </section>
 
     <details class="pl-card pl-settings pl-fold" id="worker-settings">
       <summary class="pl-fold-sum"><span class="pl-fold-title">설정 · 날짜와 금액 바꾸기</span><span class="pl-fold-meta" data-draw="set-sum" data-scope="worker">—</span><span class="pl-fold-cue" aria-hidden="true"></span></summary>
-      <p class="pl-note"><b>금액은 모두 예시값입니다.</b> 통상임금, 월 급여, 추가 수입, 자녀 출생일을 직접 입력하면 다시 계산됩니다. 만유 휴직 날짜는 사업장 탭과 같은 값을 씁니다.</p>
+      <p class="pl-note">각 칸을 바꾸면 바로 다시 계산됩니다. 금액은 백만원 단위로 넣습니다 (예: 3.4 = 3,400,000원).</p>
       <div class="pl-fields">
-        <p class="pl-group-title">만유 (근로자)</p>
+        <p class="pl-group-title">만유</p>
         <div class="pl-field pl-r-worker">
           <label for="pl-w-ls"><i class="pl-dot"></i>육아휴직 시작일</label>
           <input id="pl-w-ls" class="pl-date" data-param="ls" type="date" min="2020-01-01" max="2035-12-31">
@@ -674,14 +554,12 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
         <div class="pl-field pl-r-worker">
           <label for="pl-w-le"><i class="pl-dot"></i>육아휴직 종료일</label>
           <input id="pl-w-le" class="pl-date" data-param="le" type="date" min="2020-01-01" max="2035-12-31">
+          <small>복직일은 종료일 다음 날(<b data-draw="anchor-date" data-anchor="RT">—</b>)로 계산합니다.</small>
         </div>
         <div class="pl-field pl-r-worker">
-          <label for="pl-w-rt"><i class="pl-dot"></i>복직일</label>
-          <input id="pl-w-rt" class="pl-date" data-param="rt" type="date" min="2020-01-01" max="2035-12-31">
-        </div>
-        <div class="pl-field pl-r-worker">
-          <label for="pl-w-wage"><i class="pl-dot"></i>월 통상임금 (원)</label>
-          <input id="pl-w-wage" class="pl-num-in" data-param="wage" type="number" min="0" max="100000000" step="10000" inputmode="numeric">
+          <label for="pl-w-wage"><i class="pl-dot"></i>월 통상임금 (백만원, 세전)</label>
+          <input id="pl-w-wage" class="pl-num-in" data-param="wage" data-unit="1000000" type="number" min="0" max="100" step="0.01" inputmode="decimal">
+          <small>= <span class="pl-won" data-draw="won" data-param="wage">—</span>원</small>
         </div>
         <p class="pl-group-title">세은</p>
         <div class="pl-field pl-r-spouse">
@@ -689,36 +567,40 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
           <input id="pl-w-sls" class="pl-date" data-param="sls" type="date" min="2020-01-01" max="2035-12-31">
         </div>
         <div class="pl-field pl-r-spouse">
-          <label for="pl-w-srt"><i class="pl-dot"></i>세은 복직일</label>
-          <input id="pl-w-srt" class="pl-date" data-param="srt" type="date" min="2020-01-01" max="2035-12-31">
-          <small>휴직 종료일은 복직일 전날로 계산합니다.</small>
+          <label for="pl-w-sle"><i class="pl-dot"></i>세은 육아휴직 종료일</label>
+          <input id="pl-w-sle" class="pl-date" data-param="sle" type="date" min="2020-01-01" max="2035-12-31">
+          <small>복직일은 종료일 다음 날(<b data-draw="anchor-date" data-anchor="SRT">—</b>)로 계산합니다.</small>
         </div>
         <div class="pl-field pl-r-spouse">
-          <label for="pl-w-swage"><i class="pl-dot"></i>세은 월 통상임금 (원)</label>
-          <input id="pl-w-swage" class="pl-num-in" data-param="swage" type="number" min="0" max="100000000" step="10000" inputmode="numeric">
+          <label for="pl-w-swage"><i class="pl-dot"></i>세은 월 통상임금 (백만원, 세전)</label>
+          <input id="pl-w-swage" class="pl-num-in" data-param="swage" data-unit="1000000" type="number" min="0" max="100" step="0.01" inputmode="decimal">
+          <small>= <span class="pl-won" data-draw="won" data-param="swage">—</span>원</small>
         </div>
         <p class="pl-group-title">월별 수입 표 (근무 기간 급여 · 추가 수입)</p>
         <div class="pl-field pl-r-worker">
-          <label for="pl-w-salary"><i class="pl-dot"></i>만유 월 급여 · 근무 기간 (원)</label>
-          <input id="pl-w-salary" class="pl-num-in" data-param="salary" type="number" min="0" max="100000000" step="10000" inputmode="numeric">
+          <label for="pl-w-salary"><i class="pl-dot"></i>만유 월 급여 · 근무 기간 (백만원, 세후 실수령)</label>
+          <input id="pl-w-salary" class="pl-num-in" data-param="salary" data-unit="1000000" type="number" min="0" max="100" step="0.01" inputmode="decimal">
+          <small>= <span class="pl-won" data-draw="won" data-param="salary">—</span>원</small>
         </div>
         <div class="pl-field pl-r-spouse">
-          <label for="pl-w-ssalary"><i class="pl-dot"></i>세은 월 급여 · 근무 기간 (원)</label>
-          <input id="pl-w-ssalary" class="pl-num-in" data-param="ssalary" type="number" min="0" max="100000000" step="10000" inputmode="numeric">
+          <label for="pl-w-ssalary"><i class="pl-dot"></i>세은 월 급여 · 근무 기간 (백만원, 세후 실수령)</label>
+          <input id="pl-w-ssalary" class="pl-num-in" data-param="ssalary" data-unit="1000000" type="number" min="0" max="100" step="0.01" inputmode="decimal">
+          <small>= <span class="pl-won" data-draw="won" data-param="ssalary">—</span>원</small>
         </div>
         <div class="pl-field pl-r-worker">
-          <label for="pl-w-xme"><i class="pl-dot"></i>만유 추가 수입 · 육아휴직 급여 받는 달마다 (원)</label>
-          <input id="pl-w-xme" class="pl-num-in" data-param="x_me" type="number" min="0" max="100000000" step="10000" inputmode="numeric">
-          <small>한 달 중 일부만 휴직이면 휴직 일수 비율로 넣습니다.</small>
+          <label for="pl-w-xme"><i class="pl-dot"></i>만유 추가 수입 · 휴직 중 매월 (백만원)</label>
+          <input id="pl-w-xme" class="pl-num-in" data-param="x_me" data-unit="1000000" type="number" min="0" max="100" step="0.01" inputmode="decimal">
+          <small>= <span class="pl-won" data-draw="won" data-param="x_me">—</span>원 · 한 달 중 일부만 휴직이면 일수 비율로 넣습니다.</small>
         </div>
         <div class="pl-field pl-r-spouse">
-          <label for="pl-w-xsp"><i class="pl-dot"></i>세은 추가 수입 · 1회 금액 (원)</label>
-          <input id="pl-w-xsp" class="pl-num-in" data-param="x_sp" type="number" min="0" max="100000000" step="10000" inputmode="numeric">
+          <label for="pl-w-xsp"><i class="pl-dot"></i>세은 추가 수입 · 1회 금액 (백만원)</label>
+          <input id="pl-w-xsp" class="pl-num-in" data-param="x_sp" data-unit="1000000" type="number" min="0" max="100" step="0.01" inputmode="decimal">
+          <small>= <span class="pl-won" data-draw="won" data-param="x_sp">—</span>원</small>
         </div>
-        <div class="pl-field pl-r-spouse">
-          <label for="pl-w-xspm"><i class="pl-dot"></i>세은 추가 수입 · 받는 달</label>
-          <input id="pl-w-xspm" class="pl-text-in" data-param="x_sp_months" type="text" inputmode="numeric" placeholder="2026-12, 2027-03" aria-describedby="pl-w-xspm-help">
-          <small id="pl-w-xspm-help">연-월을 쉼표로 구분해 입력합니다 (예: 2026-12, 2027-03).</small>
+        <div class="pl-field pl-field-wide pl-r-spouse">
+          <span class="pl-field-label" id="pl-w-xspm-label"><i class="pl-dot"></i>세은 추가 수입 · 받는 달</span>
+          <div class="pl-months" role="group" aria-labelledby="pl-w-xspm-label" data-draw="xsp-months">—</div>
+          <small>받는 달을 누르면 선택되고, 다시 누르면 해제됩니다.</small>
         </div>
         <p class="pl-group-title">자녀 · 제도</p>
         <div class="pl-field">
@@ -729,19 +611,36 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
         <div class="pl-field">
           <span class="pl-kpi-label">제도</span>
           <label class="pl-check" for="pl-w-p66"><input id="pl-w-p66" class="pl-bool" data-param="p66" type="checkbox">6+6 부모육아휴직제 적용</label>
+          <label class="pl-check" for="pl-w-mat"><input id="pl-w-mat" class="pl-bool" data-param="mat" type="checkbox">세은 출산전후휴가 (육아휴직 전 90일 · 대규모기업)</label>
+          <small>출산전후휴가: <b data-draw="anchor-date" data-anchor="MS">—</b> ~ <b data-draw="anchor-date" data-anchor="ME">—</b>. 최초 60일은 회사가 통상임금 지급(표에는 세후 월 급여로 넣음), 마지막 30일은 정부 급여(통상임금 100%, 30일 기준 상한 220만원).</small>
         </div>
       </div>
       <div class="pl-settings-foot">
-        <p class="pl-note">여기서 바꾼 값은 이 기기 브라우저에만 저장되고, 다른 사람에게는 보이지 않습니다.</p>
+        <p class="pl-note">여기서 바꾼 값은 지금 보고 있는 화면에 적용됩니다.</p>
         <button type="button" class="pl-btn pl-reset">기본값으로 되돌리기</button>
       </div>
     </details>
 
-    <section class="pl-card" id="pay">
+    <section class="pl-card" id="couple-timeline">
       <div class="pl-card-head">
-        <h2>부부 월별 수입 · <span data-draw="pay-range">—</span></h2>
-        <p class="pl-note">휴직 중에는 육아휴직 급여, 일하는 기간에는 월 급여, 여기에 추가 수입을 더한 금액입니다.</p>
+        <h2>부부 일정</h2>
+        <p class="pl-note">일정마다 신청 시작(◆)과 기한(◇)을 겹쳐 표시했습니다. 항목을 누르거나 마우스를 올리면 아래에 필요 서류와 준비사항이 보입니다.</p>
       </div>
+      <div class="pl-legend" aria-label="범례">
+        <span class="pl-r-worker"><i class="pl-dot"></i>만유</span>
+        <span class="pl-r-spouse"><i class="pl-dot"></i>세은</span>
+        <span><i class="pl-lg-band"></i>휴직 기간 (배경)</span>
+        <span><i class="pl-lg-start"></i>신청 시작 · 시점</span>
+        <span><i class="pl-lg-due"></i>기한 · 마감</span>
+        <span><i class="pl-lg-bar"></i>진행 기간</span>
+        <span><i class="pl-lg-now"></i>오늘</span>
+      </div>
+      <div class="pl-gantt" id="couple-gantt" data-draw="gantt" data-roles="worker,spouse" data-group="role" data-bands="LS:LE:worker:만유 육아휴직,MS:ME:spouse:세은 출산휴가,SLS:SLE:spouse:세은 육아휴직" data-source="tasks"></div>
+    </section>
+
+    <details class="pl-card pl-fold" id="pay">
+      <summary class="pl-fold-sum"><span class="pl-fold-title">부부 월별 수입</span><span class="pl-fold-meta" data-draw="pay-range">—</span><span class="pl-fold-cue" aria-hidden="true"></span></summary>
+      <p class="pl-note">휴직 중에는 육아휴직 급여, 세은 출산전후휴가 중에는 회사 지급분과 정부 출산전후휴가 급여, 일하는 기간에는 월 급여(세후 실수령), 여기에 추가 수입을 더한 금액입니다.</p>
       <div class="pl-tablewrap">
         <table class="pl-table pl-combined pl-stack">
           <thead>
@@ -761,25 +660,11 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
         <div class="pl-more-body">
           <p>육아휴직 급여는 각자 휴직 시작일부터 한 달 단위 회차로 계산합니다. 통상임금 × 지급률에 회차별 월 상한과 하한(70만원)을 적용하고, 한 달이 다 차지 않는 회차는 일수 비율로 나눴습니다. 휴직하지 않은 날은 설정한 월 급여를 그 달 일수 비율로 넣었습니다.</p>
           <p>6+6(부모함께육아휴직제): 자녀 생후 18개월 이내에 부모 모두 휴직하면 첫 6개월 상한이 250 · 250 · 300 · 350 · 400 · 450만원(통상임금 100%), 7개월차부터는 일반 기준(80%, 상한 160만원)입니다. 5개월차 400만원은 요청에 따라 적용한 값이고, 고용노동부 일생활균형 안내 페이지에는 350만원으로 적혀 있으니 고용센터(1350)에서 확인하세요. 하한 70만원은 그 페이지에 없고 다른 자료를 따랐습니다.</p>
+          <p>세은 출산전후휴가(대규모기업): 최초 60일은 회사가 통상임금을 주므로 세후 월 급여를 일수 비율로 넣었고, 마지막 30일은 정부가 통상임금 100%를 30일 기준 220만원 한도로 지급합니다(고용노동부 일생활균형 「출산전후휴가 및 급여」, 2026.11.09 열람). 정부 급여는 휴가가 끝난 뒤 한꺼번에 신청할 수 있어 실제 입금 달은 표와 다를 수 있습니다.</p>
           <p>휴직 중 회사에서 금품을 받으면 그 달 금품과 육아휴직 급여의 합이 통상임금을 넘는 만큼 급여가 줄어듭니다. 만유 추가 수입이 회사 지급분이라면 해당되며, 이 표는 감액을 반영하지 않았습니다.</p>
         </div>
       </details>
-    </section>
-
-    <section class="pl-card" id="couple-timeline">
-      <div class="pl-card-head">
-        <h2>부부 일정</h2>
-        <p class="pl-note">업무를 누르거나 마우스를 올리면 필요 서류, 준비사항, 신청 기한이 보입니다.</p>
-      </div>
-      <div class="pl-legend" aria-label="범례">
-        <span class="pl-r-worker"><i class="pl-dot"></i>만유</span>
-        <span class="pl-r-spouse"><i class="pl-dot"></i>세은</span>
-        <span><i class="pl-lg-rec"></i>매월 급여 신청</span>
-        <span><i class="pl-lg-pt"></i>시점·기한</span>
-        <span><i class="pl-lg-today"></i>오늘</span>
-      </div>
-      <div class="pl-gantt" id="couple-gantt" data-draw="gantt" data-roles="worker,spouse" data-group="role" data-bands="LS:LE:worker:만유 휴직,SLS:SLE:spouse:세은 휴직" data-source="tasks"></div>
-    </section>
+    </details>
 
 
 
@@ -819,8 +704,11 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     special: { name: '육아휴직 지원금 특례', parts: '특례 첫 3개월 월 100만원 + 이후 월 30만원 (대체인력 지원금 전체 기간 중복 제한)' },
   };
   // 값이 비어 있을 때만 쓰는 예비값. 실제 기본값은 대시보드 설정(dash/params)에 있음.
-  const FALLBACK = window.PL_DEFAULTS;
+  const FALLBACK = { tab: 'worker', role: 'all', scn: 'sub', ph: false, male: false, sub_wage: 2500000, share_pay: 600000, ls: '2027-01-01', le: '2027-06-30', hs: '2026-12-01', rt: '2027-07-01', wage: 3000000, sls: '2027-03-01', sle: '2028-07-30', swage: 3400000, birth: '2026-12-12', p66: true, mat: true, salary: 3000000, ssalary: 2800000, x_me: 3000000, x_sp: 2500000, x_sp_months: '2026-12,2027-03,2027-06,2027-09,2027-12', ck: '' };
   const HIRE_MONTHS_BEFORE = 2;
+  const MAT_DAYS = 90;        // 출산전후휴가 90일 (고용노동부 일생활균형 안내)
+  const MAT_EMP_DAYS = 60;    // 대규모기업: 최초 60일은 사업주가 통상임금 지급
+  const MAT_CAP30 = 2200000;  // 정부 출산전후휴가 급여 상한 (30일 기준)
   const SUB_RATE_CAP = 0.8;
   const SUB_MIN_PAY = 1240000;
   const KEEP_AFTER_HIRE_MONTHS = 12;
@@ -859,8 +747,10 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   const anchors = () => {
     const LS = day(prm('ls'));
     const LE = day(prm('le'));
-    const RT = day(prm('rt'));
-    const SRT = day(prm('srt'));
+    const RT = d3.utcDay.offset(LE, 1); // 복직일 = 휴직 종료일 다음 날
+    const SLE = day(prm('sle'));
+    const SLS0 = day(prm('sls'));
+    const SRT = d3.utcDay.offset(SLE, 1); // 세은 복직일 = 종료일 다음 날
     const ph = flag('ph') && scn() === 'sub';
     const HS = day(prm('hs'));
     const SE = ph ? d3.utcDay.offset(d3.utcMonth.offset(RT, POST_HANDOVER_MAX_MONTHS), -1) : LE;
@@ -870,8 +760,13 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       HY: HY < SE ? HY : SE,
       HD: d3.utcMonth.offset(LS, -HIRE_MONTHS_BEFORE),
       HE: d3.utcDay.offset(LS, -1),
-      SLS: day(prm('sls')),
-      SLE: d3.utcDay.offset(SRT, -1),
+      SLS: SLS0,
+      SLE,
+      // 세은 출산전후휴가: 육아휴직 시작 전 90일, 대규모기업 기준 최초 60일 회사 지급 · 마지막 30일 정부 지급
+      MS: d3.utcDay.offset(SLS0, -MAT_DAYS),
+      MEE: d3.utcDay.offset(SLS0, -MAT_DAYS + MAT_EMP_DAYS - 1),
+      MGS: d3.utcDay.offset(SLS0, -MAT_DAYS + MAT_EMP_DAYS),
+      ME: d3.utcDay.offset(SLS0, -1),
     };
   };
   const resolve = (raw, A) => {
@@ -912,7 +807,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   };
   const fill = (text, A) => {
     const M = monthsOf(A);
-    return String(text || '').replace(/\{(HD|HS|HE|HY|LS|LE|RT|SE|SLS|SLE|SRT|LM|SM)\}/g, (_, k) => (k === 'LM' ? one(M.leave) : k === 'SM' ? one(M.spouse) : fmtD(A[k])));
+    return String(text || '').replace(/\{(HD|HS|HE|HY|LS|LE|RT|SE|SLS|SLE|SRT|MS|ME|LM|SM)\}/g, (_, k) => (k === 'LM' ? one(M.leave) : k === 'SM' ? one(M.spouse) : fmtD(A[k])));
   };
   const labelOf = (r, s, e) => {
     switch (r.label_style) {
@@ -928,6 +823,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     const sc = r.scenario || 'all';
     if (sc !== 'all' && sc !== scn()) return false;
     if (r.only_if === 'ph' && !(flag('ph') && scn() === 'sub')) return false;
+    if (r.only_if === 'sp12' && !(monthsOf(anchors()).spouse > 12)) return false; // 세은이 1년을 넘게 쓸 때만
     return true;
   };
   const tasksNow = (rows) => {
@@ -956,10 +852,8 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   };
 
   /* ---------- controls ---------- */
-  const startTab = location.hash.slice(1);
-  if (startTab === 'worker' || startTab === 'employer') dash.setParams({ tab: startTab });
-
-  document.querySelectorAll('.pl-pagetab').forEach((b) => b.addEventListener('click', () => { dash.setParams({ tab: b.dataset.tab }); dash.setLink(b.dataset.tab); }));
+  // 예전에 세은 복직일(srt)로 저장한 값은 종료일(sle)로 옮김
+  { const p0 = dash.params(); if (!p0.sle && p0.srt) dash.setParams({ sle: iso(d3.utcDay.offset(day(p0.srt), -1)), srt: null }); }
   document.querySelectorAll('.pl-tab').forEach((b) => b.addEventListener('click', () => dash.setParams({ role: b.dataset.role })));
   document.querySelectorAll('.pl-scn-btn').forEach((b) => b.addEventListener('click', () => dash.setParams({ scn: b.dataset.scn })));
   document.querySelectorAll('.pl-date').forEach((inp) => {
@@ -977,12 +871,14 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     });
     inp.addEventListener('blur', () => { inp.value = prm(inp.dataset.param) || ''; });
   });
+  const unitOf = (inp) => Number(inp.dataset.unit) || 1;
+  const showNum = (inp) => { const u = unitOf(inp); inp.value = String(Math.round((num(inp.dataset.param) / u) * 100) / 100); };
   document.querySelectorAll('.pl-num-in').forEach((inp) => {
     inp.addEventListener('change', () => {
       const n = Number(inp.value);
-      if (inp.value !== '' && Number.isFinite(n) && n >= 0) dash.setParams({ [inp.dataset.param]: Math.round(n) });
+      if (inp.value !== '' && Number.isFinite(n) && n >= 0) dash.setParams({ [inp.dataset.param]: Math.round(n * unitOf(inp)) });
     });
-    inp.addEventListener('blur', () => { inp.value = String(num(inp.dataset.param)); });
+    inp.addEventListener('blur', () => showNum(inp));
   });
   document.querySelectorAll('.pl-bool').forEach((inp) => inp.addEventListener('change', () => dash.setParams({ [inp.dataset.param]: inp.checked })));
   document.querySelectorAll('.pl-text-in').forEach((inp) => {
@@ -1001,10 +897,9 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   }));
 
   dash.onData(() => {
-    const tab = prm('tab') === 'employer' ? 'employer' : 'worker';
+    const tab = 'worker';
     const role = prm('role') || 'all';
     const sc = scn();
-    document.querySelectorAll('.pl-pagetab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     document.querySelectorAll('.pl-page').forEach((p) => { p.hidden = p.dataset.page !== tab; });
     document.querySelectorAll('.pl-tab').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.role === role)));
     document.querySelectorAll('.pl-scn-btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.scn === sc)));
@@ -1017,7 +912,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       a.hidden = (a.classList.contains('pl-only-sub') && sc !== 'sub') || (role !== 'all' && a.dataset.role !== role);
     });
     document.querySelectorAll('.pl-date').forEach((inp) => { if (inp !== document.activeElement) inp.value = prm(inp.dataset.param) || ''; });
-    document.querySelectorAll('.pl-num-in').forEach((inp) => { if (inp !== document.activeElement) inp.value = String(num(inp.dataset.param)); });
+    document.querySelectorAll('.pl-num-in').forEach((inp) => { if (inp !== document.activeElement) showNum(inp); });
     document.querySelectorAll('.pl-bool').forEach((inp) => { inp.checked = flag(inp.dataset.param); });
     document.querySelectorAll('.pl-text-in').forEach((inp) => { if (inp !== document.activeElement) inp.value = String(prm(inp.dataset.param) || '').split(',').filter(Boolean).join(', '); });
   });
@@ -1055,7 +950,6 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     const M = monthsOf(A);
     const w = [];
     if (A.LE < A.LS) w.push('휴직 종료일이 휴직 개시일보다 빠릅니다.');
-    if (A.RT <= A.LE) w.push('복직 예정일이 휴직 종료일과 같거나 빠릅니다.');
     if (el.dataset.scope === 'employer') {
       if (scn() === 'sub') {
         if (A.HS >= A.LS) w.push('인수인계 시작일이 휴직 개시일과 같거나 늦습니다. 휴직 전 인수인계 기간이 없습니다.');
@@ -1068,26 +962,14 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       if (scn() === 'special' && M.leave < SPECIAL_MONTHS) w.push('휴직이 3개월 미만이라 특례 요건(3개월 이상 연속)을 충족하지 못합니다.');
       if (scn() === 'share' && num('share_pay') < 600000) w.push('업무분담 지원금은 업무분담자에게 지급한 금액까지만 지원되어 월 ' + comma(num('share_pay')) + '원으로 계산합니다.');
     } else {
-      if (A.SRT <= A.SLS) w.push('세은 복직일이 세은 휴직 시작일과 같거나 빠릅니다.');
+      if (A.SLE < A.SLS) w.push('세은 휴직 종료일이 세은 휴직 시작일보다 빠릅니다.');
       if (!(num('wage') > 0)) w.push('만유 월 통상임금을 입력하세요.');
       if (!(num('swage') > 0)) w.push('세은 월 통상임금을 입력하세요.');
       const six = sixStatus();
       if (flag('p66') && !six.apply) w.push('6+6: ' + six.detail);
       if ((M.leave > 12 || M.spouse > 12) && (M.leave < 3 || M.spouse < 3)) w.push('1년을 넘는 휴직(최대 1년 6개월)은 부모 모두 3개월 이상 사용한 경우(또는 한부모·중증장애아동부모)에만 가능합니다.');
-      // 추가 6개월은 신청하는 시점에 상대방이 이미 3개월 이상 썼어야 함 (고용노동부 Q&A)
-      const usedBy = (ls, le, at) => sumFrac(periods(ls, le < at ? le : at));
-      const ig = (n) => n + ((n.charCodeAt(n.length - 1) - 0xac00) % 28 ? '이' : '가');
-      const extraCheck = (who, other, months, start, oStart, oEnd) => {
-        if (!(months > 12)) return;
-        const at = d3.utcDay.offset(start, -30);
-        const used = usedBy(oStart, oEnd, at);
-        if (used < 3) w.push(ig(who) + ' 1년을 넘게 쓰려면 신청하는 시점에 ' + ig(other) + ' 3개월 이상 썼어야 합니다. ' + who + ' 신청 시점(' + fmtD(at) + ')에 ' + other + ' 사용 기간은 ' + one(used) + '개월이라, 먼저 1년 이내로 신청한 뒤 요건을 갖추고 연장(종료 예정일 30일 전까지 통지)하거나 새로 신청해야 합니다.');
-      };
-      extraCheck('세은', '만유', M.spouse, A.SLS, A.LS, A.LE);
-      extraCheck('만유', '세은', M.leave, A.LS, A.SLS, A.SLE);
     }
     if (M.leave > 18) w.push('육아휴직은 최대 1년 6개월입니다.');
-    if (el.dataset.scope === 'employer' && M.leave > 12) w.push('1년을 넘는 휴직은 부모 모두 3개월 이상 사용한 경우 등에만 가능합니다. 만유 · 세은 탭에서 세은 기간을 확인하세요.');
     el.replaceChildren(...w.map((t) => mk('li', '', t)));
     el.hidden = !w.length;
   });
@@ -1237,11 +1119,76 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
   const combinedRange = () => {
     const A = anchors();
     const extra = spExtraMonths().map((k) => day(k + '-01'));
-    const starts = [A.LS, A.SLS, ...extra].filter(valid);
+    const starts = [A.LS, A.SLS, flag('mat') ? A.MS : null, ...extra].filter(valid);
     const ends = [A.LE, A.SLE, ...extra].filter(valid);
     if (!starts.length || !ends.length) return null;
     return [d3.utcMonth.floor(d3.min(starts)), d3.utcMonth.floor(d3.max(ends))];
   };
+  // 세은 추가 수입 받는 달: 연도별 12개월 버튼을 눌러 선택/해제
+  dash.draw('xsp-months', (el) => {
+    const A = anchors();
+    const picked = new Set(spExtraMonths());
+    const yrs = [A.LS, A.SLS, A.LE, A.SLE].filter(valid).map((t) => new Date(t).getUTCFullYear());
+    picked.forEach((k) => yrs.push(Number(k.slice(0, 4))));
+    if (!yrs.length) { el.textContent = '—'; return; }
+    const y0 = Math.min(...yrs) - (Math.min(...[A.LS, A.SLS].filter(valid).map((t) => new Date(t).getUTCMonth())) < 3 ? 1 : 0);
+    const y1 = Math.max(...yrs);
+    const inLeave = (t) => (valid(A.SLS) && valid(A.SLE) && t >= d3.utcMonth.floor(A.SLS) && t <= A.SLE);
+    const toggle = (k) => { const s = new Set(spExtraMonths()); if (s.has(k)) s.delete(k); else s.add(k); dash.setParams({ x_sp_months: Array.from(s).sort().join(',') }); };
+    const rows = [];
+    for (let y = y0; y <= y1; y++) {
+      const row = document.createElement('div'); row.className = 'pl-months-year';
+      const lab = document.createElement('span'); lab.textContent = y + '년'; row.append(lab);
+      for (let m = 1; m <= 12; m++) {
+        const k = y + '-' + String(m).padStart(2, '0');
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'pl-mbtn' + (inLeave(Date.UTC(y, m - 1, 1)) ? ' is-leave' : '');
+        b.textContent = m + '월'; b.setAttribute('aria-pressed', String(picked.has(k))); b.setAttribute('aria-label', y + '년 ' + m + '월');
+        b.addEventListener('click', () => toggle(k));
+        row.append(b);
+      }
+      rows.push(row);
+    }
+    const sum = document.createElement('p'); sum.className = 'pl-months-sum';
+    sum.textContent = picked.size ? '선택한 달 ' + picked.size + '개: ' + Array.from(picked).sort().map((k) => k.replace('-', '.')).join(', ') + ' · 옅은 색은 세은 휴직 기간' : '선택한 달 없음 · 옅은 색은 세은 휴직 기간';
+    el.replaceChildren(...rows, sum);
+  });
+  dash.draw('won', (el) => { el.textContent = comma(num(el.dataset.param)); });
+  // 다음 할 일: 오늘 이후 가장 가까운 만유·세은 일정 2개
+  dash.draw('next-tasks', (el) => {
+    const g = dash.data('tasks');
+    if (g.status !== 'ok') { el.replaceChildren(); return; }
+    const t0 = today();
+    const items = tasksNow(g.data).filter((r) => r.role === 'worker' || r.role === 'spouse').map((r) => {
+      let at = null;
+      if (r.kind === 'recurring') {
+        const every = Number(r.every_months) || 1;
+        for (let d = r.start, i = 0; d <= r.end && i < 60; d = d3.utcMonth.offset(r.start, every * ++i)) { if (d >= t0) { at = d; break; } }
+      } else if (r.start >= t0) at = r.label_style === 'until' ? r.end : r.start;
+      else if (r.end >= t0) at = r.end;
+      return at ? { r, at } : null;
+    }).filter(Boolean).sort((a, b) => a.at - b.at).slice(0, 2);
+    el.replaceChildren(...items.map(({ r, at }) => {
+      const li = document.createElement('li');
+      const b = mk('button', 'pl-next-item pl-r-' + r.role);
+      b.type = 'button';
+      const dd = Math.round((at - t0) / 864e5);
+      const task = mk('span', 'pl-next-task', r.task);
+      task.append(mk('small', '', r.date_label + (r.note ? ' · ' + r.note : '')));
+      const d = mk('span', 'pl-next-d');
+      d.append(mk('b', '', dd === 0 ? 'D-day' : 'D-' + dd), document.createTextNode(fmtD(at) + (r.label_style === 'until' || r.kind === 'deadline' ? '까지' : '')));
+      b.append(mk('span', 'pl-next-who', ROLES[r.role] ? ROLES[r.role].label : r.role), task, d);
+      b.addEventListener('click', () => {
+        const nodes = document.querySelectorAll('#couple-gantt [data-tid="' + r.id + '"]');
+        nodes.forEach((n, i) => {
+          if (i === 0) { n.scrollIntoView({ behavior: 'smooth', block: 'center' }); n.click(); }
+          n.classList.add('is-flash');
+          setTimeout(() => n.classList.remove('is-flash'), 1600);
+        });
+      });
+      li.append(b);
+      return li;
+    }));
+  });
   dash.draw('pay-range', (el) => {
     const r = combinedRange();
     el.textContent = r ? iso(r[0]).slice(0, 7).replace('-', '.') + ' ~ ' + iso(r[1]).slice(0, 7).replace('-', '.') : '—';
@@ -1266,16 +1213,24 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
         const e = le < e0 ? le : e0;
         if (e >= s) leaveDays = Math.round((e - s) / 864e5) + 1;
       }
-      const workDays = dim - leaveDays;
+      const lastDay = d3.utcDay.offset(next, -1);
+      const ov = (a, b) => { if (!valid(a) || !valid(b)) return 0; const s = a > m ? a : m; const e = b < lastDay ? b : lastDay; return e >= s ? Math.round((e - s) / 864e5) + 1 : 0; };
+      const matEmpDays = who === 'spouse' && flag('mat') ? ov(A.MS, A.MEE) : 0;
+      const matGovDays = who === 'spouse' && flag('mat') ? ov(A.MGS, A.ME) : 0;
+      const workDays = dim - leaveDays - matEmpDays - matGovDays;
       const leave = map.get(key);
       const pay = workDays > 0 ? Math.round((wage * workDays) / dim) : 0;
+      const matEmp = matEmpDays ? Math.round((wage * matEmpDays) / dim) : 0;
+      const mat = matGovDays ? Math.round((Math.min(num('swage'), MAT_CAP30) * matGovDays) / 30) : 0;
       const notes = leave ? leave.notes.slice() : [];
+      if (matEmpDays) notes.push('출산휴가 ' + matEmpDays + '일 · 회사 지급');
+      if (matGovDays) notes.push('출산휴가 ' + matGovDays + '일 · 정부 급여');
       if (workDays > 0) notes.push(workDays === dim ? '근무 · 월 급여' : '근무 ' + workDays + '일 · 월 급여 일할');
       let extra = 0;
       if (who === 'me' && leave && leaveDays > 0) { extra = Math.round((num('x_me') * leaveDays) / dim); if (extra) notes.push('추가 수입 (휴직 급여 받는 달)'); }
       if (who === 'spouse' && xMonths.has(key)) { extra = num('x_sp'); if (extra) notes.push('추가 수입'); }
       const lv = leave ? leave.amt : 0;
-      return { leave: lv, pay, extra, amt: lv + pay + extra, notes };
+      return { leave: lv, pay: pay + matEmp, work: pay, matEmp, mat, extra, amt: lv + pay + matEmp + mat + extra, notes };
     };
     const rows = [];
     let cum = 0;
@@ -1285,6 +1240,8 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
     let l2 = 0;
     let x1 = 0;
     let x2 = 0;
+    let mg2 = 0;
+    let me2 = 0;
     for (let m = range[0]; m <= range[1]; m = d3.utcMonth.offset(m, 1)) {
       const key = iso(m).slice(0, 7);
       const a = cell(M1, key, m, A.LS, A.LE, num('salary'), 'me');
@@ -1296,6 +1253,8 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       l2 += b.leave;
       x1 += a.extra;
       x2 += b.extra;
+      mg2 += b.mat;
+      me2 += b.matEmp;
       cum += sum;
       const tr = document.createElement('tr');
       const money = (x, who) => {
@@ -1304,7 +1263,11 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
         const leaveNote = x.notes.find((n) => /개월차/.test(n));
         let tag = '근무';
         let cls = 'is-work';
-        if (leaveNote) {
+        if (x.mat || x.matEmp) {
+          tag = '출산휴가 · ' + (x.mat && x.matEmp ? '회사 + 정부' : x.mat ? '정부 급여' : '회사 지급');
+          cls = 'is-leave pl-r-spouse';
+          if (x.work) tag += ' + 근무';
+        } else if (leaveNote) {
           const m = leaveNote.match(/^(\d+)개월차 · (\S+)/);
           tag = '휴직 ' + (m ? m[1] + '개월차' + (m[2] === '부모함께' ? ' · 6+6' : '') : '');
           cls = 'is-leave pl-r-' + (who === 'me' ? 'worker' : 'spouse');
@@ -1328,7 +1291,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       tr.append(mk('td', '', label), mk('td', 'pl-num', comma(x)), mk('td', 'pl-num', comma(y)), mk('td', 'pl-num', comma(x + y)), mk('td', '', ''));
       return tr;
     };
-    tb.replaceChildren(...rows, foot, sub('육아휴직 급여', l1, l2), sub('월 급여 (근무)', t1 - l1 - x1, t2 - l2 - x2), sub('추가 수입', x1, x2));
+    tb.replaceChildren(...rows, foot, sub('육아휴직 급여', l1, l2), sub('출산전후휴가 급여 (정부)', 0, mg2), sub('출산전후휴가 (회사 지급 · 세후)', 0, me2), sub('월 급여 (근무 · 세후)', t1 - l1 - x1, t2 - l2 - x2 - mg2 - me2), sub('추가 수입', x1, x2));
     labelCells(tb);
   });
 
@@ -1378,199 +1341,178 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 
   /* ---------- gantt ---------- */
   dash.draw('gantt', (el) => {
+    // 사업장 지원금 일정표와 같은 구성: 위 월 눈금, 담당자별 묶음, 막대 위에 시작(◆)·기한(◇), 휴직 기간 배경, 오늘 선, 아래 설명 카드
     const g = dash.data('tasks');
     el.classList.toggle('dash-skeleton', g.status === 'loading');
     if (g.status !== 'ok') { el.replaceChildren(); return; }
     const A = anchors();
     const roles = (el.dataset.roles || '').split(',');
-    const base = tasksNow(g.data).filter((r) => roles.includes(r.role));
-    let role = el.dataset.filter === 'role' ? prm('role') || 'all' : 'all';
-    if (role === 'substitute' && scn() !== 'sub') role = 'all';
-    const rows = base.filter((r) => role === 'all' || r.role === role);
-    if (!base.length) { el.replaceChildren(); return; }
-    const starts = base.filter((r) => !r.clip_ok).map((r) => r.start);
-    if (roles.includes('employer') && scn() === 'sub') starts.push(A.HD);
-    const D0 = d3.utcDay.offset(d3.utcMonth.floor(d3.min(starts)), -12);
-    const D1 = d3.utcDay.offset(d3.max(base, (r) => r.end), 20);
+    const rows = tasksNow(g.data).filter((r) => roles.includes(r.role));
+    if (!rows.length) { el.replaceChildren(); return; }
+    const bandSpecs = (el.dataset.bands || '').split(',').filter(Boolean).map((sp) => sp.split(':')).filter(([a, b]) => valid(A[a]) && valid(A[b]) && A[b] >= A[a]);
+    const t0 = today();
+    const starts = rows.map((r) => r.start).concat(bandSpecs.map(([a]) => A[a]), [t0]);
+    const ends = rows.map((r) => r.end).concat(bandSpecs.map(([, b]) => A[b]));
+    const D0 = d3.utcMonth.floor(d3.min(starts));
+    const D1 = d3.utcMonth.ceil(d3.utcDay.offset(d3.max(ends), 1));
     const pct = (d) => Math.max(0, Math.min(100, ((d - D0) / (D1 - D0)) * 100));
+    const endPct = (d) => pct(d3.utcDay.offset(d, 1));
     const W = el.clientWidth || 800;
     const narrow = W < 680;
-    el.classList.toggle('pl-g-narrow', narrow);
-    const trackW = narrow ? W : W * 0.64 - 12;
+    const labelPx = 216;
+    const trackW = narrow ? W : Math.max(560, W - labelPx);
 
-    const overlay = mk('div', 'pl-g-overlay');
-    const months = d3.utcMonth.range(d3.utcMonth.ceil(D0), D1);
+    const box = mk('div', 'pl-sg' + (narrow ? ' is-narrow' : ''));
+    // 배경: 월 선, 휴직 기간, 오늘
+    const overlay = mk('div', 'pl-sg-overlay');
+    const months = d3.utcMonth.range(D0, D1);
     months.forEach((d) => {
-      const line = mk('div', 'pl-g-mline' + (d.getUTCMonth() === 0 ? ' is-year' : ''));
+      const line = mk('div', 'pl-sg-mline' + (d.getUTCMonth() === 0 ? ' is-year' : ''));
       line.style.left = pct(d) + '%';
       overlay.append(line);
     });
-    const bandSpecs = (el.dataset.bands || '').split(',').filter(Boolean);
-    bandSpecs.forEach((spec, bi) => {
-      const [a, b, who, label] = spec.split(':');
-      const s = A[a];
-      const e = A[b];
-      if (!valid(s) || !valid(e) || e < s) return;
-      const band = mk('div', 'pl-g-band pl-r-' + who);
-      band.style.left = pct(s) + '%';
-      band.style.width = (pct(d3.utcDay.offset(e, 1)) - pct(s)) + '%';
-      const bl = mk('span', 'pl-g-band-label', label);
-      bl.style.top = 4 + bi * 16 + 'px';
-      band.append(bl);
-      overlay.append(band);
-    });
-    const t = today();
-    let showToday = false;
-    if (t >= D0 && t <= D1) {
-      const tl = mk('div', 'pl-g-today');
-      tl.style.left = pct(t) + '%';
-      // 오늘 글자는 축 아래, 휴직 기간 글자 다음 줄에 두고 양 끝에서는 안쪽으로 붙임
-      const tt = mk('span', '', '오늘 ' + md(t));
-      tt.style.top = 12 + bandSpecs.length * 16 + 'px';
-      const tp = pct(t);
-      tt.style.transform = tp < 15 ? 'translateX(-2px)' : tp > 85 ? 'translateX(calc(-100% + 2px))' : 'translateX(-50%)';
+    const showToday = t0 >= D0 && t0 < D1;
+    if (showToday) {
+      const tl = mk('div', 'pl-sg-today');
+      tl.style.left = pct(t0) + '%';
+      const tt = mk('span', '', '오늘 ' + md(t0));
+      tt.style.top = '4px';
+      if (pct(t0) > 85) tt.style.transform = 'translateX(calc(-100% - 6px))';
       tl.append(tt);
       overlay.append(tl);
-      showToday = true;
     }
-
     const parts = [overlay];
-    if (!narrow) parts.push(mk('div', ''));
-    const axis = mk('div', 'pl-g-axis');
+    // 월 눈금
+    if (!narrow) parts.push(mk('div', 'pl-sg-axis-l'));
+    const axis = mk('div', 'pl-sg-axis');
     const perMonth = trackW / Math.max(1, months.length);
-    // 눈금 글자가 겹치지 않도록 간격이 60px 이상 되는 개월 단위를 고름
-    const step = [1, 2, 3, 6, 12].find((n) => n * perMonth >= 60) || 12;
+    const step = [1, 2, 3, 6, 12].find((n) => n * perMonth >= 40) || 12;
+    const yearIdx = months.map((d, i) => (d.getUTCMonth() === 0 ? i : -1)).filter((i) => i >= 0);
     months.forEach((d, i) => {
-      if (i % step) return;
-      const tick = mk('span', 'pl-g-tick' + (i === 0 ? ' is-first' : ''), String(d.getUTCFullYear()).slice(2) + '.' + String(d.getUTCMonth() + 1).padStart(2, '0'));
-      tick.style.left = pct(d) + '%';
+      const yr = d.getUTCMonth() === 0;
+      if (!yr && (i % step || yearIdx.some((y) => Math.abs(y - i) < step))) return;
+      const tick = mk('span', 'pl-sg-tick' + (yr ? ' is-year' : ''), yr ? String(d.getUTCFullYear()) : (d.getUTCMonth() + 1) + '월');
+      const x = pct(d) + 100 / months.length / 2;
+      tick.style.left = x + '%';
+      if (x < 3) tick.style.transform = 'translateX(0)';
       axis.append(tick);
     });
     parts.push(axis);
-    if (bandSpecs.length || showToday) {
-      const space = mk('div', 'pl-g-bandspace');
-      space.style.height = (bandSpecs.length + (showToday ? 1 : 0)) * 16 + 6 + 'px';
-      parts.push(space);
-    }
+    const space = mk('div', 'pl-sg-space');
+    space.style.height = (showToday ? 20 : 4) + 'px';
+    parts.push(space);
 
     const byId = new Map(rows.map((r) => [r.id, r]));
-    const byRole = el.dataset.group === 'role';
-    const groups = byRole
-      ? roles.map((ro) => [ro, rows.filter((r) => r.role === ro)]).filter((x) => x[1].length)
-      : d3.groups(rows, (r) => r.phase).sort((a, b) => a[0] - b[0]);
-    groups.forEach(([key, list]) => {
-      const head = mk('div', 'pl-g-phase');
-      if (byRole) {
-        head.className += ' pl-r-' + key;
-        head.append(mk('i', 'pl-dot'), mk('b', '', ROLES[key] ? ROLES[key].full : key));
-      } else {
-        const inP = base.filter((r) => r.phase === key && r.in_period);
-        const ps = d3.min(inP, (r) => r.start);
-        const pe = d3.max(inP, (r) => (r.kind === 'open' ? r.start : r.end));
-        head.append(mk('span', 'pl-g-phase-no', key + '단계'), mk('b', '', list[0].phase_name));
-        if (ps && pe) head.append(mk('span', 'pl-g-phase-period', fmtD(ps) + ' ~ ' + (ps.getUTCFullYear() === pe.getUTCFullYear() ? md(pe) : fmtD(pe))));
+    const mkPt = (track, d, txt, due, small) => {
+      const p = mk('div', 'pl-sg-pt' + (due ? ' is-due' : '') + (small ? ' is-small' : ''));
+      p.style.left = pct(d) + '%';
+      track.append(p);
+      if (txt) {
+        const l = mk('span', 'pl-sg-pl' + (due ? ' is-due' : ''), txt);
+        const x = pct(d);
+        l.style.left = x + '%';
+        if (x < 6) l.style.transform = 'translateX(-4px)';
+        else if (x > 94) l.style.transform = 'translateX(calc(-100% + 4px))';
+        track.append(l);
       }
+    };
+    const span = (track, cls, s, e) => {
+      const b = mk('div', cls);
+      b.style.left = pct(s) + '%';
+      b.style.width = Math.max(0.4, endPct(e) - pct(s)) + '%';
+      track.append(b);
+    };
+    roles.forEach((ro) => {
+      const list = rows.filter((r) => r.role === ro).sort((a, b) => a.start - b.start || a.end - b.end);
+      if (!list.length) return;
+      const head = mk('div', 'pl-sg-group-l pl-r-' + ro);
+      const leave = ro === 'worker' ? [A.LS, A.LE] : [A.SLS, A.SLE];
+      head.append(mk('i', 'pl-dot'), mk('span', '', ROLES[ro] ? ROLES[ro].label : ro), mk('small', '', '육아휴직 ' + fmtD(leave[0]) + ' ~ ' + fmtD(leave[1])));
       parts.push(head);
-      list.slice().sort((a, b) => a.start - b.start).forEach((r) => {
+      const myBands = bandSpecs.filter((b) => b[2] === ro);
+      if (!narrow) {
+        const gt = mk('div', 'pl-sg-group-t pl-r-' + ro);
+        myBands.forEach(([a, b, , label]) => { const bl = mk('span', 'pl-sg-blabel', label); bl.style.left = pct(A[a]) + '%'; gt.append(bl); });
+        parts.push(gt);
+      }
+      list.forEach((r) => {
         const st = stateOf(r);
-        const label = mk('div', 'pl-g-label pl-r-' + r.role + (st === 'now' ? ' pl-g-now' : ''));
-        label.tabIndex = 0;
-        label.dataset.tid = r.id;
-        const name = mk('span', 'pl-g-name', r.task);
-        name.append(mk('span', 'pl-g-when', r.date_label));
-        label.append(mk('span', 'pl-badge', ROLES[r.role] ? ROLES[r.role].label : r.role), name);
-        if (st === 'now') label.append(mk('span', 'pl-chip-now', '진행 중'));
-        if (r.docs.length || r.prep.length) label.append(mk('span', 'pl-chip-prep', r.docs.length ? '서류' : '준비'));
-        const track = mk('div', 'pl-g-track pl-r-' + r.role);
+        const lab = mk('div', 'pl-sg-label pl-r-' + r.role);
+        lab.tabIndex = 0;
+        lab.dataset.tid = r.id;
+        const nm = mk('span', 'pl-sg-name', r.task);
+        if (st === 'now') nm.append(mk('span', 'pl-chip-now', '진행 중'));
+        lab.append(nm, mk('span', 'pl-sg-when', r.date_label));
+        const track = mk('div', 'pl-sg-track pl-r-' + r.role);
         track.dataset.tid = r.id;
-        const s = r.start;
-        const e = d3.utcDay.offset(r.end, 1);
-        if (r.kind === 'point' || r.kind === 'deadline') {
-          const p = mk('div', 'pl-pt' + (r.kind === 'deadline' ? ' is-deadline' : ''));
-          p.style.left = pct(s) + '%';
-          track.append(p);
+        myBands.forEach(([a, b]) => { const bd = mk('div', 'pl-sg-tband'); bd.style.left = pct(A[a]) + '%'; bd.style.width = (endPct(A[b]) - pct(A[a])) + '%'; track.append(bd); });
+        const ds = [];
+        if (r.kind === 'deadline') {
+          mkPt(track, r.end, '~' + md(r.end), true);
+          ds.push(md(r.end) + '까지');
+        } else if (r.kind === 'point') {
+          mkPt(track, r.start, md(r.start));
+          ds.push(md(r.start));
+        } else if (r.kind === 'open') {
+          span(track, 'pl-sg-line', r.start, r.end);
+          mkPt(track, r.start, '신청 ' + md(r.start));
+          mkPt(track, r.end, '마감 ' + md(r.end), true);
+          ds.push('신청 ' + md(r.start), '마감 ' + md(r.end));
         } else if (r.kind === 'recurring') {
-          const line = mk('div', 'pl-bar is-line');
-          line.style.left = pct(s) + '%';
-          line.style.width = (pct(e) - pct(s)) + '%';
-          track.append(line);
+          span(track, 'pl-sg-line', r.start, r.end);
           const every = Number(r.every_months) || 1;
-          for (let d = s, i = 0; d < e && i < 60; d = d3.utcMonth.offset(s, every * ++i)) {
-            const tk = mk('div', 'pl-tick');
-            tk.style.left = pct(d) + '%';
-            track.append(tk);
-          }
+          for (let d = r.start, i = 0; d <= r.end && i < 60; d = d3.utcMonth.offset(r.start, every * ++i)) mkPt(track, d, i === 0 ? (every === 1 ? '매월 ' : every + '개월마다 ') + md(d) + '~' : '', false, true);
+          ds.push((every === 1 ? '매월 ' : every + '개월마다 ') + md(r.start) + '부터');
         } else {
-          const bar = mk('div', 'pl-bar' + (r.kind === 'open' ? ' is-open' : '') + (s < D0 ? ' is-clip' : ''));
-          bar.style.left = pct(s) + '%';
-          bar.style.width = (pct(e) - pct(s)) + '%';
-          track.append(bar);
+          span(track, 'pl-sg-bar', r.start, r.end);
+          ds.push(md(r.start) + ' ~ ' + md(r.end));
         }
-        parts.push(label, track);
+        lab.append(mk('span', 'pl-sg-dates', ds.join(' · ')));
+        parts.push(lab, track);
       });
     });
+    box.append(...parts);
+    const scroll = mk('div', 'pl-sg-scroll');
+    scroll.append(box);
 
-    const tip = mk('div', 'pl-tip');
-    tip.hidden = true;
-    parts.push(tip);
-    el.replaceChildren(...parts);
-
-    const show = (id, x, y) => {
+    // 설명 카드: 누르거나(휴대폰) 마우스를 올리면 바뀜
+    const detail = mk('div', 'pl-sg-detail');
+    detail.setAttribute('aria-live', 'polite');
+    const pick = () => {
+      if (el._sel && byId.has(el._sel)) return el._sel;
+      const up = rows.filter((r) => r.end >= t0).sort((a, b) => a.start - b.start)[0];
+      return (up || rows[0]).id;
+    };
+    const show = (id) => {
       const r = byId.get(id);
-      if (!r) { tip.hidden = true; return; }
-      const roleLine = mk('span', 'pl-tip-role pl-r-' + r.role);
-      roleLine.append(mk('i', 'pl-dot'), document.createTextNode((ROLES[r.role] ? ROLES[r.role].full : r.role) + ' · ' + r.phase_name));
-      const kids = [roleLine, mk('span', 'pl-tip-task', r.task), mk('span', 'pl-tip-when', r.date_label), mk('span', 'pl-tip-note', r.note)];
-      if (r.flag) kids.push(mk('span', 'pl-flag', r.flag));
-      const section = (title, items) => {
+      if (!r) return;
+      el._sel = id;
+      box.querySelectorAll('[data-tid]').forEach((n) => n.classList.toggle('is-hot', n.dataset.tid === id));
+      detail.className = 'pl-sg-detail pl-r-' + r.role;
+      const kids = [mk('span', 'pl-sg-d-who', ROLES[r.role] ? ROLES[r.role].label : r.role), mk('h3', '', r.task)];
+      const meta = mk('p', 'pl-sg-d-meta');
+      meta.append(mk('b', '', '기간 '), document.createTextNode(r.date_label));
+      kids.push(meta);
+      if (r.note) kids.push(mk('p', 'pl-sg-d-note', r.note));
+      if (r.flag) kids.push(mk('p', 'pl-flag', r.flag));
+      const list = (title, items) => {
         if (!items.length) return;
-        kids.push(mk('span', 'pl-tip-h', title));
-        const ul = mk('ul', 'pl-tip-list');
+        kids.push(mk('h4', '', title));
+        const ul = mk('ul', '');
         items.forEach((x) => ul.append(mk('li', '', x)));
         kids.push(ul);
       };
-      section('필요 서류', r.docs);
-      section('준비사항', r.prep);
-      if (r.prep_src && (r.docs.length || r.prep.length)) kids.push(mk('span', 'pl-tip-src', '근거: ' + r.prep_src));
-      tip.replaceChildren(...kids);
-      tip.hidden = false;
-      const box = el.getBoundingClientRect();
-      const tw = tip.offsetWidth;
-      const th = tip.offsetHeight;
-      let left = x - box.left + 14;
-      if (left + tw > box.width) left = Math.max(0, x - box.left - tw - 14);
-      let top = y - box.top + 14;
-      if (top + th > box.height) top = Math.max(0, y - box.top - th - 10);
-      tip.style.left = left + 'px';
-      tip.style.top = top + 'px';
+      list('필요 서류', r.docs);
+      list('준비사항', r.prep);
+      if (r.prep_src && (r.docs.length || r.prep.length)) kids.push(mk('p', 'pl-sg-d-src', '근거: ' + r.prep_src));
+      detail.replaceChildren(...kids);
     };
-    let hot = null;
-    const highlight = (id) => {
-      if (hot === id) return;
-      hot = id;
-      el.querySelectorAll('[data-tid]').forEach((n) => n.classList.toggle('pl-g-row-hot', n.dataset.tid === id));
-    };
-    el.onpointermove = (ev) => {
-      const cell = ev.target.closest('[data-tid]');
-      if (!cell) { tip.hidden = true; highlight(null); return; }
-      highlight(cell.dataset.tid);
-      show(cell.dataset.tid, ev.clientX, ev.clientY);
-    };
-    el.onpointerleave = (ev) => { if (ev.pointerType === 'mouse') { tip.hidden = true; highlight(null); } };
-    el.onclick = (ev) => {
-      const cell = ev.target.closest('[data-tid]');
-      if (!cell) { tip.hidden = true; highlight(null); return; }
-      highlight(cell.dataset.tid);
-      show(cell.dataset.tid, ev.clientX, ev.clientY);
-    };
-    el.onfocusin = (ev) => {
-      const cell = ev.target.closest('[data-tid]');
-      if (!cell) return;
-      const b = cell.getBoundingClientRect();
-      highlight(cell.dataset.tid);
-      show(cell.dataset.tid, b.left + Math.min(b.width, 240), b.top + b.height / 2);
-    };
-    el.onfocusout = () => { tip.hidden = true; highlight(null); };
+    el.replaceChildren(scroll, detail);
+    show(pick());
+    el.onclick = (ev) => { const c = ev.target.closest('[data-tid]'); if (c) show(c.dataset.tid); };
+    el.onpointerover = (ev) => { if (ev.pointerType !== 'mouse') return; const c = ev.target.closest('[data-tid]'); if (c) show(c.dataset.tid); };
+    el.onfocusin = (ev) => { const c = ev.target.closest('[data-tid]'); if (c) show(c.dataset.tid); };
+    el.onkeydown = (ev) => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.dataset && ev.target.dataset.tid) { ev.preventDefault(); show(ev.target.dataset.tid); } };
   });
 </script>
 
