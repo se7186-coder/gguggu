@@ -533,7 +533,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       <div class="pl-card pl-kpi pl-r-worker">
         <span class="pl-kpi-label"><i class="pl-dot"></i>부부 예상 수령 합계</span>
         <b class="pl-kpi-value"><span data-draw="pay-total" data-who="both" data-source="pay_rules">—</span><small>원</small></b>
-        <span class="pl-kpi-sub">만유 <span data-draw="pay-total" data-who="me" data-source="pay_rules">—</span>원 + 세은 <span data-draw="pay-total" data-who="spouse" data-source="pay_rules">—</span>원</span>
+        <span class="pl-kpi-sub">만유 <span data-draw="pay-total" data-who="me" data-source="pay_rules">—</span>원 + 세은 <span data-draw="pay-total" data-who="spouse" data-source="pay_rules">—</span>원<span data-draw="mat-note"></span></span>
       </div>
     </section>
     <ul class="pl-warns pl-warns-top" data-draw="warnings" data-scope="worker" aria-live="polite"></ul>
@@ -1039,12 +1039,15 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
       return { p, rule, base, cap, floor, monthly, paid: Math.round(monthly * p.frac), applyFrom: d3.utcDay.offset(p.end, 1), deadline };
     });
   };
+  // 세은 출산전후휴가 급여(정부 지급분): 대규모기업은 60일 초과 30일, 통상임금 100% · 30일 기준 상한 220만원
+  const matTotal = () => (flag('mat') ? Math.round((Math.min(num('swage'), MAT_CAP30) * (MAT_DAYS - MAT_EMP_DAYS)) / 30) : 0);
   const payTotal = (who) => { const r = payRows(who); return r ? r.reduce((s, x) => s + x.paid, 0) : null; };
   dash.draw('pay-total', (el) => {
     const who = el.dataset.who;
-    const t = who === 'both' ? (payTotal('me') == null ? null : payTotal('me') + payTotal('spouse')) : payTotal(who);
+    const t = who === 'both' ? (payTotal('me') == null ? null : payTotal('me') + payTotal('spouse') + matTotal()) : who === 'spouse' ? (payTotal('spouse') == null ? null : payTotal('spouse') + matTotal()) : payTotal(who);
     el.textContent = t == null ? '—' : comma(t);
   });
+  dash.draw('mat-note', (el) => { const m = matTotal(); el.textContent = m ? ' (세은 출산전후휴가 급여 ' + comma(m) + '원 포함)' : ''; });
   dash.draw('pay-sum', (el) => {
     const rows = payRows(el.dataset.who);
     if (!rows) { el.replaceChildren(); return; }
